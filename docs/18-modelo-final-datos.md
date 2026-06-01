@@ -45,6 +45,20 @@ auditoria
 
 ---
 
+## Requisitos técnicos de las fotografías
+
+Requisitos técnicos de las fotografías
+
+- Formato JPG.
+- Lado mayor de 1920 píxeles.
+- Resolución de 72 ppp.
+- Tamaño mínimo de 0,5 MB.
+- Tamaño máximo de 1,5 MB.
+
+La aplicación comprobará automáticamente estos requisitos antes de aceptar una fotografía.
+
+---
+
 ## 4. Colección usuarios
 
 ```text
@@ -151,6 +165,14 @@ Ejemplo:
   fechaUltimaModificacion: "",
   totalPuntos: 0,
   estado: "activa"
+}
+
+validacion: {
+  formatosPermitidos: ["jpg"],
+  ladoMayor: 1920,
+  resolucion: 72,
+  pesoMinimoMB: 0.5,
+  pesoMaximoMB: 1.5
 }
 ```
 
