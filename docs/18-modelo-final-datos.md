@@ -14,7 +14,9 @@ La aplicación se basa en las siguientes reglas:
 
 - Una única Liga AGAFONA por temporada.
 - Una única categoría: Naturaleza General.
-- Una fotografía por socio y convocatoria.
+- 1 fotografía activa por socio y convocatoria.
+El socio podrá sustituir la fotografía enviada mientras el plazo de subida esté abierto.
+Finalizado el plazo, la fotografía quedará bloqueada para votación.
 - Tres jurados por fotografía.
 - Máximo 10 puntos por jurado.
 - Máximo 30 puntos por fotografía.
@@ -146,7 +148,9 @@ Ejemplo:
   titulo: "",
   urlImagen: "",
   fechaSubida: "",
-  totalPuntos: 0
+  fechaUltimaModificacion: "",
+  totalPuntos: 0,
+  estado: "activa"
 }
 ```
 
