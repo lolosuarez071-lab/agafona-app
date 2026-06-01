@@ -11,11 +11,11 @@ La aplicación utilizará autenticación y un sistema de roles para controlar qu
 ## Roles del sistema
 
 | Rol | Descripción |
-|---|---|
+|-----|-----|
 | socio | Usuario miembro de AGAFONA. |
-| jurado | Usuario autorizado para puntuar fotografías de la liga. Puede ser socio o no serlo. |
+| jurado | Usuario autorizado para puntuar fotografías de la liga. |
+| directiva | Usuario miembro de la Junta Directiva con acceso a documentación y funciones internas. |
 | admin | Usuario con permisos de administración global. |
-
 ---
 
 ## Reglas generales
@@ -29,7 +29,7 @@ La aplicación utilizará autenticación y un sistema de roles para controlar qu
 - El jurado no podrá ver el autor de las fotografías durante la votación.
 - La subida de fotografías solo estará permitida del día 1 a las 00:01 al día 15 a las 23:59.
 - La votación solo estará permitida desde el día 16 hasta el último día del mes.
-- La clasificación mensual y general se calculará automáticamente al cerrar la votación.
+- La clasificación de convocatoria y la clasificación general se calcularán automáticamente al cierre de la votación.
 
 ---
 
@@ -44,7 +44,9 @@ Puede:
 - Consultar documentos.
 - Ver su perfil.
 - Consultar su estado de cuota.
-- Subir una fotografía mensual a la liga durante el periodo permitido.
+- Participar en las convocatorias de la liga.
+Subir una fotografía por convocatoria.
+Sustituir su fotografía mientras el plazo de envío permanezca abierto.  
 - Consultar clasificaciones.
 - Consultar localizaciones aprobadas, si el módulo se implementa.
 
@@ -88,6 +90,28 @@ No puede:
 
 ---
 
+## Permisos de la directiva
+
+Puede:
+
+- Iniciar sesión.
+- Consultar documentación interna de la asociación.
+- Consultar actas de Junta Directiva.
+- Consultar informes internos.
+- Consultar presupuestos y documentación económica autorizada.
+- Consultar documentación de planificación y organización.
+- Acceder a documentación restringida para la Junta.
+
+No puede:
+
+- Gestionar usuarios.
+- Asignar roles.
+- Modificar permisos.
+- Administrar la aplicación.
+- Modificar clasificaciones de la liga.
+
+---
+
 ## Permisos del administrador
 
 Puede:
@@ -98,7 +122,7 @@ Puede:
 - Gestionar actividades.
 - Gestionar inscripciones.
 - Gestionar avisos.
-- Gestionar documentos.
+- Gestionar documentos internos de la directiva.
 - Gestionar cuotas.
 - Gestionar convocatorias de liga.
 - Revisar fotografías.
@@ -115,6 +139,7 @@ Durante el periodo de votación, el jurado solo verá:
 - Imagen presentada.
 - Título de la fotografía.
 - Formulario de puntuación.
+- Los socios podrán sustituir su fotografía durante el periodo de envío. Al comenzar la votación la fotografía quedará bloqueada.
 
 El sistema ocultará al jurado cualquier dato que pueda identificar al autor de la fotografía.
 
@@ -168,3 +193,25 @@ La aplicación almacenará únicamente los datos personales necesarios:
 No se almacenarán datos personales innecesarios.
 
 Cada usuario solo podrá acceder a la información que necesite según su rol.
+
+---
+
+### Niveles de acceso a documentos
+
+Público:
+- Información pública.
+
+Socios:
+- Bases de la liga.
+- Estatutos.
+- Actas de asamblea.
+- Memorias.
+
+Directiva:
+- Actas de Junta Directiva.
+- Informes internos.
+- Presupuestos.
+- Documentación de planificación.
+
+Administrador:
+- Acceso total.
