@@ -190,14 +190,14 @@ La aplicación mostrará un resumen de la competición y un enlace al documento 
 
 ---
 
-## 9. Temporada de Liga
+## 9. Liga AGAFONA
 
 La aplicación deberá contemplar el funcionamiento real de la Liga AGAFONA.
 
 Características actuales:
 
 ```text
-Temporada:
+Liga:
 Noviembre a Junio
 
 Total convocatorias:
@@ -306,7 +306,7 @@ La estructura deberá permitir incorporar en el futuro:
 * Historial de versiones.
 * Buscador documental.
 * Descarga de documentos.
-* Organización por temporadas.
+* Organización por ligas.
 * Archivo histórico de actas.
 
 ---
