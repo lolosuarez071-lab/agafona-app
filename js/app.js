@@ -1,29 +1,64 @@
 import { auth } from "./firebase-services.js";
-import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+import {
+  signInWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+import {
+  collection,
+  query,
+  where,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+import { db } from "./firebase-services.js";
 
 const loginForm = document.getElementById("login-form");
 const loginMessage = document.getElementById("login-message");
 
-loginForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
+loginForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
 
-  loginMessage.textContent = "Comprobando datos...";
-  loginMessage.style.color = "#666";
-
   try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
 
-    loginMessage.textContent = "Inicio de sesión correcto";
-    loginMessage.style.color = "green";
+    await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
 
-    console.log("Usuario conectado:", userCredential.user);
-  } catch (error) {
-    loginMessage.textContent = "Correo o contraseña incorrectos";
-    loginMessage.style.color = "red";
+    const q = query(
+      collection(db, "usuarios"),
+      where("email", "==", email)
+    );
 
-    console.error("Error de login:", error);
+    const snapshot = await getDocs(q);
+
+    if (!snapshot.empty) {
+
+      const usuario = snapshot.docs[0].data();
+
+      document.querySelector(".login-card").innerHTML = `
+        <img src="assets/logo-agafona.png" class="logo">
+        <h2>Bienvenido ${usuario.nombre}</h2>
+        <p><strong>Rol:</strong> ${usuario.rol}</p>
+        <p>Acceso correcto a AGAFONA</p>
+      `;
+
+    } else {
+
+      loginMessage.textContent =
+        "Usuario encontrado en Auth pero no en Firestore";
+
+    }
+
+  }catch (error) {
+    console.error("Error de login:", error.code, error.message);
+    loginMessage.textContent =
+      "Error: " + error.code;
   }
+
 });
