@@ -83,3 +83,69 @@
     text-align: center;
     font-size: 14px;
   }
+
+  .app-page {
+    min-height: 100vh;
+    padding: 20px;
+    background: #f2f5f3;
+  }
+  
+  .app-header {
+    max-width: 760px;
+    margin: 0 auto 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .app-logo {
+    width: 180px;
+  }
+  
+  .logout-button {
+    width: auto;
+    margin: 0;
+    padding: 10px 16px;
+    background: #234326;
+  }
+  
+  .welcome-card,
+  .dashboard-grid {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+  
+  .welcome-card {
+    background: white;
+    padding: 20px;
+    border-radius: 18px;
+    margin-bottom: 18px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  }
+  
+  .welcome-card h1 {
+    margin: 0 0 8px;
+    color: #234326;
+  }
+  
+  .dashboard-grid {
+    display: grid;
+    gap: 14px;
+  }
+  
+  .dashboard-card {
+    background: white;
+    padding: 20px;
+    border-radius: 18px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  }
+  
+  .dashboard-card h2 {
+    margin: 0 0 8px;
+    color: #234326;
+  }
+  
+  .dashboard-card p {
+    margin: 0;
+    color: #555;
+  }
