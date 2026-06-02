@@ -8,15 +8,26 @@
 </head>
 <body>
 
-  <header>
-    <h1>AGAFONA App</h1>
-    <p>Aplicación PWA para socios, actividades y liga fotográfica.</p>
-  </header>
+  <main class="login-page">
+    <section class="login-card">
+        <img
+        src="assets/logo-agafona.png"
+        alt="AGAFONA"
+        class="logo"
+      />
+      <p class="subtitle">Acceso a la app de socios</p>
 
-  <main>
-    <section>
-      <h2>Estado del proyecto</h2>
-      <p id="estado-firebase">Comprobando conexión con Firebase...</p>
+      <form id="login-form">
+        <label for="email">Correo electrónico</label>
+        <input type="email" id="email" required>
+
+        <label for="password">Contraseña</label>
+        <input type="password" id="password" required>
+
+        <button type="submit">Entrar</button>
+      </form>
+
+      <p id="login-message"></p>
     </section>
   </main>
 
