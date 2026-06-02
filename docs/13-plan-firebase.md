@@ -124,7 +124,7 @@ Ejemplos:
 ### Inicio del periodo de subida
 
 ```text
-Ya puedes subir tu fotografía para la jornada actual.
+Ya puedes subir tu fotografía para la convocatoria actual.
 ```
 
 ### Fin próximo del plazo de subida

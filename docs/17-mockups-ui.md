@@ -82,7 +82,7 @@ Elementos:
 │ └───────────────┘   │
 │                     │
 │ Estado Liga         │
-│ Jornada abierta     │
+│ convocatoria abierta     │
 │                     │
 │ Foto destacada      │
 │                     │
@@ -101,9 +101,9 @@ Elementos:
 ┌─────────────────────┐
 │ Liga Fotográfica    │
 │                     │
-│ Temporada 2026-27   │
+│ convocatoria 2026-27   │
 │                     │
-│ Jornada Abril       │
+│ convocatoria Abril       │
 │                     │
 │ Estado: Subida      │
 │                     │
@@ -121,7 +121,7 @@ Elementos:
 ┌─────────────────────┐
 │ Subir fotografía    │
 │                     │
-│ Jornada Abril       │
+│ convocatoria Abril       │
 │                     │
 │ Título              │
 │ [______________]   │
@@ -157,7 +157,7 @@ Elementos:
 
 ```text
 ┌─────────────────────┐
-│ Temporada 2026-27   │
+│ convocatoria 2026-27   │
 │                     │
 │ 1. Socio A   188    │
 │ 2. Socio B   182    │

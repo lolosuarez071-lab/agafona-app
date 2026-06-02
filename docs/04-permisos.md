@@ -10,7 +10,7 @@ La aplicación utilizará autenticación y un sistema de roles para controlar qu
 
 ## Roles del sistema
 
-| Rol | Descripción |
+| Roles | Descripción |
 |-----|-----|
 | socio | Usuario miembro de AGAFONA. |
 | jurado | Usuario autorizado para puntuar fotografías de la liga. |

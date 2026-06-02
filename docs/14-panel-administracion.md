@@ -84,12 +84,12 @@ Permitirá:
 
 ---
 
-## 6. Configuración de temporada
+## 6. Configuración de convocatoria
 
 La administración podrá definir:
 
 ```text
-Nombre de temporada
+Nombre de convocatoria
 Fecha de inicio
 Fecha de fin
 Número de convocatorias
@@ -98,7 +98,7 @@ Número de convocatorias
 Configuración inicial:
 
 ```text
-Temporada:
+convocatoria:
 Noviembre - Junio
 
 Convocatorias:

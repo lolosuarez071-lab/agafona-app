@@ -12,7 +12,7 @@ Recoge todas las decisiones funcionales adoptadas durante la fase de análisis y
 
 La aplicación se basa en las siguientes reglas:
 
-- Una única Liga AGAFONA por temporada.
+- Una única Liga AGAFONA por convocatoria.
 - Una única categoría: Naturaleza General.
 - 1 fotografía activa por socio y convocatoria.
 El socio podrá sustituir la fotografía enviada mientras el plazo de subida esté abierto.

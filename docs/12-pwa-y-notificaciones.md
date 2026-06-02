@@ -217,7 +217,7 @@ Mayo
 Junio
 ```
 
-La configuración deberá permitir modificar estos parámetros en futuras temporadas.
+La configuración deberá permitir modificar estos parámetros en futuras convocatorias.
 
 ---
 

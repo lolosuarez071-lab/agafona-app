@@ -49,7 +49,7 @@ No podrán:
 
 ---
 
-## 4. Rol socio
+## 4. Roles socio
 
 El socio podrá:
 
@@ -73,7 +73,7 @@ El socio no podrá:
 
 ---
 
-## 5. Rol jurado
+## 5. Roles jurado
 
 El jurado podrá:
 
@@ -93,7 +93,7 @@ El jurado no podrá:
 
 ---
 
-## 6. Rol directiva
+## 6. Roles directiva
 
 La directiva podrá:
 
