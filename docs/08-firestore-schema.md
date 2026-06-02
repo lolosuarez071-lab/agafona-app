@@ -29,7 +29,7 @@ Ejemplo:
 {
   nombre: "Juan Pérez",
   email: "juan@email.com",
-  rol: "socio",
+  roles: "socio",
   activo: true,
   fechaAlta: "2026-01-15",
   avatar: "url_avatar"
@@ -41,6 +41,7 @@ Roles permitidos:
 ```text
 socio
 jurado
+directiva
 admin
 ```
 
@@ -53,17 +54,34 @@ Permite modificar la configuración sin cambiar código.
 Ruta:
 
 ```text
-configuracionLiga/{temporada}
+configuracionLiga/{liga}
 ```
 
 Ejemplo:
 
+
 ```js
+
 {
-  temporada: 2026,
+  liga: 2026,
+
+   ligaMesInicio: 11,
+  ligaMesFin: 6,
+  numeroConvocatorias: 8,
+  
   maximoPorJurado: 10,
   numeroJuradosPorFoto: 3,
   maximoTotalFoto: 30,
+
+  unaFotoPorSocio: true,
+
+validacionFotografias: {
+  formatosPermitidos: ["jpg"],
+  ladoMayor: 1920,
+  resolucion: 72,
+  pesoMinimoMB: 0.5,
+  pesoMaximoMB: 1.5
+}
 
   criterios: [
     {
@@ -104,7 +122,7 @@ Ejemplo:
   nombre: "Liga AGAFONA 2026",
   tipo: "liga",
   activa: true,
-  temporada: 2026,
+  liga: 2026,
   fechaInicio: "2026-01-01",
   fechaFin: "2026-12-31"
 }
@@ -112,21 +130,21 @@ Ejemplo:
 
 ---
 
-## 5. Colección jornadas
+## 5. Colección 
 
 Representa cada mes de competición.
 
 Ruta:
 
 ```text
-jornadas/{jornadaId}
+convocatorias/{convocatoriaid}
 ```
 
 Ejemplo:
 
 ```js
 {
-  temporada: 2026,
+  liga: 2026,
   mes: 5,
   nombre: "Mayo 2026",
 
@@ -162,7 +180,7 @@ Ejemplo:
 
 ```js
 {
-  jornadaId: "2026_05",
+  convocatoriaId: "2026_05",
   autorId: "uid_usuario",
   titulo: "Abejaruco al amanecer",
 
@@ -224,19 +242,19 @@ Total <= 10
 
 ---
 
-## 8. Colección clasificacionMensual
+## 8. Colección clasificacionConvocatoria
 
 Ruta:
 
 ```text
-clasificacionMensual/{jornadaId}
+clasificacionConvocatoria/{convocatoriaId}
 ```
 
 Ejemplo:
 
 ```js
 {
-  jornadaId: "2026_05",
+  convocatoriaId: "2026_05",
 
   resultados: [
     {
@@ -260,14 +278,14 @@ Ejemplo:
 Ruta:
 
 ```text
-clasificacionAnual/{temporada}
+clasificacionAnual/{liga}
 ```
 
 Ejemplo:
 
 ```js
 {
-  temporada: 2026,
+  liga: 2026,
 
   resultados: [
     {
@@ -344,10 +362,10 @@ Ejemplo:
 usuarios
 configuracionLiga
 concursos
-jornadas
+convocatorias
 fotografias
 votaciones
-clasificacionMensual
+clasificacionConvocatoria
 clasificacionAnual
 actividades
 notificaciones

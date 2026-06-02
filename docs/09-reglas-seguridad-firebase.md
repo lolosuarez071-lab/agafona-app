@@ -10,6 +10,7 @@ Los roles principales serán:
 
 * socio
 * jurado
+* directiva
 * admin
 
 ---
@@ -19,7 +20,7 @@ Los roles principales serán:
 La seguridad de la aplicación se basará en estas ideas:
 
 * Los usuarios deben iniciar sesión para acceder a las zonas privadas.
-* Cada usuario tendrá un rol asignado.
+* Cada usuario podrá tener uno o varios roles asignados.
 * Un socio solo podrá gestionar sus propios datos y fotografías.
 * Un jurado podrá votar fotografías, pero no conocer al autor.
 * Un administrador tendrá acceso completo a la gestión.
@@ -56,7 +57,8 @@ El socio podrá:
 * Modificar algunos datos personales propios.
 * Consultar actividades.
 * Consultar notificaciones.
-* Subir una fotografía durante el periodo permitido.
+* Subir una fotografía por convocatoria.
+Sustituir su fotografía mientras el plazo de envío permanezca abierto.
 * Consultar clasificaciones.
 * Ver sus propias participaciones.
 
@@ -91,14 +93,34 @@ El jurado no podrá:
 
 ---
 
-## 6. Rol administrador
+## 6. Rol directiva
+
+La directiva podrá:
+
+* Consultar documentación interna.
+* Consultar actas de Junta Directiva.
+* Consultar informes internos.
+* Consultar documentación de planificación.
+* Consultar documentación restringida para la Junta.
+
+La directiva no podrá:
+
+* Gestionar usuarios.
+* Asignar roles.
+* Modificar permisos.
+* Gestionar la aplicación.
+* Modificar clasificaciones.
+
+---
+
+## 7. Rol administrador
 
 El administrador podrá:
 
 * Gestionar usuarios.
 * Asignar roles.
 * Crear concursos.
-* Crear jornadas de liga.
+* Crear convocatorias de liga.
 * Revisar fotografías.
 * Consultar autores de fotografías.
 * Gestionar votaciones.
@@ -112,7 +134,7 @@ El administrador será el único rol con permisos completos de gestión.
 
 ---
 
-## 7. Seguridad en usuarios
+## 8. Seguridad en usuarios
 
 Colección:
 
@@ -127,6 +149,7 @@ Reglas previstas:
 * Solo el administrador podrá cambiar roles.
 * Solo el administrador podrá desactivar usuarios.
 * Solo el administrador podrá ver el listado completo de usuarios.
+* La fotografía quedará bloqueada automáticamente al finalizar el plazo de envío y no podrá modificarse durante la fase de votación.
 
 Ejemplo lógico:
 
@@ -143,7 +166,7 @@ Si el usuario no es administrador:
 
 ---
 
-## 8. Seguridad en fotografías
+## 9. Seguridad en fotografías
 
 Colección:
 
@@ -163,7 +186,7 @@ El campo `autorId` deberá protegerse especialmente para que no sea visible por 
 
 ---
 
-## 9. Seguridad en votaciones
+## 10. Seguridad en votaciones
 
 Colección:
 
@@ -192,12 +215,12 @@ La suma de los tres jurados dará un máximo de 30 puntos por fotografía.
 
 ---
 
-## 10. Seguridad en configuración de liga
+## 11. Seguridad en configuración de liga
 
 Colección:
 
 ```text
-configuracionLiga/{temporada}
+configuracionLiga/{liga}
 ```
 
 Reglas previstas:
@@ -235,13 +258,13 @@ Ejemplo de configuración:
 
 ---
 
-## 11. Seguridad en clasificaciones
+## 12. Seguridad en clasificaciones
 
 Colecciones:
 
 ```text
-clasificacionMensual
-clasificacionAnual
+clasificacionConvocatoria
+clasificacionGeneral
 ```
 
 Reglas previstas:
@@ -253,7 +276,7 @@ Reglas previstas:
 
 ---
 
-## 12. Seguridad en actividades
+## 13. Seguridad en actividades
 
 Colección:
 
@@ -270,24 +293,30 @@ Reglas previstas:
 
 ---
 
-## 13. Seguridad en notificaciones
+## 14. Seguridad en Firebase Storage
 
-Colección:
+Firebase Storage almacenará principalmente:
 
-```text
-notificaciones/{id}
-```
+* Fotografías de concursos.
+* Avatares.
+* Bases de la Liga.
+* Actas de Asamblea.
+* Actas de Junta Directiva.
+* Estatutos.
+* Otros documentos.
+* Imágenes de actividades.
 
 Reglas previstas:
 
-* Los usuarios podrán leer notificaciones visibles.
-* Solo el administrador podrá crear notificaciones.
-* Solo el administrador podrá modificar notificaciones.
-* Solo el administrador podrá eliminar notificaciones.
+* Un socio solo podrá subir fotografías propias.
+* Las fotografías de liga solo se podrán subir durante el periodo permitido.
+* El jurado podrá visualizar fotografías asignadas para votación.
+* Los documentos privados solo serán visibles para usuarios autorizados.
+* El administrador tendrá permisos completos de gestión.
 
 ---
 
-## 14. Seguridad en Firebase Storage
+## 15. Seguridad en Firebase Storage
 
 Firebase Storage almacenará principalmente:
 
@@ -306,7 +335,7 @@ Reglas previstas:
 
 ---
 
-## 15. Anonimato del jurado
+## 16. Anonimato del jurado
 
 Una regla fundamental de AGAFONA App será mantener el anonimato del autor durante la votación.
 
@@ -322,12 +351,12 @@ El administrador sí podrá consultar la relación entre fotografía y autor.
 
 ---
 
-## 16. Reglas futuras
+## 17. Reglas futuras
 
 En fases posteriores se podrán definir reglas más avanzadas:
 
-* Control por temporada.
-* Control por jornada activa.
+* Control por liga.
+* Control por convocatoria activa.
 * Control por fecha exacta de subida.
 * Control de número máximo de fotografías por socio.
 * Control de votaciones duplicadas.
@@ -336,7 +365,7 @@ En fases posteriores se podrán definir reglas más avanzadas:
 
 ---
 
-## 17. Conclusión
+## 18. Conclusión
 
 Las reglas de seguridad de Firebase serán una parte esencial de AGAFONA App.
 
