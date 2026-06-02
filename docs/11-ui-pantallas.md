@@ -19,9 +19,11 @@ La interfaz deberá seguir estas ideas:
 * Botones grandes y claros.
 * Navegación inferior tipo app.
 * Textos fáciles de entender.
-* Acceso rápido a la liga fotográfica.
+* Acceso rápido a la Liga AGAFONA.
 * Acceso rápido a actividades y avisos.
-* Diferentes pantallas según el rol del usuario.
+* Acceso rápido a documentos.
+* Diferentes pantallas según los roles del usuario.
+* Diseño alineado con la identidad visual de AGAFONA.
 
 ---
 
@@ -33,11 +35,12 @@ Las pantallas públicas serán visibles sin iniciar sesión.
 
 Contenido previsto:
 
-* Nombre de la aplicación.
-* Imagen o identidad visual de AGAFONA.
+* Logo AGAFONA.
+* Imagen corporativa.
 * Botón de acceso.
 * Información breve de la asociación.
-* Acceso a avisos públicos, si los hubiera.
+* Avisos públicos.
+* Próximas actividades destacadas.
 
 ### 3.2 Pantalla de login
 
@@ -46,31 +49,31 @@ Contenido previsto:
 * Campo de correo electrónico.
 * Campo de contraseña.
 * Botón de iniciar sesión.
-* Enlace para recuperar contraseña.
+* Recuperar contraseña.
 
 ### 3.3 Recuperar contraseña
 
 Contenido previsto:
 
 * Campo de correo electrónico.
-* Botón para enviar correo de recuperación.
-* Mensaje de confirmación.
+* Botón para enviar recuperación.
+* Confirmación de envío.
 
 ---
 
 ## 4. Pantallas del socio
 
-El socio tendrá acceso a las funciones principales de participación en la asociación.
-
 ### 4.1 Inicio del socio
 
 Contenido previsto:
 
-* Saludo al socio.
+* Saludo personalizado.
+* Estado de la liga.
+* Convocatoria activa.
 * Próxima actividad.
-* Estado de la liga fotográfica.
 * Avisos recientes.
-* Acceso rápido a clasificación.
+* Fotografía destacada.
+* Accesos rápidos.
 
 ### 4.2 Mi perfil
 
@@ -78,336 +81,359 @@ Contenido previsto:
 
 * Nombre.
 * Correo electrónico.
-* Rol.
+* Roles.
 * Estado de socio.
-* Participaciones en la liga.
-* Botón de cerrar sesión.
+* Historial de participación.
+* Cerrar sesión.
 
 ### 4.3 Liga fotográfica
 
 Contenido previsto:
 
-* Jornada actual.
-* Estado de la jornada:
-
-  * subida
-  * votación
-  * cerrada
+* Liga activa.
+* Convocatoria actual.
+* Estado de la convocatoria.
 * Fechas importantes.
-* Información de participación.
-* Botón para subir fotografía cuando esté permitido.
+* Situación de participación.
+* Acceso a clasificación.
+
+Estados:
+
+```text
+subida
+votacion
+cerrada
+```
 
 ### 4.4 Subir fotografía
 
 Contenido previsto:
 
-* Nombre de la jornada.
-* Información de la categoría:
+* Nombre de la convocatoria.
+* Categoría:
 
-  * Naturaleza general
+```text
+Naturaleza general
+```
+
 * Selector de imagen.
-* Campo de título de la fotografía.
-* Aviso de una sola fotografía por socio y jornada.
+* Título de la fotografía.
+* Información de requisitos técnicos.
 * Botón de enviar.
+* Botón de sustituir fotografía.
 
 Reglas:
 
 ```text
-Solo se podrá subir una fotografía por socio y jornada.
-Solo se podrá subir durante el periodo del día 1 al 15.
+1 fotografía activa por convocatoria.
+Posibilidad de sustituir la fotografía hasta el cierre del plazo.
 ```
 
-### 4.5 Clasificación mensual
+Requisitos técnicos:
+
+```text
+Formato JPG
+1920 px lado mayor
+72 ppp
+Entre 0,5 MB y 1,5 MB
+```
+
+### 4.5 Clasificación de convocatoria
 
 Contenido previsto:
 
-* Jornada mensual.
-* Lista de resultados.
+* Convocatoria actual.
 * Posición.
 * Nombre del socio.
 * Puntos obtenidos.
 
-### 4.6 Clasificación anual
+### 4.6 Clasificación general
 
 Contenido previsto:
 
-* Temporada actual.
+* Liga activa.
 * Ranking acumulado.
 * Posición.
 * Nombre del socio.
-* Puntos totales.
+* Puntos acumulados.
 
 ### 4.7 Actividades
 
 Contenido previsto:
 
-* Lista de actividades publicadas.
+* Actividades publicadas.
 * Fecha.
 * Lugar.
 * Descripción.
 * Información adicional.
 
-En fases futuras podrá incluir inscripción a actividades.
-
 ### 4.8 Avisos
 
 Contenido previsto:
 
-* Lista de avisos publicados.
-* Fecha del aviso.
+* Avisos publicados.
+* Fecha.
 * Título.
 * Mensaje.
+
+### 4.9 Documentos
+
+Contenido previsto:
+
+* Bases de la Liga.
+* Estatutos.
+* Actas de Asamblea.
+* Memorias.
+* Otros documentos autorizados para socios.
 
 ---
 
 ## 5. Pantallas del jurado
 
-El jurado tendrá acceso principalmente a las votaciones.
-
 ### 5.1 Inicio del jurado
 
 Contenido previsto:
 
-* Saludo al jurado.
+* Saludo.
 * Estado de votaciones.
-* Número de fotografías pendientes.
+* Fotografías pendientes.
 * Acceso rápido a votar.
 
 ### 5.2 Votaciones
 
 Contenido previsto:
 
-* Fotografía a valorar.
-* Título de la fotografía, si se decide mostrar.
-* Campos de puntuación:
-
-  * Técnica
-  * Creatividad
-  * Dificultad
+* Fotografía.
+* Título (si se muestra).
+* Técnica.
+* Creatividad.
+* Dificultad.
 * Total calculado automáticamente.
-* Botón de guardar voto.
-* Botón de siguiente fotografía.
+* Guardar voto.
+* Siguiente fotografía.
 
-El jurado no verá el autor de la fotografía.
+El autor permanecerá oculto.
 
 ### 5.3 Historial de votaciones
 
 Contenido previsto:
 
-* Fotografías ya votadas.
-* Fecha de votación.
+* Fotografías votadas.
+* Fecha.
 * Puntuación emitida.
 
-### 5.4 Perfil del jurado
+### 5.4 Perfil
 
 Contenido previsto:
 
 * Nombre.
-* Correo electrónico.
-* Rol.
-* Botón de cerrar sesión.
+* Correo.
+* Roles.
+* Cerrar sesión.
 
 ---
 
-## 6. Pantallas del administrador
+## 6. Pantallas de la directiva
 
-El administrador tendrá acceso a la gestión completa de la aplicación.
+### 6.1 Inicio directiva
 
-### 6.1 Panel de administración
+Contenido previsto:
+
+* Resumen de actividad.
+* Acceso rápido a documentación interna.
+* Avisos relevantes.
+
+### 6.2 Documentación interna
+
+Contenido previsto:
+
+* Actas de Junta Directiva.
+* Informes internos.
+* Presupuestos.
+* Planificación.
+* Documentación restringida.
+
+### 6.3 Perfil
+
+Contenido previsto:
+
+* Datos personales.
+* Roles.
+* Cerrar sesión.
+
+---
+
+## 7. Pantallas del administrador
+
+### 7.1 Panel de administración
 
 Contenido previsto:
 
 * Resumen general.
-* Usuarios registrados.
-* Jornada activa.
-* Fotografías subidas.
-* Votaciones pendientes.
-* Accesos rápidos de gestión.
+* Usuarios.
+* Convocatoria activa.
+* Fotografías enviadas.
+* Estado de votaciones.
+* Accesos rápidos.
 
-### 6.2 Gestión de usuarios
+### 7.2 Gestión de usuarios
 
 Contenido previsto:
 
-* Lista de usuarios.
 * Nombre.
 * Correo.
-* Rol.
+* Roles.
 * Estado.
-* Opciones para cambiar rol o desactivar usuario.
 
-Roles disponibles:
+Roles posibles:
 
 ```text
 socio
 jurado
+directiva
 admin
 ```
 
-### 6.3 Gestión de liga
+### 7.3 Gestión de la liga
 
 Contenido previsto:
 
-* Temporada activa.
-* Jornada actual.
-* Estado de la jornada.
+* Liga activa.
+* Convocatoria actual.
+* Estado.
 * Fechas de subida.
 * Fechas de votación.
-* Botón para cerrar jornada.
-* Botón para publicar clasificación.
+* Publicar clasificaciones.
 
-### 6.4 Gestión de fotografías
+### 7.4 Gestión de fotografías
 
 Contenido previsto:
 
-* Lista de fotografías subidas.
+* Fotografías enviadas.
 * Autor.
-* Jornada.
+* Convocatoria.
 * Estado.
 * Vista previa.
-* Opciones de revisión.
+* Validación técnica.
 
-Esta pantalla sí podrá mostrar el autor, ya que será solo para administración.
-
-### 6.5 Gestión de votaciones
+### 7.5 Gestión de votaciones
 
 Contenido previsto:
 
-* Fotografías pendientes de votación.
-* Jurados asignados.
-* Número de votos recibidos.
-* Estado de cada fotografía.
+* Jurados.
+* Fotografías.
+* Votos emitidos.
+* Estado de votación.
 
-### 6.6 Clasificaciones
-
-Contenido previsto:
-
-* Generar clasificación mensual.
-* Revisar resultados.
-* Publicar clasificación.
-* Actualizar clasificación anual.
-
-### 6.7 Gestión de actividades
+### 7.6 Gestión de clasificaciones
 
 Contenido previsto:
 
-* Crear actividad.
-* Editar actividad.
-* Eliminar actividad.
-* Publicar actividad.
+* Clasificación de convocatoria.
+* Clasificación general.
+* Recalcular resultados.
+* Publicar resultados.
 
-Campos:
-
-```text
-título
-descripción
-fecha
-lugar
-imagen opcional
-```
-
-### 6.8 Gestión de avisos
+### 7.7 Gestión documental
 
 Contenido previsto:
 
-* Crear aviso.
-* Editar aviso.
-* Eliminar aviso.
-* Publicar aviso.
+* Crear documento.
+* Editar documento.
+* Eliminar documento.
+* Asignar permisos.
 
-Campos:
-
-```text
-título
-mensaje
-fecha
-visible
-```
-
-### 6.9 Configuración de liga
+### 7.8 Gestión de actividades
 
 Contenido previsto:
 
-* Máximo por jurado.
-* Número de jurados por fotografía.
+* Crear.
+* Editar.
+* Eliminar.
+* Publicar.
+
+### 7.9 Gestión de avisos
+
+Contenido previsto:
+
+* Crear.
+* Editar.
+* Eliminar.
+* Publicar.
+
+### 7.10 Configuración de liga
+
+Contenido previsto:
+
+* Número de jurados.
+* Puntuación máxima.
 * Criterios de puntuación.
-* Estado de temporada.
-* Opciones futuras de configuración.
-
-Configuración inicial:
-
-```text
-Técnica: 5 puntos
-Creatividad: 3 puntos
-Dificultad: 2 puntos
-Máximo por jurado: 10 puntos
-Número de jurados: 3
-Máximo total por fotografía: 30 puntos
-```
+* Fechas de liga.
+* Requisitos técnicos de fotografías.
 
 ---
 
-## 7. Navegación inferior
+## 8. Navegación inferior
 
-La aplicación tendrá una navegación inferior pensada para móvil.
-
-Para socio:
+### Socio
 
 ```text
-Inicio | Liga | Subir | Clasificación | Perfil
+Inicio | Liga | Clasificación | Documentos | Perfil
 ```
 
-Para jurado:
+### Jurado
 
 ```text
 Inicio | Votar | Historial | Clasificación | Perfil
 ```
 
-Para administrador:
+### Directiva
 
 ```text
-Inicio | Liga | Usuarios | Actividades | Config
+Inicio | Documentos | Avisos | Actividades | Perfil
+```
+
+### Administrador
+
+```text
+Inicio | Liga | Usuarios | Documentos | Config
 ```
 
 ---
 
-## 8. Pantallas futuras
+## 9. Pantallas futuras
 
-En fases posteriores se podrán añadir nuevas pantallas:
+Posibles ampliaciones:
 
-* Documentos para socios.
 * Inscripción a actividades.
-* Galería histórica.
+* Histórico de ligas.
 * Estadísticas personales.
-* Histórico de clasificaciones.
-* Configuración avanzada.
-* Zona de socios con documentación interna.
+* Galería histórica.
+* Buscador documental.
+* Notificaciones push.
+* Zona de concursos independientes.
 
 ---
 
-## 9. Consideraciones de usabilidad
+## 10. Consideraciones de usabilidad
 
-La app debe ser fácil de usar para socios con distintos niveles de experiencia digital.
+La aplicación deberá ser sencilla para usuarios con distintos niveles de experiencia tecnológica.
 
-Por ello se recomienda:
+Se recomienda:
 
 * Evitar menús complejos.
-* Usar textos claros.
-* Mostrar mensajes de confirmación.
+* Mostrar mensajes claros.
+* Confirmar acciones importantes.
 * Mostrar errores comprensibles.
-* Evitar formularios largos.
-* Hacer visible siempre el estado de la liga.
-* No sobrecargar la pantalla de inicio.
+* Minimizar pasos innecesarios.
+* Facilitar el acceso a la Liga AGAFONA.
 
 ---
 
-## 10. Conclusión
+## 11. Conclusión
 
-Las pantallas de AGAFONA App estarán organizadas según el rol del usuario.
+Las pantallas de AGAFONA App estarán organizadas según los roles del usuario.
 
-El socio tendrá una experiencia sencilla centrada en actividades, avisos, liga y clasificaciones.
+La aplicación proporcionará acceso sencillo a la liga fotográfica, documentación, actividades y avisos, manteniendo una experiencia clara y coherente con la identidad visual de AGAFONA.
 
-El jurado tendrá una zona específica para votar fotografías de forma anónima respecto al autor.
-
-El administrador contará con un panel de gestión para controlar usuarios, liga, fotografías, votaciones, actividades y avisos.
-
-Este documento servirá como referencia para diseñar y programar las primeras pantallas reales de la PWA.
+La estructura propuesta servirá como base para el diseño definitivo y la programación de la interfaz de usuario.
