@@ -56,6 +56,7 @@ loginForm.addEventListener("submit", async (e) => {
 function mostrarDashboard(usuario) {
   document.body.innerHTML = `
     <main class="app-page">
+
       <header class="app-header">
         <img src="assets/logo-agafona.png" alt="AGAFONA" class="app-logo">
         <button id="logout-button" class="logout-button">Salir</button>
@@ -66,15 +67,8 @@ function mostrarDashboard(usuario) {
         <p>Rol: ${usuario.rol}</p>
       </section>
 
-      <nav class="bottom-nav">
-    <button>🏠<span>Inicio</span></button>
-    <button>📅<span>Actividades</span></button>
-    <button>📷<span>Liga</span></button>
-    <button>📄<span>Docs</span></button>
-    <button>👤<span>Perfil</span></button>
-</nav>
-
       <section class="dashboard-grid">
+
         <article class="dashboard-card">
           <h2>Próxima actividad</h2>
           <p>No hay actividades publicadas todavía.</p>
@@ -99,7 +93,17 @@ function mostrarDashboard(usuario) {
           <h2>Mi perfil</h2>
           <p>Datos personales y estado de socio.</p>
         </article>
+
       </section>
+
+      <nav class="bottom-nav">
+        <button>🏠<span>Inicio</span></button>
+        <button>📅<span>Actividades</span></button>
+        <button>📷<span>Liga</span></button>
+        <button>📄<span>Docs</span></button>
+        <button>👤<span>Perfil</span></button>
+      </nav>
+
     </main>
   `;
 
