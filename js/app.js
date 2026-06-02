@@ -66,6 +66,14 @@ function mostrarDashboard(usuario) {
         <p>Rol: ${usuario.rol}</p>
       </section>
 
+      <nav class="bottom-nav">
+    <button>🏠<span>Inicio</span></button>
+    <button>📅<span>Actividades</span></button>
+    <button>📷<span>Liga</span></button>
+    <button>📄<span>Docs</span></button>
+    <button>👤<span>Perfil</span></button>
+</nav>
+
       <section class="dashboard-grid">
         <article class="dashboard-card">
           <h2>Próxima actividad</h2>

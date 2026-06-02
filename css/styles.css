@@ -87,6 +87,7 @@
   .app-page {
     min-height: 100vh;
     padding: 20px;
+    padding-bottom: 90px;
     background: #f2f5f3;
   }
   
@@ -149,3 +150,36 @@
     margin: 0;
     color: #555;
   }
+
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+
+    display: flex;
+    justify-content: space-around;
+
+    background: white;
+    border-top: 1px solid #ddd;
+
+    padding: 10px 0;
+}
+
+.bottom-nav button {
+    border: none;
+    background: none;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    color: #234d20;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.bottom-nav span {
+    font-size: 0.75rem;
+    margin-top: 4px;
+}
