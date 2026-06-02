@@ -135,15 +135,16 @@ Usuarios almacenados y gestionados desde Firestore.
 
 Objetivos:
 
-* Crear estructura de temporadas.
-* Crear jornadas.
+* Crear estructura de ligas.
+* Crear convocatorias.
 * Crear fotografías.
 * Crear votaciones.
+* Crear clasificaciones.
 
 Configuración inicial:
 
 ```text
-Temporada:
+Liga:
 Noviembre - Junio
 
 Convocatorias:
@@ -157,6 +158,16 @@ Máximo por jurado:
 
 Máximo fotografía:
 30 puntos
+
+Una fotografía activa por socio
+
+Sustitución permitida hasta el día 15
+```
+
+Categoría inicial:
+
+```text
+Naturaleza general
 ```
 
 Resultado esperado:
@@ -180,7 +191,10 @@ Tipos previstos:
 Fotografías de la Liga
 Avatares
 Bases de participación
-Actas
+Actas de Asamblea
+Actas Junta Directiva
+Estatutos
+Memorias
 Documentación interna
 ```
 
@@ -325,10 +339,11 @@ Orden recomendado:
 ```text
 Login
 Usuarios
-Liga
+Liga y convocatorias
 Fotografías
 Votaciones
-Clasificaciones
+Clasificación de convocatoria
+Clasificación general
 Documentos
 Actividades
 Notificaciones
@@ -371,7 +386,7 @@ La arquitectura deberá permitir:
 
 ```text
 Más usuarios
-Más temporadas
+Más ligas
 Más documentos
 Más actividades
 Más funcionalidades
@@ -388,13 +403,15 @@ Orden recomendado de desarrollo:
 ```text
 1. Autenticación
 2. Usuarios
-3. Liga
+3. Liga y convocatorias
 4. Fotografías
 5. Votaciones
-6. Clasificaciones
-7. Documentos
-8. Actividades
-9. Notificaciones
+6. Clasificación de convocatoria
+7. Clasificación general
+8. Documentos
+9. Gestión documental avanzada
+10. Actividades
+11. Notificaciones
 ```
 
 ---
@@ -420,3 +437,6 @@ Todos ellos podrán mitigarse mediante pruebas y copias de seguridad.
 Firebase proporciona una plataforma adecuada para AGAFONA App, permitiendo construir una aplicación moderna, segura y escalable.
 
 La implantación por fases permitirá validar cada componente antes de continuar con el siguiente, reduciendo riesgos y facilitando el mantenimiento futuro del sistema.
+
+La estructura definida permitirá gestionar la Liga AGAFONA, la documentación de la asociación, las actividades y la comunicación con socios, jurados, directiva y administradores desde una única plataforma.
+
