@@ -33,7 +33,7 @@ Información prevista:
 ```text
 Usuarios registrados
 Socios activos
-Jornada activa
+Convocatoria activa
 Fotografías recibidas
 Votaciones pendientes
 Próximas actividades
@@ -74,9 +74,9 @@ Será una de las áreas principales del panel.
 
 Permitirá:
 
-* Crear temporada.
+* Crear liga.
 * Configurar convocatorias.
-* Abrir y cerrar jornadas.
+* Abrir y cerrar convocatorias.
 * Consultar participación.
 * Revisar fotografías.
 * Supervisar votaciones.
@@ -122,7 +122,7 @@ Información visible:
 ```text
 Autor
 Fecha de envío
-Jornada
+Convocatoria
 Título
 Estado
 ```
@@ -153,9 +153,9 @@ Fotografías pendientes
 
 La administración podrá:
 
-* Generar clasificación mensual.
-* Publicar clasificación mensual.
-* Actualizar clasificación anual.
+* Generar clasificación de convocatoria.
+* Publicar clasificación de convocatoria.
+* Actualizar clasificación general.
 * Consultar históricos.
 
 Información:
@@ -247,6 +247,7 @@ Apertura de convocatoria
 Resultados publicados
 Nueva actividad
 Avisos generales
+Publicación de documentos
 ```
 
 ---
@@ -276,6 +277,8 @@ Número de jurados
 Puntuación máxima
 Criterios de valoración
 Número de convocatorias
+Periodo de subida
+Requisitos técnicos de fotografías
 ```
 
 Configuración inicial:
@@ -288,6 +291,11 @@ Dificultad: 2
 Máximo jurado: 10
 Máximo fotografía: 30
 Jurados: 3
+
+Formato JPG
+1920 px lado mayor
+72 ppp
+0,5 MB - 1,5 MB
 ```
 
 ---
@@ -314,7 +322,7 @@ Esto permitirá conocer cambios relevantes realizados en la plataforma.
 
 En fases futuras se podrán incorporar:
 
-* Participación por jornada.
+* Participación por convocatoria.
 * Evolución de socios.
 * Participación en actividades.
 * Histórico de clasificaciones.
