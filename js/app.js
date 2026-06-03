@@ -244,13 +244,78 @@ function mostrarLiga() {
   `;
 }
 
-function mostrarDocumentos() {
-  document.getElementById("content-area").innerHTML = `
+async function mostrarDocumentos() {
+
+  const contentArea = document.getElementById("content-area");
+
+  contentArea.innerHTML = `
     <section class="dashboard-card">
       <h2>Documentos</h2>
-      <p>Próximamente...</p>
+      <p>Cargando documentos...</p>
     </section>
   `;
+
+  try {
+
+    const q = query(
+      collection(db, "documentos"),
+      where("publico", "==", true)
+    );
+
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      contentArea.innerHTML = `
+        <section class="dashboard-card">
+          <h2>Documentos</h2>
+          <p>No hay documentos disponibles.</p>
+        </section>
+      `;
+      return;
+    }
+
+    let html = `<section class="dashboard-grid">`;
+
+    snapshot.forEach((doc) => {
+
+      const documento = doc.data();
+
+      html += `
+        <article class="dashboard-card">
+
+          <h2>📄 ${documento.titulo}</h2>
+
+          <p>
+            Categoría: ${documento.categoria}
+          </p>
+
+          <a
+            href="${documento.url}"
+            target="_blank"
+            class="actividad-btn"
+          >
+            Abrir documento
+          </a>
+
+        </article>
+      `;
+    });
+
+    html += `</section>`;
+
+    contentArea.innerHTML = html;
+
+  } catch (error) {
+
+    console.error(error);
+
+    contentArea.innerHTML = `
+      <section class="dashboard-card">
+        <h2>Documentos</h2>
+        <p>Error al cargar documentos.</p>
+      </section>
+    `;
+  }
 }
 
 function mostrarPerfil(usuario) {
