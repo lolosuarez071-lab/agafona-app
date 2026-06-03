@@ -67,34 +67,7 @@ function mostrarDashboard(usuario) {
         <p>Rol: ${usuario.rol}</p>
       </section>
 
-      <section class="dashboard-grid">
-
-        <article class="dashboard-card">
-          <h2>Próxima actividad</h2>
-          <p>No hay actividades publicadas todavía.</p>
-        </article>
-
-        <article class="dashboard-card">
-          <h2>Liga fotográfica</h2>
-          <p>Sin convocatoria activa.</p>
-        </article>
-
-        <article class="dashboard-card">
-          <h2>Avisos</h2>
-          <p>No hay avisos nuevos.</p>
-        </article>
-
-        <article class="dashboard-card">
-          <h2>Documentos</h2>
-          <p>Actas, bases y normativa.</p>
-        </article>
-
-        <article class="dashboard-card">
-          <h2>Mi perfil</h2>
-          <p>Datos personales y estado de socio.</p>
-        </article>
-
-      </section>
+      <div id="content-area"></div>
 
       <nav class="bottom-nav">
         <button>🏠<span>Inicio</span></button>
@@ -111,4 +84,81 @@ function mostrarDashboard(usuario) {
     await signOut(auth);
     location.reload();
   });
+
+  mostrarInicio();
+
+  document.querySelectorAll(".bottom-nav button")[0]
+    .addEventListener("click", mostrarInicio);
+
+  document.querySelectorAll(".bottom-nav button")[1]
+    .addEventListener("click", mostrarActividades);
+
+  document.querySelectorAll(".bottom-nav button")[2]
+    .addEventListener("click", mostrarLiga);
+
+  document.querySelectorAll(".bottom-nav button")[3]
+    .addEventListener("click", mostrarDocumentos);
+
+  document.querySelectorAll(".bottom-nav button")[4]
+    .addEventListener("click", mostrarPerfil);
+}
+
+
+function mostrarInicio() {
+  document.getElementById("content-area").innerHTML = `
+    <section class="dashboard-grid">
+
+      <article class="dashboard-card">
+        <h2>Próxima actividad</h2>
+        <p>No hay actividades publicadas todavía.</p>
+      </article>
+
+      <article class="dashboard-card">
+        <h2>Liga fotográfica</h2>
+        <p>Sin convocatoria activa.</p>
+      </article>
+
+      <article class="dashboard-card">
+        <h2>Avisos</h2>
+        <p>No hay avisos nuevos.</p>
+      </article>
+
+    </section>
+  `;
+}
+
+function mostrarActividades() {
+  document.getElementById("content-area").innerHTML = `
+    <section class="dashboard-card">
+      <h2>Actividades</h2>
+      <p>Próximamente...</p>
+    </section>
+  `;
+}
+
+function mostrarLiga() {
+  document.getElementById("content-area").innerHTML = `
+    <section class="dashboard-card">
+      <h2>Liga Fotográfica</h2>
+      <p>Próximamente...</p>
+    </section>
+  `;
+}
+
+function mostrarDocumentos() {
+  document.getElementById("content-area").innerHTML = `
+    <section class="dashboard-card">
+      <h2>Documentos</h2>
+      <p>Próximamente...</p>
+    </section>
+  `;
+}
+
+function mostrarPerfil() {
+  document.getElementById("content-area").innerHTML = `
+    <section class="dashboard-card">
+      <h2>Mi Perfil</h2>
+      <p>Próximamente...</p>
+    </section>
+  `;
 }
