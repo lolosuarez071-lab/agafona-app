@@ -108,7 +108,7 @@
   }
   
   .app-logo {
-    width: 180px;
+    width: 250px;
   }
   
   .logout-button {
@@ -144,20 +144,18 @@
   
   .dashboard-card {
     background: white;
-    padding: 20px;
+    padding: 16px;
     border-radius: 18px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-  }
+}
   
-  .dashboard-card h2 {
-    margin: 0 0 8px;
-    color: #234326;
-  }
-  
-  .dashboard-card p {
-    margin: 0;
-    color: #555;
-  }
+.dashboard-card h2 {
+  margin: 0 0 6px;
+}
+
+.dashboard-card p {
+  margin: 0;
+}
 
   .bottom-nav {
     position: fixed;

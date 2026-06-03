@@ -9,8 +9,7 @@ import {
   collection,
   query,
   where,
-  getDocs,
-  orderBy
+  getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const loginForm = document.getElementById("login-form");
@@ -63,11 +62,6 @@ function mostrarDashboard(usuario) {
         <button id="logout-button" class="logout-button">Salir</button>
       </header>
 
-      <section class="welcome-card">
-        <h1>Hola, ${usuario.nombre}</h1>
-        <p>Rol: ${usuario.rol}</p>
-      </section>
-
       <div id="content-area"></div>
 
       <nav class="bottom-nav">
@@ -86,28 +80,25 @@ function mostrarDashboard(usuario) {
     location.reload();
   });
 
-  mostrarInicio();
+  mostrarInicio(usuario);
 
-  document.querySelectorAll(".bottom-nav button")[0]
-    .addEventListener("click", mostrarInicio);
+  const botones = document.querySelectorAll(".bottom-nav button");
 
-  document.querySelectorAll(".bottom-nav button")[1]
-    .addEventListener("click", mostrarActividades);
-
-  document.querySelectorAll(".bottom-nav button")[2]
-    .addEventListener("click", mostrarLiga);
-
-  document.querySelectorAll(".bottom-nav button")[3]
-    .addEventListener("click", mostrarDocumentos);
-
-  document.querySelectorAll(".bottom-nav button")[4]
-    .addEventListener("click", mostrarPerfil);
+  botones[0].addEventListener("click", () => mostrarInicio(usuario));
+  botones[1].addEventListener("click", mostrarActividades);
+  botones[2].addEventListener("click", mostrarLiga);
+  botones[3].addEventListener("click", mostrarDocumentos);
+  botones[4].addEventListener("click", () => mostrarPerfil(usuario));
 }
 
-function mostrarInicio() {
+function mostrarInicio(usuario) {
   document.getElementById("content-area").innerHTML = `
-    <section class="dashboard-grid">
+    <section class="welcome-card">
+      <h1>Hola, ${usuario.nombre}</h1>
+      <p>Rol: ${usuario.rol}</p>
+    </section>
 
+    <section class="dashboard-grid">
       <article class="dashboard-card">
         <h2>Próxima actividad</h2>
         <p>No hay actividades publicadas todavía.</p>
@@ -122,7 +113,6 @@ function mostrarInicio() {
         <h2>Avisos</h2>
         <p>No hay avisos nuevos.</p>
       </article>
-
     </section>
   `;
 }
@@ -163,34 +153,33 @@ async function mostrarActividades() {
       const plazas = actividad.plazas ?? 0;
       const inscritos = actividad.inscritos ?? 0;
       const disponibles = plazas - inscritos;
+
       html += `
-      <article class="dashboard-card actividad-card">
-    
-        <div class="actividad-fecha">
-          📅 ${actividad.fecha}
-        </div>
-    
-        <h2>${actividad.titulo}</h2>
-    
-        <p class="actividad-lugar">
-          📍 ${actividad.lugar}
-        </p>
-    
-        <p class="actividad-descripcion">
-          ${actividad.descripcion}
-        </p>
-    
-        <div class="actividad-datos">
-          <span>👥 ${inscritos}/${plazas}</span>
-          <span>✅ ${disponibles} plazas libres</span>
-        </div>
-    
-        <button class="actividad-btn">
-          Inscribirme
-        </button>
-    
-      </article>
-    `;
+        <article class="dashboard-card actividad-card">
+          <div class="actividad-fecha">
+            📅 ${actividad.fecha}
+          </div>
+
+          <h2>${actividad.titulo}</h2>
+
+          <p class="actividad-lugar">
+            📍 ${actividad.lugar}
+          </p>
+
+          <p class="actividad-descripcion">
+            ${actividad.descripcion}
+          </p>
+
+          <div class="actividad-datos">
+            <span>👥 ${inscritos}/${plazas}</span>
+            <span>✅ ${disponibles} plazas libres</span>
+          </div>
+
+          <button class="actividad-btn">
+            Inscribirme
+          </button>
+        </article>
+      `;
     });
 
     html += `</section>`;
@@ -225,11 +214,12 @@ function mostrarDocumentos() {
   `;
 }
 
-function mostrarPerfil() {
+function mostrarPerfil(usuario) {
   document.getElementById("content-area").innerHTML = `
     <section class="dashboard-card">
       <h2>Mi Perfil</h2>
-      <p>Próximamente...</p>
+      <p><strong>Nombre:</strong> ${usuario.nombre}</p>
+      <p><strong>Rol:</strong> ${usuario.rol}</p>
     </section>
   `;
 }
