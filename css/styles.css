@@ -258,3 +258,29 @@
   text-align: right;
   color: #444;
 }
+
+.documento-categoria {
+  display: inline-block;
+  background: #e8f0e8;
+  color: #234326;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  margin: 8px 0 12px;
+}
+
+.documento-link {
+  display: inline-block;
+  background: #234326;
+  color: white;
+  text-decoration: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.documento-link:hover {
+  background: #315f36;
+}

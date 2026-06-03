@@ -274,7 +274,14 @@ async function mostrarDocumentos() {
       return;
     }
 
-    let html = `<section class="dashboard-grid">`;
+    let html = `
+  <section class="dashboard-card">
+    <h2>Documentos</h2>
+    <p>Consulta estatutos, bases y documentación disponible para los socios.</p>
+  </section>
+
+  <section class="dashboard-grid">
+`;
 
     snapshot.forEach((doc) => {
 
@@ -285,17 +292,19 @@ async function mostrarDocumentos() {
 
           <h2>📄 ${documento.titulo}</h2>
 
-          <p>
-            Categoría: ${documento.categoria}
-          </p>
+          <div class="documento-categoria">
+  ${documento.categoria}
+</div>
 
-          <a
-            href="${documento.url}"
-            target="_blank"
-            class="actividad-btn"
-          >
-            Abrir documento
-          </a>
+<br>
+
+<a
+  href="${documento.url}"
+  target="_blank"
+  class="documento-link"
+>
+  📄 Abrir documento
+</a>
 
         </article>
       `;
