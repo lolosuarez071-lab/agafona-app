@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Prueba Cloudinary</title>
+</head>
+<body>
+
+<h1>Prueba subida Cloudinary</h1>
+
+<input type="file" id="foto">
+
+<button id="subir">
+  Subir foto
+</button>
+
+<p id="resultado"></p>
+
+<script>
+
+const CLOUD_NAME = "dbamev2pv";
+const UPLOAD_PRESET = "agafona_liga";
+
+document.getElementById("subir").addEventListener("click", async () => {
+
+    const archivo = document.getElementById("foto").files[0];
+
+    if (!archivo) {
+        alert("Selecciona una foto");
+        return;
+    }
+
+    const formData = new FormData();
+
+    formData.append("file", archivo);
+    formData.append("upload_preset", UPLOAD_PRESET);
+
+    try {
+
+        const respuesta = await fetch(
+            `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+            {
+                method: "POST",
+                body: formData
+            }
+        );
+
+        const datos = await respuesta.json();
+
+        console.log(datos);
+
+        document.getElementById("resultado").innerHTML = `
+            <p><strong>URL:</strong></p>
+            <a href="${datos.secure_url}" target="_blank">
+                Ver imagen
+            </a>
+        `;
+
+    } catch(error) {
+
+        console.error(error);
+
+        alert("Error subiendo imagen");
+
+    }
+
+});
+
+</script>
+
+</body>
+</html>

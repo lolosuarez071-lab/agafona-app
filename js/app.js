@@ -236,7 +236,6 @@ async function mostrarActividades(usuario) {
 }
 
 async function mostrarLiga(usuario) {
-
   const contentArea = document.getElementById("content-area");
 
   contentArea.innerHTML = `
@@ -247,7 +246,6 @@ async function mostrarLiga(usuario) {
   `;
 
   try {
-
     const q = query(
       collection(db, "convocatorias"),
       where("activa", "==", true)
@@ -256,14 +254,12 @@ async function mostrarLiga(usuario) {
     const snapshot = await getDocs(q);
 
     if (snapshot.empty) {
-
       contentArea.innerHTML = `
         <section class="dashboard-card">
           <h2>Liga Fotográfica</h2>
           <p>No hay convocatoria activa.</p>
         </section>
       `;
-
       return;
     }
 
@@ -275,31 +271,41 @@ async function mostrarLiga(usuario) {
       where("email", "==", usuario.email),
       where("visible", "==", true)
     );
-    
+
     const fotosSnapshot = await getDocs(fotosQuery);
-    
+
     let bloqueFoto = "";
-    
+    let fotoDocId = null;
+
     if (fotosSnapshot.empty) {
       bloqueFoto = `
+        <p><strong>Mi fotografía:</strong></p>
         <p>No has enviado ninguna fotografía.</p>
-    
-        <button class="actividad-btn">
+
+        <input type="file" id="foto-liga" accept="image/*">
+
+        <button id="subir-foto-btn" class="actividad-btn">
           Subir fotografía
         </button>
       `;
     } else {
-      const foto = fotosSnapshot.docs[0].data();
-    
+      const fotoDoc = fotosSnapshot.docs[0];
+      const foto = fotoDoc.data();
+      fotoDocId = fotoDoc.id;
+
       bloqueFoto = `
         <p><strong>Mi fotografía:</strong></p>
         <p>${foto.tituloFoto}</p>
-    
+
         <a href="${foto.urlFoto}" target="_blank" class="documento-link">
           Ver fotografía
         </a>
-    
-        <button class="actividad-btn">
+
+        <br><br>
+
+        <input type="file" id="foto-liga" accept="image/*">
+
+        <button id="subir-foto-btn" class="actividad-btn">
           Cambiar fotografía
         </button>
       `;
@@ -307,14 +313,11 @@ async function mostrarLiga(usuario) {
 
     contentArea.innerHTML = `
       <section class="dashboard-card">
-
         <h2>📷 Liga Fotográfica</h2>
 
         <h3>${convocatoria.titulo}</h3>
 
-        <p>
-          🟢 Convocatoria abierta
-        </p>
+        <p>🟢 Convocatoria abierta</p>
 
         <p>
           Del ${convocatoria.fechaInicio}
@@ -325,12 +328,14 @@ async function mostrarLiga(usuario) {
         <hr>
 
         ${bloqueFoto}
-
       </section>
     `;
 
-  } catch (error) {
+    document.getElementById("subir-foto-btn").addEventListener("click", () => {
+      subirFotoLiga(usuario, convocatoria, fotoDocId);
+    });
 
+  } catch (error) {
     console.error(error);
 
     contentArea.innerHTML = `
@@ -515,5 +520,63 @@ async function inscribirseActividad(actividadId, usuario) {
   } catch (error) {
     console.error("Error al inscribirse:", error);
     alert("No se ha podido realizar la inscripción");
+  }
+}
+
+async function subirFotoLiga(usuario, convocatoria, fotoDocId) {
+  const CLOUD_NAME = "dbamev2pv";
+  const UPLOAD_PRESET = "agafona_liga";
+
+  const input = document.getElementById("foto-liga");
+  const archivo = input.files[0];
+
+  if (!archivo) {
+    alert("Selecciona una fotografía primero");
+    return;
+  }
+
+  try {
+    const formData = new FormData();
+    formData.append("file", archivo);
+    formData.append("upload_preset", UPLOAD_PRESET);
+
+    const respuesta = await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+      {
+        method: "POST",
+        body: formData
+      }
+    );
+
+    const datos = await respuesta.json();
+
+    const datosFoto = {
+      convocatoriaId: convocatoria.codigo,
+      email: usuario.email,
+      nombreSocio: `${usuario.nombre} ${usuario.apellidos ?? ""}`,
+      numeroSocio: usuario.numeroSocio ?? null,
+      tituloFoto: archivo.name,
+      nombreArchivo: archivo.name,
+      urlFoto: datos.secure_url,
+      fechaSubida: serverTimestamp(),
+      estado: "enviada",
+      puntuacionFinal: 0,
+      visible: true
+    };
+
+    if (fotoDocId) {
+      const fotoRef = doc(db, "fotos", fotoDocId);
+      await updateDoc(fotoRef, datosFoto);
+      alert("Fotografía cambiada correctamente");
+    } else {
+      await addDoc(collection(db, "fotos"), datosFoto);
+      alert("Fotografía subida correctamente");
+    }
+
+    mostrarLiga(usuario);
+
+  } catch (error) {
+    console.error("Error subiendo fotografía:", error);
+    alert("No se ha podido subir la fotografía");
   }
 }
