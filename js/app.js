@@ -269,6 +269,42 @@ async function mostrarLiga(usuario) {
 
     const convocatoria = snapshot.docs[0].data();
 
+    const fotosQuery = query(
+      collection(db, "fotos"),
+      where("convocatoriaId", "==", convocatoria.codigo),
+      where("email", "==", usuario.email),
+      where("visible", "==", true)
+    );
+    
+    const fotosSnapshot = await getDocs(fotosQuery);
+    
+    let bloqueFoto = "";
+    
+    if (fotosSnapshot.empty) {
+      bloqueFoto = `
+        <p>No has enviado ninguna fotografía.</p>
+    
+        <button class="actividad-btn">
+          Subir fotografía
+        </button>
+      `;
+    } else {
+      const foto = fotosSnapshot.docs[0].data();
+    
+      bloqueFoto = `
+        <p><strong>Mi fotografía:</strong></p>
+        <p>${foto.tituloFoto}</p>
+    
+        <a href="${foto.urlFoto}" target="_blank" class="documento-link">
+          Ver fotografía
+        </a>
+    
+        <button class="actividad-btn">
+          Cambiar fotografía
+        </button>
+      `;
+    }
+
     contentArea.innerHTML = `
       <section class="dashboard-card">
 
@@ -288,13 +324,7 @@ async function mostrarLiga(usuario) {
 
         <hr>
 
-        <p>
-          No has enviado ninguna fotografía.
-        </p>
-
-        <button class="actividad-btn">
-          Subir fotografía
-        </button>
+        ${bloqueFoto}
 
       </section>
     `;
