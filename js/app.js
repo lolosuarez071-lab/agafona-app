@@ -149,6 +149,19 @@ async function mostrarActividades(usuario) {
 
     const snapshot = await getDocs(q);
 
+    const inscripcionesQuery = query(
+      collection(db, "inscripciones"),
+      where("email", "==", usuario.email)
+    );
+
+    const inscripcionesSnapshot = await getDocs(inscripcionesQuery);
+
+    const actividadesInscritas = [];
+
+    inscripcionesSnapshot.forEach((doc) => {
+      actividadesInscritas.push(doc.data().actividadId);
+    });
+
     if (snapshot.empty) {
       contentArea.innerHTML = `
         <section class="dashboard-card">
@@ -167,6 +180,8 @@ async function mostrarActividades(usuario) {
       const plazas = actividad.plazas ?? 0;
       const inscritos = actividad.inscritos ?? 0;
       const disponibles = plazas - inscritos;
+
+      const yaInscrito = actividadesInscritas.includes(documento.id);
 
       html += `
         <article class="dashboard-card actividad-card">
@@ -189,9 +204,13 @@ async function mostrarActividades(usuario) {
             <span>✅ ${disponibles} plazas libres</span>
           </div>
 
-         <button class="actividad-btn" data-id="${documento.id}">
-         Inscribirme
-         </button>
+         <button 
+          class="actividad-btn" 
+          data-id="${documento.id}"
+          ${yaInscrito ? "disabled" : ""}
+         >
+          ${yaInscrito ? "Ya inscrito" : "Inscribirme"}
+        </button>
       `;
     });
 
