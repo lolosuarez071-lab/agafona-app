@@ -9,7 +9,8 @@ import {
   collection,
   query,
   where,
-  getDocs
+  getDocs,
+  orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const loginForm = document.getElementById("login-form");
@@ -103,7 +104,6 @@ function mostrarDashboard(usuario) {
     .addEventListener("click", mostrarPerfil);
 }
 
-
 function mostrarInicio() {
   document.getElementById("content-area").innerHTML = `
     <section class="dashboard-grid">
@@ -127,13 +127,84 @@ function mostrarInicio() {
   `;
 }
 
-function mostrarActividades() {
-  document.getElementById("content-area").innerHTML = `
+async function mostrarActividades() {
+  const contentArea = document.getElementById("content-area");
+
+  contentArea.innerHTML = `
     <section class="dashboard-card">
       <h2>Actividades</h2>
-      <p>Próximamente...</p>
+      <p>Cargando actividades...</p>
     </section>
   `;
+
+  try {
+    const q = query(
+      collection(db, "actividades"),
+      where("activa", "==", true)
+    );
+
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      contentArea.innerHTML = `
+        <section class="dashboard-card">
+          <h2>Actividades</h2>
+          <p>No hay actividades publicadas todavía.</p>
+        </section>
+      `;
+      return;
+    }
+
+    let html = `<section class="dashboard-grid">`;
+
+    snapshot.forEach((doc) => {
+      const actividad = doc.data();
+
+      const plazas = actividad.plazas ?? 0;
+      const inscritos = actividad.inscritos ?? 0;
+      const disponibles = plazas - inscritos;
+      html += `
+      <article class="dashboard-card actividad-card">
+    
+        <div class="actividad-fecha">
+          📅 ${actividad.fecha}
+        </div>
+    
+        <h2>${actividad.titulo}</h2>
+    
+        <p class="actividad-lugar">
+          📍 ${actividad.lugar}
+        </p>
+    
+        <p class="actividad-descripcion">
+          ${actividad.descripcion}
+        </p>
+    
+        <div class="actividad-datos">
+          <span>👥 ${inscritos}/${plazas}</span>
+          <span>✅ ${disponibles} plazas libres</span>
+        </div>
+    
+        <button class="actividad-btn">
+          Inscribirme
+        </button>
+    
+      </article>
+    `;
+    });
+
+    html += `</section>`;
+    contentArea.innerHTML = html;
+
+  } catch (error) {
+    console.error("Error cargando actividades:", error);
+    contentArea.innerHTML = `
+      <section class="dashboard-card">
+        <h2>Actividades</h2>
+        <p>Error al cargar las actividades.</p>
+      </section>
+    `;
+  }
 }
 
 function mostrarLiga() {

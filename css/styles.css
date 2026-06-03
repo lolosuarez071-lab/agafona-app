@@ -194,3 +194,40 @@
   font-size: 0.75rem;
   margin-top: 4px;
 }
+
+.actividad-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.actividad-fecha {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.actividad-lugar {
+  font-weight: 600;
+  color: #234326;
+}
+
+.actividad-descripcion {
+  color: #555;
+}
+
+.actividad-datos {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-weight: 600;
+}
+
+.actividad-btn {
+  margin-top: 10px;
+  background: #234326;
+  border-radius: 12px;
+}
+
+.actividad-btn:hover {
+  background: #315f36;
+}
