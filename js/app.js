@@ -9,7 +9,12 @@ import {
   collection,
   query,
   where,
-  getDocs
+  getDocs,
+  doc,
+  updateDoc,
+  increment,
+  addDoc,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const loginForm = document.getElementById("login-form");
@@ -85,7 +90,7 @@ function mostrarDashboard(usuario) {
   const botones = document.querySelectorAll(".bottom-nav button");
 
   botones[0].addEventListener("click", () => mostrarInicio(usuario));
-  botones[1].addEventListener("click", mostrarActividades);
+  botones[1].addEventListener("click", () => mostrarActividades(usuario));
   botones[2].addEventListener("click", mostrarLiga);
   botones[3].addEventListener("click", mostrarDocumentos);
   botones[4].addEventListener("click", () => mostrarPerfil(usuario));
@@ -101,7 +106,7 @@ function mostrarInicio(usuario) {
     descripcionRol = `Socio nº ${usuario.numeroSocio ?? "-"}`;
   }
   document.getElementById("content-area").innerHTML = `
-  
+
     <section class="welcome-card">
       <h1>Hola, ${usuario.nombre} 👋</h1>
       <p>Socio nº ${usuario.numeroSocio ?? "-"} · Administrador</p>
@@ -126,7 +131,7 @@ function mostrarInicio(usuario) {
   `;
 }
 
-async function mostrarActividades() {
+async function mostrarActividades(usuario) {
   const contentArea = document.getElementById("content-area");
 
   contentArea.innerHTML = `
@@ -156,8 +161,8 @@ async function mostrarActividades() {
 
     let html = `<section class="dashboard-grid">`;
 
-    snapshot.forEach((doc) => {
-      const actividad = doc.data();
+    snapshot.forEach((documento) => {
+      const actividad = documento.data();
 
       const plazas = actividad.plazas ?? 0;
       const inscritos = actividad.inscritos ?? 0;
@@ -184,15 +189,21 @@ async function mostrarActividades() {
             <span>✅ ${disponibles} plazas libres</span>
           </div>
 
-          <button class="actividad-btn">
-            Inscribirme
-          </button>
-        </article>
+         <button class="actividad-btn" data-id="${documento.id}">
+         Inscribirme
+         </button>
       `;
     });
 
     html += `</section>`;
     contentArea.innerHTML = html;
+
+    document.querySelectorAll(".actividad-btn").forEach((boton) => {
+      boton.addEventListener("click", async () => {
+        const actividadId = boton.dataset.id;
+        await inscribirseActividad(actividadId, usuario);
+      });
+    });
 
   } catch (error) {
     console.error("Error cargando actividades:", error);
@@ -231,4 +242,29 @@ function mostrarPerfil(usuario) {
       <p><strong>Rol:</strong> ${usuario.rol}</p>
     </section>
   `;
+}
+
+async function inscribirseActividad(actividadId, usuario) {
+  try {
+    await addDoc(collection(db, "inscripciones"), {
+      actividadId: actividadId,
+      nombre: usuario.nombre,
+      email: usuario.email,
+      fechaInscripcion: serverTimestamp()
+    });
+
+    const actividadRef = doc(db, "actividades", actividadId);
+
+    await updateDoc(actividadRef, {
+      inscritos: increment(1)
+    });
+
+    alert("Inscripción realizada correctamente");
+
+    mostrarActividades(usuario);
+
+  } catch (error) {
+    console.error("Error al inscribirse:", error);
+    alert("No se ha podido realizar la inscripción");
+  }
 }
