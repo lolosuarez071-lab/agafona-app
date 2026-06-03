@@ -246,6 +246,19 @@ function mostrarPerfil(usuario) {
 
 async function inscribirseActividad(actividadId, usuario) {
   try {
+    const q = query(
+      collection(db, "inscripciones"),
+      where("actividadId", "==", actividadId),
+      where("email", "==", usuario.email)
+    );
+
+    const snapshot = await getDocs(q);
+
+    if (!snapshot.empty) {
+      alert("Ya estás inscrito en esta actividad");
+      return;
+    }
+
     await addDoc(collection(db, "inscripciones"), {
       actividadId: actividadId,
       nombre: usuario.nombre,
