@@ -91,7 +91,7 @@ function mostrarDashboard(usuario) {
 
   botones[0].addEventListener("click", () => mostrarInicio(usuario));
   botones[1].addEventListener("click", () => mostrarActividades(usuario));
-  botones[2].addEventListener("click", mostrarLiga);
+  botones[2].addEventListener("click", () => mostrarLiga(usuario));
   botones[3].addEventListener("click", mostrarDocumentos);
   botones[4].addEventListener("click", () => mostrarPerfil(usuario));
 }
@@ -235,13 +235,81 @@ async function mostrarActividades(usuario) {
   }
 }
 
-function mostrarLiga() {
-  document.getElementById("content-area").innerHTML = `
+async function mostrarLiga(usuario) {
+
+  const contentArea = document.getElementById("content-area");
+
+  contentArea.innerHTML = `
     <section class="dashboard-card">
       <h2>Liga Fotográfica</h2>
-      <p>Próximamente...</p>
+      <p>Cargando convocatoria...</p>
     </section>
   `;
+
+  try {
+
+    const q = query(
+      collection(db, "convocatorias"),
+      where("activa", "==", true)
+    );
+
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+
+      contentArea.innerHTML = `
+        <section class="dashboard-card">
+          <h2>Liga Fotográfica</h2>
+          <p>No hay convocatoria activa.</p>
+        </section>
+      `;
+
+      return;
+    }
+
+    const convocatoria = snapshot.docs[0].data();
+
+    contentArea.innerHTML = `
+      <section class="dashboard-card">
+
+        <h2>📷 Liga Fotográfica</h2>
+
+        <h3>${convocatoria.titulo}</h3>
+
+        <p>
+          🟢 Convocatoria abierta
+        </p>
+
+        <p>
+          Del ${convocatoria.fechaInicio}
+          al
+          ${convocatoria.fechaFin}
+        </p>
+
+        <hr>
+
+        <p>
+          No has enviado ninguna fotografía.
+        </p>
+
+        <button class="actividad-btn">
+          Subir fotografía
+        </button>
+
+      </section>
+    `;
+
+  } catch (error) {
+
+    console.error(error);
+
+    contentArea.innerHTML = `
+      <section class="dashboard-card">
+        <h2>Liga Fotográfica</h2>
+        <p>Error al cargar la convocatoria.</p>
+      </section>
+    `;
+  }
 }
 
 async function mostrarDocumentos() {
