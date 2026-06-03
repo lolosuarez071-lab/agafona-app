@@ -254,11 +254,51 @@ function mostrarDocumentos() {
 }
 
 function mostrarPerfil(usuario) {
+  const numeroSocio = usuario.numeroSocio ?? "-";
+
+  let rolMostrado = "Socio";
+
+  if (usuario.rol === "admin") {
+    rolMostrado = "Administrador";
+  } else if (usuario.rol === "jurado") {
+    rolMostrado = "Jurado";
+  } else if (usuario.rol === "directiva") {
+    rolMostrado = "Directiva";
+  }
+
   document.getElementById("content-area").innerHTML = `
-    <section class="dashboard-card">
+    <section class="dashboard-card perfil-card">
       <h2>Mi Perfil</h2>
-      <p><strong>Nombre:</strong> ${usuario.nombre}</p>
-      <p><strong>Rol:</strong> ${usuario.rol}</p>
+
+      <div class="perfil-dato">
+        <strong>Nombre</strong>
+        <span>${usuario.nombre}</span>
+      </div>
+
+      <div class="perfil-dato">
+        <strong>Apellidos</strong>
+        <span>${usuario.apellidos ?? "-"}</span>
+      </div>
+
+      <div class="perfil-dato">
+        <strong>Email</strong>
+        <span>${usuario.email}</span>
+      </div>
+
+      <div class="perfil-dato">
+        <strong>Nº de socio</strong>
+        <span>${numeroSocio}</span>
+      </div>
+
+      <div class="perfil-dato">
+        <strong>Perfil</strong>
+        <span>${rolMostrado}</span>
+      </div>
+
+      <div class="perfil-dato">
+        <strong>Estado</strong>
+        <span>${usuario.activo ? "Activo" : "Inactivo"}</span>
+      </div>
     </section>
   `;
 }
