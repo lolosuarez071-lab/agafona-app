@@ -92,11 +92,20 @@ function mostrarDashboard(usuario) {
 }
 
 function mostrarInicio(usuario) {
+
+  let descripcionRol = "";
+
+  if (usuario.rol === "admin") {
+    descripcionRol = `Socio nº ${usuario.numeroSocio ?? "-"} · Administrador`;
+  } else {
+    descripcionRol = `Socio nº ${usuario.numeroSocio ?? "-"}`;
+  }
   document.getElementById("content-area").innerHTML = `
+  
     <section class="welcome-card">
-      <h1>Hola, ${usuario.nombre}</h1>
-      <p>Rol: ${usuario.rol}</p>
-    </section>
+      <h1>Hola, ${usuario.nombre} 👋</h1>
+      <p>Socio nº ${usuario.numeroSocio ?? "-"} · Administrador</p>
+      </section>
 
     <section class="dashboard-grid">
       <article class="dashboard-card">

@@ -108,7 +108,7 @@
   }
   
   .app-logo {
-    width: 250px;
+    width: 280px;
   }
   
   .logout-button {
@@ -121,7 +121,7 @@
   .welcome-card {
     background: linear-gradient(135deg, #234326, #8cc000);
     color: white;
-    padding: 24px;
+    padding: 16px 20px;
     border-radius: 22px;
     margin-bottom: 18px;
     box-shadow: 0 10px 28px rgba(0,0,0,0.18);
