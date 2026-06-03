@@ -89,8 +89,11 @@
     padding: 20px;
     padding-bottom: 90px;
     background:
-      linear-gradient(rgba(242, 245, 243, 0.88), rgba(242, 245, 243, 0.88)),
-      url("../assets/fondo-app.jpg");
+  linear-gradient(
+    rgba(242,245,243,0.72),
+    rgba(242,245,243,0.72)
+  ),
+  url("../assets/fondo-app.jpg");
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
@@ -165,10 +168,15 @@
     display: flex;
     justify-content: space-around;
 
-    background: white;
-    border-top: 1px solid #ddd;
+    background: linear-gradient(
+        90deg,
+        #8b6f47,
+        #b89b6b,
+        #d8c19a
+    );
 
-    padding: 10px 0;
+    border-top: 1px solid rgba(0,0,0,0.1);
+    padding: 12px 0;
 }
 
 .bottom-nav button {
