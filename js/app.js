@@ -286,14 +286,19 @@ function mostrarPerfil(usuario) {
       </div>
 
       <div class="perfil-dato">
-        <strong>Nº de socio</strong>
-        <span>${numeroSocio}</span>
-      </div>
+  <strong>Nº de socio</strong>
+  <span>${numeroSocio}</span>
+</div>
 
-      <div class="perfil-dato">
-        <strong>Perfil</strong>
-        <span>${rolMostrado}</span>
-      </div>
+<div class="perfil-dato">
+  <strong>Estado cuota</strong>
+  <span>${usuario.estadoCuota ?? "No informado"}</span>
+</div>
+
+<div class="perfil-dato">
+  <strong>Perfil</strong>
+  <span>${rolMostrado}</span>
+</div>
 
       <div class="perfil-dato">
         <strong>Estado</strong>
