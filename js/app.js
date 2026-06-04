@@ -96,7 +96,7 @@ function mostrarDashboard(usuario) {
   botones[4].addEventListener("click", () => mostrarPerfil(usuario));
 }
 
-function mostrarInicio(usuario) {
+async function mostrarInicio(usuario) {
 
   let descripcionRol = "";
 
@@ -105,131 +105,87 @@ function mostrarInicio(usuario) {
   } else {
     descripcionRol = `Socio nº ${usuario.numeroSocio ?? "-"}`;
   }
-  document.getElementById("content-area").innerHTML = `
 
-    <section class="welcome-card">
-      <h1>Hola, ${usuario.nombre} 👋</h1>
-      <p>Socio nº ${usuario.numeroSocio ?? "-"} · Administrador</p>
-      </section>
-
-    <section class="dashboard-grid">
-      <article class="dashboard-card">
-        <h2>Próxima actividad</h2>
-        <p>No hay actividades publicadas todavía.</p>
-      </article>
-
-      <article class="dashboard-card">
-        <h2>Liga fotográfica</h2>
-        <p>Sin convocatoria activa.</p>
-      </article>
-
-      <article class="dashboard-card">
-        <h2>Avisos</h2>
-        <p>No hay avisos nuevos.</p>
-      </article>
-    </section>
-  `;
-}
-
-async function mostrarActividades(usuario) {
   const contentArea = document.getElementById("content-area");
 
   contentArea.innerHTML = `
+    <section class="welcome-card">
+      <h1>Hola, ${usuario.nombre} 👋</h1>
+      <p>${descripcionRol}</p>
+    </section>
+
     <section class="dashboard-card">
-      <h2>Actividades</h2>
-      <p>Cargando actividades...</p>
+      <h2>Inicio</h2>
+      <p>Cargando información...</p>
     </section>
   `;
 
   try {
-    const q = query(
-      collection(db, "actividades"),
-      where("activa", "==", true)
+    const avisosQuery = query(
+      collection(db, "avisos"),
+      where("activo", "==", true)
     );
 
-    const snapshot = await getDocs(q);
+    const avisosSnapshot = await getDocs(avisosQuery);
 
-    const inscripcionesQuery = query(
-      collection(db, "inscripciones"),
-      where("email", "==", usuario.email)
-    );
+    let avisosHtml = "";
 
-    const inscripcionesSnapshot = await getDocs(inscripcionesQuery);
-
-    const actividadesInscritas = [];
-
-    inscripcionesSnapshot.forEach((doc) => {
-      actividadesInscritas.push(doc.data().actividadId);
-    });
-
-    if (snapshot.empty) {
-      contentArea.innerHTML = `
-        <section class="dashboard-card">
-          <h2>Actividades</h2>
-          <p>No hay actividades publicadas todavía.</p>
-        </section>
+    if (avisosSnapshot.empty) {
+      avisosHtml = `
+        <article class="dashboard-card">
+          <h2>Avisos</h2>
+          <p>No hay avisos nuevos.</p>
+        </article>
       `;
-      return;
+    } else {
+      avisosSnapshot.forEach((doc) => {
+        const aviso = doc.data();
+
+        avisosHtml += `
+          <article class="dashboard-card">
+            <h2>${aviso.titulo}</h2>
+            <p>${aviso.mensaje}</p>
+            <p><strong>Fecha:</strong> ${aviso.fecha}</p>
+          </article>
+        `;
+      });
     }
 
-    let html = `<section class="dashboard-grid">`;
+    contentArea.innerHTML = `
+      <section class="welcome-card">
+        <h1>Hola, ${usuario.nombre} 👋</h1>
+        <p>${descripcionRol}</p>
+      </section>
 
-    snapshot.forEach((documento) => {
-      const actividad = documento.data();
+      <section class="dashboard-grid">
 
-      const plazas = actividad.plazas ?? 0;
-      const inscritos = actividad.inscritos ?? 0;
-      const disponibles = plazas - inscritos;
+        <article class="dashboard-card">
+          <h2>Próxima actividad</h2>
+          <p>No hay actividades publicadas todavía.</p>
+        </article>
 
-      const yaInscrito = actividadesInscritas.includes(documento.id);
+        <article class="dashboard-card">
+          <h2>Liga fotográfica</h2>
+          <p>Sin convocatoria activa.</p>
+        </article>
 
-      html += `
-        <article class="dashboard-card actividad-card">
-          <div class="actividad-fecha">
-            📅 ${actividad.fecha}
-          </div>
+        ${avisosHtml}
 
-          <h2>${actividad.titulo}</h2>
-
-          <p class="actividad-lugar">
-            📍 ${actividad.lugar}
-          </p>
-
-          <p class="actividad-descripcion">
-            ${actividad.descripcion}
-          </p>
-
-          <div class="actividad-datos">
-            <span>👥 ${inscritos}/${plazas}</span>
-            <span>✅ ${disponibles} plazas libres</span>
-          </div>
-
-         <button 
-          class="actividad-btn" 
-          data-id="${documento.id}"
-          ${yaInscrito ? "disabled" : ""}
-         >
-          ${yaInscrito ? "Ya inscrito" : "Inscribirme"}
-        </button>
-      `;
-    });
-
-    html += `</section>`;
-    contentArea.innerHTML = html;
-
-    document.querySelectorAll(".actividad-btn").forEach((boton) => {
-      boton.addEventListener("click", async () => {
-        const actividadId = boton.dataset.id;
-        await inscribirseActividad(actividadId, usuario);
-      });
-    });
+      </section>
+    `;
 
   } catch (error) {
-    console.error("Error cargando actividades:", error);
+    console.error("Error cargando inicio:", error);
+
     contentArea.innerHTML = `
+      <section class="welcome-card">
+        <h1>Hola, ${usuario.nombre} 👋</h1>
+        <p>${descripcionRol}</p>
+      </section>
+
       <section class="dashboard-card">
-        <h2>Actividades</h2>
-        <p>Error al cargar las actividades.</p>
+        <h2>Inicio</h2>
+        <p>Error al cargar la información.</p>
       </section>
     `;
   }
