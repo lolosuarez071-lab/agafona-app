@@ -10,11 +10,13 @@ import {
   query,
   where,
   getDocs,
+  getDoc,
   doc,
   updateDoc,
   increment,
   addDoc,
-  serverTimestamp
+  serverTimestamp,
+  orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const loginForm = document.getElementById("login-form");
@@ -303,6 +305,48 @@ async function mostrarInicio(usuario) {
 
       const fotosSnapshot = await getDocs(fotosQuery);
 
+      const clasificacionQuery = query(
+        collection(db, "clasificaciones"),
+        where("convocatoriaId", "==", convocatoria.codigo),
+        where("visible", "==", true),
+        orderBy("posicion", "asc")
+      );
+      
+      const clasificacionSnapshot = await getDocs(clasificacionQuery);
+
+      console.log(
+        "Clasificaciones encontradas:",
+        clasificacionSnapshot.docs.length
+      );
+      clasificacionSnapshot.forEach((doc) => {
+        console.log(doc.data());
+      });
+      
+      let clasificacionHtml = "";
+      
+      if (clasificacionSnapshot.empty) {
+        clasificacionHtml = `
+          <p>No hay clasificación publicada todavía.</p>
+        `;
+      } else {
+        clasificacionHtml = `
+          <hr>
+          <h3>🏆 Clasificación provisional</h3>
+        `;
+      
+        clasificacionSnapshot.forEach((doc) => {
+          const item = doc.data();
+      
+          clasificacionHtml += `
+            <p>
+              <strong>${item.posicion}.</strong>
+              ${item.nombreSocio}
+              — ${item.puntos} puntos
+            </p>
+          `;
+        });
+      }
+
       let bloqueFoto = "";
       let fotoDocId = null;
 
@@ -388,6 +432,9 @@ async function mostrarInicio(usuario) {
           <hr>
 
           ${bloqueFoto}
+
+          ${clasificacionHtml}
+
         </section>
       `;
 
@@ -403,7 +450,7 @@ async function mostrarInicio(usuario) {
           <h2>Liga Fotográfica</h2>
           <p>Error al cargar la convocatoria.</p>
         </section>
-      `;
+      `;  
     }
   }
 
@@ -490,7 +537,7 @@ async function mostrarDocumentos() {
   }
 }
 
-function mostrarPerfil(usuario) {
+async function mostrarPerfil(usuario) {
   const numeroSocio = usuario.numeroSocio ?? "-";
 
   let rolMostrado = "Socio";
@@ -503,46 +550,119 @@ function mostrarPerfil(usuario) {
     rolMostrado = "Directiva";
   }
 
-  document.getElementById("content-area").innerHTML = `
-    <section class="dashboard-card perfil-card">
+  const contentArea = document.getElementById("content-area");
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
       <h2>Mi Perfil</h2>
-
-      <div class="perfil-dato">
-        <strong>Nombre</strong>
-        <span>${usuario.nombre}</span>
-      </div>
-
-      <div class="perfil-dato">
-        <strong>Apellidos</strong>
-        <span>${usuario.apellidos ?? "-"}</span>
-      </div>
-
-      <div class="perfil-dato">
-        <strong>Email</strong>
-        <span>${usuario.email}</span>
-      </div>
-
-      <div class="perfil-dato">
-  <strong>Nº de socio</strong>
-  <span>${numeroSocio}</span>
-</div>
-
-<div class="perfil-dato">
-  <strong>Estado cuota</strong>
-  <span>${usuario.estadoCuota ?? "No informado"}</span>
-</div>
-
-<div class="perfil-dato">
-  <strong>Perfil</strong>
-  <span>${rolMostrado}</span>
-</div>
-
-      <div class="perfil-dato">
-        <strong>Estado</strong>
-        <span>${usuario.activo ? "Activo" : "Inactivo"}</span>
-      </div>
+      <p>Cargando perfil...</p>
     </section>
   `;
+
+  try {
+    const inscripcionesQuery = query(
+      collection(db, "inscripciones"),
+      where("email", "==", usuario.email)
+    );
+
+    const inscripcionesSnapshot = await getDocs(inscripcionesQuery);
+
+    let actividadesHtml = "";
+
+    if (inscripcionesSnapshot.empty) {
+      actividadesHtml = `
+        <p>No tienes actividades inscritas.</p>
+      `;
+    } else {
+      actividadesHtml = `<section class="dashboard-grid">`;
+
+      for (const docInscripcion of inscripcionesSnapshot.docs) {
+        const inscripcion = docInscripcion.data();
+      
+        const actividadRef = doc(db, "actividades", inscripcion.actividadId);
+        const actividadSnap = await getDoc(actividadRef);
+      
+        let tituloActividad = "Actividad inscrita";
+        let fechaActividad = "";
+        let lugarActividad = "";
+      
+        if (actividadSnap.exists()) {
+          const actividad = actividadSnap.data();
+      
+          tituloActividad = actividad.titulo ?? "Actividad inscrita";
+          fechaActividad = actividad.fecha ?? "";
+          lugarActividad = actividad.lugar ?? "";
+        }
+      
+        actividadesHtml += `
+          <article class="dashboard-card">
+            <h3>📅 ${tituloActividad}</h3>
+            <p>📅 ${fechaActividad}</p>
+            <p>📍 ${lugarActividad}</p>
+            <p><strong>Estado:</strong> Inscrito</p>
+          </article>
+        `;
+      }
+
+      actividadesHtml += `</section>`;
+    }
+
+    contentArea.innerHTML = `
+      <section class="dashboard-card perfil-card">
+        <h2>Mi Perfil</h2>
+
+        <div class="perfil-dato">
+          <strong>Nombre</strong>
+          <span>${usuario.nombre}</span>
+        </div>
+
+        <div class="perfil-dato">
+          <strong>Apellidos</strong>
+          <span>${usuario.apellidos ?? "-"}</span>
+        </div>
+
+        <div class="perfil-dato">
+          <strong>Email</strong>
+          <span>${usuario.email}</span>
+        </div>
+
+        <div class="perfil-dato">
+          <strong>Nº de socio</strong>
+          <span>${numeroSocio}</span>
+        </div>
+
+        <div class="perfil-dato">
+          <strong>Estado cuota</strong>
+          <span>${usuario.estadoCuota ?? "No informado"}</span>
+        </div>
+
+        <div class="perfil-dato">
+          <strong>Perfil</strong>
+          <span>${rolMostrado}</span>
+        </div>
+
+        <div class="perfil-dato">
+          <strong>Estado</strong>
+          <span>${usuario.activo ? "Activo" : "Inactivo"}</span>
+        </div>
+      </section>
+
+      <section class="dashboard-card">
+        <h2>Mis actividades</h2>
+        ${actividadesHtml}
+      </section>
+    `;
+
+  } catch (error) {
+    console.error("Error cargando perfil:", error);
+
+    contentArea.innerHTML = `
+      <section class="dashboard-card">
+        <h2>Mi Perfil</h2>
+        <p>Error al cargar el perfil.</p>
+      </section>
+    `;
+  }
 }
 
 async function inscribirseActividad(actividadId, usuario) {
