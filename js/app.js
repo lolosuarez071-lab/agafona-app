@@ -121,6 +121,87 @@ async function mostrarInicio(usuario) {
   `;
 
   try {
+    const actividadesQuery = query(
+      collection(db, "actividades"),
+      where("activa", "==", true)
+    );
+
+    const actividadesSnapshot = await getDocs(actividadesQuery);
+
+    let actividadHtml = "";
+
+    if (actividadesSnapshot.empty) {
+      actividadHtml = `
+        <article class="dashboard-card">
+          <h2>Próxima actividad</h2>
+          <p>No hay actividades publicadas todavía.</p>
+        </article>
+      `;
+    } else {
+      const actividad = actividadesSnapshot.docs[0].data();
+
+      actividadHtml = `
+        <article class="dashboard-card">
+          <h2>Próxima actividad</h2>
+          <p><strong>${actividad.titulo}</strong></p>
+          <p>📅 ${actividad.fecha}</p>
+          <p>📍 ${actividad.lugar}</p>
+        </article>
+      `;
+    }
+
+    const convocatoriaQuery = query(
+      collection(db, "convocatorias"),
+      where("activa", "==", true)
+    );
+
+    const convocatoriaSnapshot = await getDocs(convocatoriaQuery);
+
+    let ligaHtml = "";
+
+    if (convocatoriaSnapshot.empty) {
+
+      ligaHtml = `
+        <article class="dashboard-card">
+          <h2>Liga Fotográfica</h2>
+          <p>Sin convocatoria activa.</p>
+        </article>
+      `;
+
+    } else {
+
+      const convocatoria = convocatoriaSnapshot.docs[0].data();
+
+      const fotoQuery = query(
+        collection(db, "fotos"),
+        where("email", "==", usuario.email),
+        where("convocatoriaId", "==", convocatoria.codigo)
+      );
+
+      const fotoSnapshot = await getDocs(fotoQuery);
+
+      let estadoFoto = "⚠️ No has enviado fotografía";
+
+      if (!fotoSnapshot.empty) {
+        estadoFoto = `📷 ${fotoSnapshot.docs[0].data().tituloFoto}`;
+      }
+
+      ligaHtml = `
+        <article class="dashboard-card">
+          <h2>📷 Liga Fotográfica</h2>
+    
+          <p><strong>${convocatoria.titulo}</strong></p>
+    
+          <p>🟢 Convocatoria ${convocatoria.estado}</p>
+    
+          <p>📅 Hasta ${convocatoria.fechaFin}</p>
+    
+          <p>${estadoFoto}</p>
+    
+        </article>
+      `;
+    }
+
     const avisosQuery = query(
       collection(db, "avisos"),
       where("activo", "==", true)
@@ -158,19 +239,11 @@ async function mostrarInicio(usuario) {
       </section>
 
       <section class="dashboard-grid">
+        ${actividadHtml}
 
-        <article class="dashboard-card">
-          <h2>Próxima actividad</h2>
-          <p>No hay actividades publicadas todavía.</p>
-        </article>
-
-        <article class="dashboard-card">
-          <h2>Liga fotográfica</h2>
-          <p>Sin convocatoria activa.</p>
-        </article>
+        ${ligaHtml}
 
         ${avisosHtml}
-
       </section>
     `;
 
@@ -191,117 +264,140 @@ async function mostrarInicio(usuario) {
   }
 }
 
-async function mostrarLiga(usuario) {
-  const contentArea = document.getElementById("content-area");
-
-  contentArea.innerHTML = `
-    <section class="dashboard-card">
-      <h2>Liga Fotográfica</h2>
-      <p>Cargando convocatoria...</p>
-    </section>
-  `;
-
-  try {
-    const q = query(
-      collection(db, "convocatorias"),
-      where("activa", "==", true)
-    );
-
-    const snapshot = await getDocs(q);
-
-    if (snapshot.empty) {
-      contentArea.innerHTML = `
-        <section class="dashboard-card">
-          <h2>Liga Fotográfica</h2>
-          <p>No hay convocatoria activa.</p>
-        </section>
-      `;
-      return;
-    }
-
-    const convocatoria = snapshot.docs[0].data();
-
-    const fotosQuery = query(
-      collection(db, "fotos"),
-      where("convocatoriaId", "==", convocatoria.codigo),
-      where("email", "==", usuario.email),
-      where("visible", "==", true)
-    );
-
-    const fotosSnapshot = await getDocs(fotosQuery);
-
-    let bloqueFoto = "";
-    let fotoDocId = null;
-
-    if (fotosSnapshot.empty) {
-      bloqueFoto = `
-        <p><strong>Mi fotografía:</strong></p>
-        <p>No has enviado ninguna fotografía.</p>
-
-        <input type="file" id="foto-liga" accept="image/*">
-
-        <button id="subir-foto-btn" class="actividad-btn">
-          Subir fotografía
-        </button>
-      `;
-    } else {
-      const fotoDoc = fotosSnapshot.docs[0];
-      const foto = fotoDoc.data();
-      fotoDocId = fotoDoc.id;
-
-      bloqueFoto = `
-        <p><strong>Mi fotografía:</strong></p>
-        <p>${foto.tituloFoto}</p>
-
-        <a href="${foto.urlFoto}" target="_blank" class="documento-link">
-          Ver fotografía
-        </a>
-
-        <br><br>
-
-        <input type="file" id="foto-liga" accept="image/*">
-
-        <button id="subir-foto-btn" class="actividad-btn">
-          Cambiar fotografía
-        </button>
-      `;
-    }
-
-    contentArea.innerHTML = `
-      <section class="dashboard-card">
-        <h2>📷 Liga Fotográfica</h2>
-
-        <h3>${convocatoria.titulo}</h3>
-
-        <p>🟢 Convocatoria abierta</p>
-
-        <p>
-          Del ${convocatoria.fechaInicio}
-          al
-          ${convocatoria.fechaFin}
-        </p>
-
-        <hr>
-
-        ${bloqueFoto}
-      </section>
-    `;
-
-    document.getElementById("subir-foto-btn").addEventListener("click", () => {
-      subirFotoLiga(usuario, convocatoria, fotoDocId);
-    });
-
-  } catch (error) {
-    console.error(error);
+  async function mostrarLiga(usuario) {
+    const contentArea = document.getElementById("content-area");
 
     contentArea.innerHTML = `
       <section class="dashboard-card">
         <h2>Liga Fotográfica</h2>
-        <p>Error al cargar la convocatoria.</p>
+        <p>Cargando convocatoria...</p>
       </section>
     `;
+
+    try {
+      const q = query(
+        collection(db, "convocatorias"),
+        where("activa", "==", true)
+      );
+
+      const snapshot = await getDocs(q);
+
+      if (snapshot.empty) {
+        contentArea.innerHTML = `
+          <section class="dashboard-card">
+            <h2>Liga Fotográfica</h2>
+            <p>No hay convocatoria activa.</p>
+          </section>
+        `;
+        return;
+      }
+
+      const convocatoria = snapshot.docs[0].data();
+
+      const fotosQuery = query(
+        collection(db, "fotos"),
+        where("convocatoriaId", "==", convocatoria.codigo),
+        where("email", "==", usuario.email),
+        where("visible", "==", true)
+      );
+
+      const fotosSnapshot = await getDocs(fotosQuery);
+
+      let bloqueFoto = "";
+      let fotoDocId = null;
+
+      if (fotosSnapshot.empty) {
+        bloqueFoto = `
+          <p><strong>Mi fotografía:</strong></p>
+          <p>No has enviado ninguna fotografía.</p>
+      
+          <label for="titulo-foto">
+          <strong>Título de la fotografía</strong>
+          </label>
+
+          <input
+          type="text"
+          id="titulo-foto"
+          placeholder="Ejemplo: Avoceta al amanecer"
+          required
+          >
+      
+          <input type="file" id="foto-liga" accept="image/*">
+      
+          <button id="subir-foto-btn" class="actividad-btn">
+            Subir fotografía
+          </button>
+        `;
+      } else {
+        const fotoDoc = fotosSnapshot.docs[0];
+        const foto = fotoDoc.data();
+        fotoDocId = fotoDoc.id;
+
+        bloqueFoto = `
+         <p><strong>Fotografía presentada:</strong></p>
+        <p>${foto.tituloFoto}</p>
+      
+          <a href="${foto.urlFoto}" target="_blank" class="documento-link">
+            Ver fotografía
+          </a>
+      
+          <br><br>
+      
+          <label for="titulo-foto">
+          <strong>Título de la fotografía</strong>
+          </label>
+
+          <input
+          type="text"
+          id="titulo-foto"
+          value="${foto.tituloFoto ?? ""}"
+          placeholder="Ejemplo: Avoceta al amanecer"
+          required
+          >
+      
+          <input type="file" id="foto-liga" accept="image/*">
+      
+          <button id="subir-foto-btn" class="actividad-btn">
+            Cambiar fotografía
+          </button>
+        `;
+      }
+
+      contentArea.innerHTML = `
+        <section class="dashboard-card">
+          <h2>📷 Liga Fotográfica</h2>
+
+          <h3>${convocatoria.titulo}</h3>
+
+          <p>🟢 Convocatoria abierta</p>
+
+          <p>
+            Del ${convocatoria.fechaInicio}
+            al
+            ${convocatoria.fechaFin}
+          </p>
+
+          <hr>
+
+          ${bloqueFoto}
+        </section>
+      `;
+
+      document.getElementById("subir-foto-btn").addEventListener("click", () => {
+        subirFotoLiga(usuario, convocatoria, fotoDocId);
+      });
+
+    } catch (error) {
+      console.error(error);
+
+      contentArea.innerHTML = `
+        <section class="dashboard-card">
+          <h2>Liga Fotográfica</h2>
+          <p>Error al cargar la convocatoria.</p>
+        </section>
+      `;
+    }
   }
-}
 
 async function mostrarDocumentos() {
 
@@ -486,10 +582,21 @@ async function subirFotoLiga(usuario, convocatoria, fotoDocId) {
   const input = document.getElementById("foto-liga");
   const archivo = input.files[0];
 
+  const tituloFoto = document.getElementById("titulo-foto").value.trim();
+
+  if (!tituloFoto) {
+    alert("Escribe un título para la fotografía");
+    return;
+  }
+
   if (!archivo) {
     alert("Selecciona una fotografía primero");
     return;
   }
+
+  const boton = document.getElementById("subir-foto-btn");
+  boton.disabled = true;
+  boton.textContent = "Subiendo fotografía...";
 
   try {
     const formData = new FormData();
@@ -511,7 +618,7 @@ async function subirFotoLiga(usuario, convocatoria, fotoDocId) {
       email: usuario.email,
       nombreSocio: `${usuario.nombre} ${usuario.apellidos ?? ""}`,
       numeroSocio: usuario.numeroSocio ?? null,
-      tituloFoto: archivo.name,
+      tituloFoto: tituloFoto,
       nombreArchivo: archivo.name,
       urlFoto: datos.secure_url,
       fechaSubida: serverTimestamp(),
@@ -533,6 +640,10 @@ async function subirFotoLiga(usuario, convocatoria, fotoDocId) {
 
   } catch (error) {
     console.error("Error subiendo fotografía:", error);
+
+    boton.disabled = false;
+    boton.textContent = fotoDocId ? "Cambiar fotografía" : "Subir fotografía";
+
     alert("No se ha podido subir la fotografía");
   }
 }

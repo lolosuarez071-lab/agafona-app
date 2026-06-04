@@ -284,3 +284,9 @@
 .documento-link:hover {
   background: #315f36;
 }
+
+.actividad-btn:disabled {
+  background: #777;
+  cursor: wait;
+  opacity: 0.8;
+}
