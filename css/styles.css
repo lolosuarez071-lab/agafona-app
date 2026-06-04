@@ -290,3 +290,12 @@
   cursor: wait;
   opacity: 0.8;
 }
+
+.miniatura-foto {
+  width: 100%;
+  max-width: 220px;
+  display: block;
+  margin: 12px auto;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}

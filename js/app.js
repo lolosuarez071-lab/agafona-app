@@ -336,6 +336,14 @@ async function mostrarInicio(usuario) {
         bloqueFoto = `
          <p><strong>Fotografía presentada:</strong></p>
         <p>${foto.tituloFoto}</p>
+
+        <img
+          src="${foto.urlFoto}"
+          alt="${foto.tituloFoto}"
+          class="miniatura-foto"
+        >
+
+          <br><br>
       
           <a href="${foto.urlFoto}" target="_blank" class="documento-link">
             Ver fotografía
