@@ -53,6 +53,8 @@ loginForm.addEventListener("submit", async (e) => {
       return;
     }
 
+    localStorage.setItem("usuarioAgafona", JSON.stringify(usuario));
+
     mostrarDashboard(usuario);
 
   } catch (error) {
@@ -85,6 +87,7 @@ function mostrarDashboard(usuario) {
 
   document.getElementById("logout-button").addEventListener("click", async () => {
     await signOut(auth);
+    localStorage.removeItem("usuarioAgafona");
     location.reload();
   });
 
@@ -267,92 +270,263 @@ async function mostrarInicio(usuario) {
   }
 }
 
-  async function mostrarLiga(usuario) {
-    const contentArea = document.getElementById("content-area");
+async function mostrarActividades(usuario) {
+  const contentArea = document.getElementById("content-area");
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
+      <h2>Actividades</h2>
+      <p>Cargando actividades...</p>
+    </section>
+  `;
+
+  try {
+    const actividadesQuery = query(
+      collection(db, "actividades"),
+      where("activa", "==", true)
+    );
+
+    const actividadesSnapshot = await getDocs(actividadesQuery);
+
+    let actividadesHtml = "";
+
+    if (actividadesSnapshot.empty) {
+      actividadesHtml = `
+        <section class="dashboard-card">
+          <h2>Actividades</h2>
+          <p>No hay actividades disponibles.</p>
+        </section>
+      `;
+    } else {
+      actividadesHtml = `<section class="dashboard-grid">`;
+
+      for (const docActividad of actividadesSnapshot.docs) {
+        const actividadId = docActividad.id;
+        const actividad = docActividad.data();
+
+        const inscripcionQuery = query(
+          collection(db, "inscripciones"),
+          where("actividadId", "==", actividadId),
+          where("email", "==", usuario.email)
+        );
+
+        const inscripcionSnapshot = await getDocs(inscripcionQuery);
+
+        let botonInscripcion = "";
+
+        if (inscripcionSnapshot.empty) {
+          botonInscripcion = `
+            <button onclick="inscribirseActividad('${actividadId}')">
+              Inscribirme
+            </button>
+          `;
+        } else {
+          botonInscripcion = `
+            <p><strong>Estado:</strong> Ya inscrito</p>
+          `;
+        }
+
+        let botonInscritos = "";
+
+        if (usuario.rol === "admin" || usuario.rol === "directiva") {
+          botonInscritos = `
+            <button onclick="verInscritosActividad('${actividadId}')">
+              Ver inscritos
+            </button>
+          `;
+        }
+
+        actividadesHtml += `
+          <article class="dashboard-card">
+            <h3>📅 ${actividad.titulo ?? "Actividad"}</h3>
+            <p>📅 ${actividad.fecha ?? ""}</p>
+            <p>📍 ${actividad.lugar ?? ""}</p>
+            <p>${actividad.descripcion ?? ""}</p>
+            <p><strong>Inscritos:</strong> ${actividad.inscritos ?? 0}</p>
+
+            ${botonInscripcion}
+            ${botonInscritos}
+          </article>
+        `;
+      }
+
+      actividadesHtml += `</section>`;
+    }
 
     contentArea.innerHTML = `
+      <section class="dashboard-card">
+        <h2>Actividades</h2>
+      </section>
+
+      ${actividadesHtml}
+    `;
+
+  } catch (error) {
+    console.error("Error cargando actividades:", error);
+
+    contentArea.innerHTML = `
+      <section class="dashboard-card">
+        <h2>Actividades</h2>
+        <p>Error al cargar las actividades.</p>
+      </section>
+    `;
+  }
+}
+
+window.mostrarActividades = mostrarActividades;
+
+async function verInscritosActividad(actividadId) {
+  const contentArea = document.getElementById("content-area");
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
+      <h2>Inscritos</h2>
+      <p>Cargando lista de inscritos...</p>
+    </section>
+  `;
+
+  try {
+    const q = query(
+      collection(db, "inscripciones"),
+      where("actividadId", "==", actividadId)
+    );
+
+    const snapshot = await getDocs(q);
+
+    let inscritosHtml = "";
+
+    if (snapshot.empty) {
+      inscritosHtml = `<p>No hay inscritos todavía.</p>`;
+    } else {
+      let contador = 1;
+
+      snapshot.forEach((doc) => {
+        const inscrito = doc.data();
+
+        inscritosHtml += `
+  <p>
+    <strong>${contador}.</strong>
+    ${inscrito.nombre} ${inscrito.apellidos ?? ""}
+    <br>
+    <small>${inscrito.email ?? ""}</small>
+  </p>
+`;
+
+        contador++;
+      });
+    }
+
+    contentArea.innerHTML = `
+      <section class="dashboard-card">
+        <h2>Lista de inscritos</h2>
+        ${inscritosHtml}
+
+        <button onclick="mostrarActividadesDesdeBoton()">
+          Volver
+        </button>
+      </section>
+    `;
+
+  } catch (error) {
+    console.error("Error cargando inscritos:", error);
+
+    contentArea.innerHTML = `
+      <section class="dashboard-card">
+        <h2>Inscritos</h2>
+        <p>Error al cargar la lista de inscritos.</p>
+      </section>
+    `;
+  }
+}
+
+window.verInscritosActividad = verInscritosActividad;
+
+async function mostrarLiga(usuario) {
+  const contentArea = document.getElementById("content-area");
+
+  contentArea.innerHTML = `
       <section class="dashboard-card">
         <h2>Liga Fotográfica</h2>
         <p>Cargando convocatoria...</p>
       </section>
     `;
 
-    try {
-      const q = query(
-        collection(db, "convocatorias"),
-        where("activa", "==", true)
-      );
+  try {
+    const q = query(
+      collection(db, "convocatorias"),
+      where("activa", "==", true)
+    );
 
-      const snapshot = await getDocs(q);
+    const snapshot = await getDocs(q);
 
-      if (snapshot.empty) {
-        contentArea.innerHTML = `
+    if (snapshot.empty) {
+      contentArea.innerHTML = `
           <section class="dashboard-card">
             <h2>Liga Fotográfica</h2>
             <p>No hay convocatoria activa.</p>
           </section>
         `;
-        return;
-      }
+      return;
+    }
 
-      const convocatoria = snapshot.docs[0].data();
+    const convocatoria = snapshot.docs[0].data();
 
-      const fotosQuery = query(
-        collection(db, "fotos"),
-        where("convocatoriaId", "==", convocatoria.codigo),
-        where("email", "==", usuario.email),
-        where("visible", "==", true)
-      );
+    const fotosQuery = query(
+      collection(db, "fotos"),
+      where("convocatoriaId", "==", convocatoria.codigo),
+      where("email", "==", usuario.email),
+      where("visible", "==", true)
+    );
 
-      const fotosSnapshot = await getDocs(fotosQuery);
+    const fotosSnapshot = await getDocs(fotosQuery);
 
-      const clasificacionQuery = query(
-        collection(db, "clasificaciones"),
-        where("convocatoriaId", "==", convocatoria.codigo),
-        where("visible", "==", true),
-        orderBy("posicion", "asc")
-      );
-      
-      const clasificacionSnapshot = await getDocs(clasificacionQuery);
+    const clasificacionQuery = query(
+      collection(db, "clasificaciones"),
+      where("convocatoriaId", "==", convocatoria.codigo),
+      where("visible", "==", true),
+      orderBy("posicion", "asc")
+    );
 
-      console.log(
-        "Clasificaciones encontradas:",
-        clasificacionSnapshot.docs.length
-      );
-      clasificacionSnapshot.forEach((doc) => {
-        console.log(doc.data());
-      });
-      
-      let clasificacionHtml = "";
-      
-      if (clasificacionSnapshot.empty) {
-        clasificacionHtml = `
+    const clasificacionSnapshot = await getDocs(clasificacionQuery);
+
+    console.log(
+      "Clasificaciones encontradas:",
+      clasificacionSnapshot.docs.length
+    );
+    clasificacionSnapshot.forEach((doc) => {
+      console.log(doc.data());
+    });
+
+    let clasificacionHtml = "";
+
+    if (clasificacionSnapshot.empty) {
+      clasificacionHtml = `
           <p>No hay clasificación publicada todavía.</p>
         `;
-      } else {
-        clasificacionHtml = `
+    } else {
+      clasificacionHtml = `
           <hr>
           <h3>🏆 Clasificación provisional</h3>
         `;
-      
-        clasificacionSnapshot.forEach((doc) => {
-          const item = doc.data();
-      
-          clasificacionHtml += `
+
+      clasificacionSnapshot.forEach((doc) => {
+        const item = doc.data();
+
+        clasificacionHtml += `
             <p>
               <strong>${item.posicion}.</strong>
               ${item.nombreSocio}
               — ${item.puntos} puntos
             </p>
           `;
-        });
-      }
+      });
+    }
 
-      let bloqueFoto = "";
-      let fotoDocId = null;
+    let bloqueFoto = "";
+    let fotoDocId = null;
 
-      if (fotosSnapshot.empty) {
-        bloqueFoto = `
+    if (fotosSnapshot.empty) {
+      bloqueFoto = `
           <p><strong>Mi fotografía:</strong></p>
           <p>No has enviado ninguna fotografía.</p>
       
@@ -373,12 +547,12 @@ async function mostrarInicio(usuario) {
             Subir fotografía
           </button>
         `;
-      } else {
-        const fotoDoc = fotosSnapshot.docs[0];
-        const foto = fotoDoc.data();
-        fotoDocId = fotoDoc.id;
+    } else {
+      const fotoDoc = fotosSnapshot.docs[0];
+      const foto = fotoDoc.data();
+      fotoDocId = fotoDoc.id;
 
-        bloqueFoto = `
+      bloqueFoto = `
          <p><strong>Fotografía presentada:</strong></p>
         <p>${foto.tituloFoto}</p>
 
@@ -414,9 +588,9 @@ async function mostrarInicio(usuario) {
             Cambiar fotografía
           </button>
         `;
-      }
+    }
 
-      contentArea.innerHTML = `
+    contentArea.innerHTML = `
         <section class="dashboard-card">
           <h2>📷 Liga Fotográfica</h2>
 
@@ -439,21 +613,21 @@ async function mostrarInicio(usuario) {
         </section>
       `;
 
-      document.getElementById("subir-foto-btn").addEventListener("click", () => {
-        subirFotoLiga(usuario, convocatoria, fotoDocId);
-      });
+    document.getElementById("subir-foto-btn").addEventListener("click", () => {
+      subirFotoLiga(usuario, convocatoria, fotoDocId);
+    });
 
-    } catch (error) {
-      console.error(error);
+  } catch (error) {
+    console.error(error);
 
-      contentArea.innerHTML = `
+    contentArea.innerHTML = `
         <section class="dashboard-card">
           <h2>Liga Fotográfica</h2>
           <p>Error al cargar la convocatoria.</p>
         </section>
-      `;  
-    }
+      `;
   }
+}
 
 async function mostrarDocumentos() {
 
@@ -579,22 +753,22 @@ async function mostrarPerfil(usuario) {
 
       for (const docInscripcion of inscripcionesSnapshot.docs) {
         const inscripcion = docInscripcion.data();
-      
+
         const actividadRef = doc(db, "actividades", inscripcion.actividadId);
         const actividadSnap = await getDoc(actividadRef);
-      
+
         let tituloActividad = "Actividad inscrita";
         let fechaActividad = "";
         let lugarActividad = "";
-      
+
         if (actividadSnap.exists()) {
           const actividad = actividadSnap.data();
-      
+
           tituloActividad = actividad.titulo ?? "Actividad inscrita";
           fechaActividad = actividad.fecha ?? "";
           lugarActividad = actividad.lugar ?? "";
         }
-      
+
         actividadesHtml += `
   <article class="dashboard-card">
     <h3>📅 ${tituloActividad}</h3>
@@ -670,7 +844,14 @@ async function mostrarPerfil(usuario) {
   }
 }
 
-async function inscribirseActividad(actividadId, usuario) {
+async function inscribirseActividad(actividadId) {
+  const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
+
+  if (!usuario) {
+    alert("No se ha encontrado el usuario conectado");
+    return;
+  }
+
   try {
     const q = query(
       collection(db, "inscripciones"),
@@ -688,6 +869,7 @@ async function inscribirseActividad(actividadId, usuario) {
     await addDoc(collection(db, "inscripciones"), {
       actividadId: actividadId,
       nombre: usuario.nombre,
+      apellidos: usuario.apellidos ?? "",
       email: usuario.email,
       fechaInscripcion: serverTimestamp()
     });
@@ -700,13 +882,17 @@ async function inscribirseActividad(actividadId, usuario) {
 
     alert("Inscripción realizada correctamente");
 
-    mostrarActividades(usuario);
+    const usuarioGuardado = JSON.parse(localStorage.getItem("usuarioAgafona"));
+    mostrarActividades(usuarioGuardado);
+
 
   } catch (error) {
     console.error("Error al inscribirse:", error);
     alert("No se ha podido realizar la inscripción");
   }
 }
+
+window.inscribirseActividad = inscribirseActividad;
 
 async function subirFotoLiga(usuario, convocatoria, fotoDocId) {
   const CLOUD_NAME = "dbamev2pv";
@@ -780,6 +966,19 @@ async function subirFotoLiga(usuario, convocatoria, fotoDocId) {
     alert("No se ha podido subir la fotografía");
   }
 }
+
+function mostrarActividadesDesdeBoton() {
+  const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
+
+  if (!usuario) {
+    alert("No se ha encontrado el usuario conectado");
+    return;
+  }
+
+  mostrarActividades(usuario);
+}
+
+window.mostrarActividadesDesdeBoton = mostrarActividadesDesdeBoton;
 
 async function cancelarInscripcion(actividadId) {
   const confirmar = confirm("¿Seguro que quieres cancelar esta inscripción?");
