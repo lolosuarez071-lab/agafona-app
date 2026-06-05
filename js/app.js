@@ -630,8 +630,18 @@ async function mostrarLiga(usuario) {
 }
 
 async function mostrarDocumentos() {
-
+  const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
   const contentArea = document.getElementById("content-area");
+
+  if (!usuario) {
+    contentArea.innerHTML = `
+      <section class="dashboard-card">
+        <h2>Documentos</h2>
+        <p>No se ha encontrado el usuario conectado.</p>
+      </section>
+    `;
+    return;
+  }
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
@@ -641,10 +651,8 @@ async function mostrarDocumentos() {
   `;
 
   try {
-
     const q = query(
-      collection(db, "documentos"),
-      where("publico", "==", true)
+      collection(db, "documentos")
     );
 
     const snapshot = await getDocs(q);
@@ -660,37 +668,41 @@ async function mostrarDocumentos() {
     }
 
     let html = `
-  <section class="dashboard-card">
-    <h2>Documentos</h2>
-    <p>Consulta estatutos, bases y documentación disponible para los socios.</p>
-  </section>
+      <section class="dashboard-card">
+        <h2>Documentos</h2>
+        <p>Consulta estatutos, bases y documentación disponible para los socios.</p>
+      </section>
 
-  <section class="dashboard-grid">
-`;
+      <section class="dashboard-grid">
+    `;
 
     snapshot.forEach((doc) => {
-
       const documento = doc.data();
+
+      const puedeVer =
+        documento.visiblePara === "socios" ||
+        documento.visiblePara === usuario.rol ||
+        usuario.rol === "admin";
+
+      if (!puedeVer) return;
 
       html += `
         <article class="dashboard-card">
-
           <h2>📄 ${documento.titulo}</h2>
 
           <div class="documento-categoria">
-  ${documento.categoria}
-</div>
+            ${documento.categoria}
+          </div>
 
-<br>
+          <br>
 
-<a
-  href="${documento.url}"
-  target="_blank"
-  class="documento-link"
->
-  📄 Abrir documento
-</a>
-
+          <a
+            href="${documento.url}"
+            target="_blank"
+            class="documento-link"
+          >
+            📄 Abrir documento
+          </a>
         </article>
       `;
     });
@@ -700,7 +712,6 @@ async function mostrarDocumentos() {
     contentArea.innerHTML = html;
 
   } catch (error) {
-
     console.error(error);
 
     contentArea.innerHTML = `
@@ -711,7 +722,6 @@ async function mostrarDocumentos() {
     `;
   }
 }
-
 async function mostrarPerfil(usuario) {
   const numeroSocio = usuario.numeroSocio ?? "-";
 
