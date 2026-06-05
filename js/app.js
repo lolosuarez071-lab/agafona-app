@@ -11,6 +11,7 @@ import {
   where,
   getDocs,
   getDoc,
+  deleteDoc,
   doc,
   updateDoc,
   increment,
@@ -595,13 +596,17 @@ async function mostrarPerfil(usuario) {
         }
       
         actividadesHtml += `
-          <article class="dashboard-card">
-            <h3>📅 ${tituloActividad}</h3>
-            <p>📅 ${fechaActividad}</p>
-            <p>📍 ${lugarActividad}</p>
-            <p><strong>Estado:</strong> Inscrito</p>
-          </article>
-        `;
+  <article class="dashboard-card">
+    <h3>📅 ${tituloActividad}</h3>
+    <p>📅 ${fechaActividad}</p>
+    <p>📍 ${lugarActividad}</p>
+    <p><strong>Estado:</strong> Inscrito</p>
+
+    <button onclick="cancelarInscripcion('${inscripcion.actividadId}')">
+      Cancelar inscripción
+    </button>
+  </article>
+`;
       }
 
       actividadesHtml += `</section>`;
@@ -775,3 +780,46 @@ async function subirFotoLiga(usuario, convocatoria, fotoDocId) {
     alert("No se ha podido subir la fotografía");
   }
 }
+
+async function cancelarInscripcion(actividadId) {
+  const confirmar = confirm("¿Seguro que quieres cancelar esta inscripción?");
+
+  if (!confirmar) return;
+
+  try {
+    const emailUsuario = auth.currentUser.email;
+
+    const q = query(
+      collection(db, "inscripciones"),
+      where("actividadId", "==", actividadId),
+      where("email", "==", emailUsuario)
+    );
+
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      alert("No se encontró la inscripción");
+      return;
+    }
+
+    await deleteDoc(
+      doc(db, "inscripciones", snapshot.docs[0].id)
+    );
+
+    const actividadRef = doc(db, "actividades", actividadId);
+
+    await updateDoc(actividadRef, {
+      inscritos: increment(-1)
+    });
+
+    alert("Inscripción cancelada correctamente");
+
+    location.reload();
+
+  } catch (error) {
+    console.error("Error al cancelar la inscripción:", error);
+    alert("No se ha podido cancelar la inscripción");
+  }
+}
+
+window.cancelarInscripcion = cancelarInscripcion;
