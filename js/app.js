@@ -1879,6 +1879,16 @@ function mostrarGestionLiga() {
           Ver convocatorias
         </button>
       </article>
+
+      <article class="dashboard-card">
+  <h3>👨‍⚖️ Jurado de la liga</h3>
+  <p>Gestionar los jurados que puntuarán toda la liga.</p>
+
+  <button onclick="mostrarGestionJuradoLiga()">
+    Gestionar jurado
+  </button>
+</article>
+
     </section>
 
     <section class="dashboard-card">
@@ -2198,4 +2208,92 @@ async function verParticipantesConvocatoria(codigoConvocatoria) {
 }
 
 window.verParticipantesConvocatoria = verParticipantesConvocatoria;
+
+async function mostrarGestionJuradoLiga() {
+  const contentArea = document.getElementById("content-area");
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
+      <h2>👨‍⚖️ Jurado de la liga</h2>
+      <p>Cargando jurado...</p>
+    </section>
+  `;
+
+  try {
+    const configRef = doc(db, "configuracionLiga", "ligaActual");
+    const configSnap = await getDoc(configRef);
+
+    let jurado1 = "";
+    let jurado2 = "";
+    let jurado3 = "";
+
+    if (configSnap.exists()) {
+      const config = configSnap.data();
+
+      jurado1 = config.jurado1 ?? "";
+      jurado2 = config.jurado2 ?? "";
+      jurado3 = config.jurado3 ?? "";
+    }
+
+    contentArea.innerHTML = `
+      <section class="dashboard-card">
+        <h2>👨‍⚖️ Jurado de la liga</h2>
+
+        <label>Jurado 1 - Email</label>
+        <input type="email" id="jurado-1" value="${jurado1}">
+
+        <label>Jurado 2 - Email</label>
+        <input type="email" id="jurado-2" value="${jurado2}">
+
+        <label>Jurado 3 - Email</label>
+        <input type="email" id="jurado-3" value="${jurado3}">
+
+        <button onclick="guardarJuradoLiga()">
+          Guardar jurado
+        </button>
+
+        <button onclick="mostrarGestionLiga()">
+          Volver
+        </button>
+      </section>
+    `;
+
+  } catch (error) {
+    console.error(error);
+    alert("Error cargando jurado");
+  }
+}
+
+window.mostrarGestionJuradoLiga = mostrarGestionJuradoLiga;
+
+async function guardarJuradoLiga() {
+  const jurado1 = document.getElementById("jurado-1").value.trim();
+  const jurado2 = document.getElementById("jurado-2").value.trim();
+  const jurado3 = document.getElementById("jurado-3").value.trim();
+
+  if (!jurado1 || !jurado2 || !jurado3) {
+    alert("Introduce los tres correos de los jurados.");
+    return;
+  }
+
+  try {
+    const configRef = doc(db, "configuracionLiga", "ligaActual");
+
+    await updateDoc(configRef, {
+      jurado1,
+      jurado2,
+      jurado3
+    });
+
+    alert("Jurado guardado correctamente.");
+
+    mostrarGestionLiga();
+
+  } catch (error) {
+    console.error(error);
+    alert("No se pudo guardar el jurado.");
+  }
+}
+
+window.guardarJuradoLiga = guardarJuradoLiga;
 
