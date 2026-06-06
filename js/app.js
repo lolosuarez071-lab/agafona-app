@@ -1137,6 +1137,18 @@ function mostrarAdmin(usuario) {
 
 </article>
 
+<article class="dashboard-card">
+  <h3>📄 Gestionar documentos</h3>
+
+  <p>
+    Ver documentos creados y desactivar los que ya no estén disponibles.
+  </p>
+
+  <button onclick="mostrarGestionDocumentos()">
+    Gestionar documentos
+  </button>
+</article>
+
     </section>
   `;
 }
@@ -1578,4 +1590,92 @@ async function mostrarGestionAvisos() {
 }
 
 window.mostrarGestionAvisos = mostrarGestionAvisos;
+
+async function mostrarGestionDocumentos() {
+  const contentArea = document.getElementById("content-area");
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
+      <h2>📄 Gestionar documentos</h2>
+      <p>Cargando documentos...</p>
+    </section>
+  `;
+
+  try {
+    const q = query(collection(db, "documentos"));
+    const snapshot = await getDocs(q);
+
+    let html = `
+      <section class="dashboard-card">
+        <h2>📄 Gestionar documentos</h2>
+      </section>
+
+      <section class="dashboard-grid">
+    `;
+
+    snapshot.forEach((docDocumento) => {
+      const documento = docDocumento.data();
+      const documentoId = docDocumento.id;
+
+      html += `
+        <article class="dashboard-card">
+          <h3>${documento.titulo}</h3>
+          <p><strong>Categoría:</strong> ${documento.categoria}</p>
+          <p><strong>Visible para:</strong> ${documento.visiblePara}</p>
+          <p><strong>Estado:</strong> ${documento.activo === false ? "Inactivo" : "Activo"}</p>
+
+          <a href="${documento.url}" target="_blank" class="documento-link">
+            📄 Abrir documento
+          </a>
+
+          <br><br>
+
+          <button onclick="desactivarDocumento('${documentoId}')">
+            Desactivar documento
+          </button>
+        </article>
+      `;
+    });
+
+    html += `
+      </section>
+
+      <section class="dashboard-card">
+        <button onclick="volverAdmin()">Volver</button>
+      </section>
+    `;
+
+    contentArea.innerHTML = html;
+
+  } catch (error) {
+    console.error(error);
+    alert("Error cargando documentos");
+  }
+}
+
+window.mostrarGestionDocumentos = mostrarGestionDocumentos;
+
+async function desactivarDocumento(documentoId) {
+  const confirmar = confirm("¿Seguro que quieres desactivar este documento?");
+
+  if (!confirmar) return;
+
+  try {
+    const documentoRef = doc(db, "documentos", documentoId);
+
+    await updateDoc(documentoRef, {
+      activo: false
+    });
+
+    alert("Documento desactivado correctamente");
+
+    mostrarGestionDocumentos();
+
+  } catch (error) {
+    console.error(error);
+    alert("No se pudo desactivar el documento");
+  }
+}
+
+window.desactivarDocumento = desactivarDocumento;
 
