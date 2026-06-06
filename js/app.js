@@ -1149,6 +1149,19 @@ function mostrarAdmin(usuario) {
   </button>
 </article>
 
+<article class="dashboard-card">
+  <h3>👥 Gestión de usuarios</h3>
+
+  <p>
+    Consultar usuarios, cambiar roles y desactivar accesos.
+  </p>
+
+  <button onclick="mostrarGestionUsuarios()">
+    Gestionar usuarios
+  </button>
+
+</article>
+
     </section>
   `;
 }
@@ -1678,4 +1691,153 @@ async function desactivarDocumento(documentoId) {
 }
 
 window.desactivarDocumento = desactivarDocumento;
+
+async function mostrarGestionUsuarios() {
+
+  const contentArea = document.getElementById("content-area");
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
+      <h2>👥 Gestión de usuarios</h2>
+      <p>Cargando usuarios...</p>
+    </section>
+  `;
+
+  try {
+
+    const snapshot = await getDocs(
+      collection(db, "usuarios")
+    );
+
+    let html = `
+      <section class="dashboard-card">
+        <h2>👥 Gestión de usuarios</h2>
+      </section>
+
+      <section class="dashboard-grid">
+    `;
+
+    snapshot.forEach((docUsuario) => {
+
+      const usuario = docUsuario.data();
+      const usuarioId = docUsuario.id;
+
+      html += `
+        <article class="dashboard-card">
+
+          <h3>
+            ${usuario.nombre}
+            ${usuario.apellidos ?? ""}
+          </h3>
+
+          <p>
+            <strong>Email:</strong>
+            ${usuario.email}
+          </p>
+
+          <p>
+            <strong>Rol:</strong>
+            ${usuario.rol}
+          </p>
+
+          <p>
+            <strong>Estado:</strong>
+            ${usuario.activo ? "Activo" : "Inactivo"}
+          </p>
+
+          <button onclick="cambiarRol('${usuarioId}')">
+            Cambiar rol
+          </button>
+
+          <br><br>
+
+          <button onclick="desactivarUsuario('${usuarioId}')">
+            Desactivar usuario
+          </button>
+
+        </article>
+      `;
+    });
+
+    html += `
+      </section>
+
+      <section class="dashboard-card">
+        <button onclick="volverAdmin()">
+          Volver
+        </button>
+      </section>
+    `;
+
+    contentArea.innerHTML = html;
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert("Error cargando usuarios");
+
+  }
+}
+
+window.mostrarGestionUsuarios = mostrarGestionUsuarios;
+
+async function cambiarRol(usuarioId) {
+  const nuevoRol = prompt(
+    "Introduce el nuevo rol: socio, directiva, jurado o admin"
+  );
+
+  if (!nuevoRol) return;
+
+  const rolesValidos = ["socio", "directiva", "jurado", "admin"];
+
+  if (!rolesValidos.includes(nuevoRol)) {
+    alert("Rol no válido.");
+    return;
+  }
+
+  try {
+    const usuarioRef = doc(db, "usuarios", usuarioId);
+
+    await updateDoc(usuarioRef, {
+      rol: nuevoRol
+    });
+
+    alert("Rol actualizado correctamente.");
+
+    mostrarGestionUsuarios();
+
+  } catch (error) {
+    console.error(error);
+    alert("No se pudo cambiar el rol.");
+  }
+}
+
+window.cambiarRol = cambiarRol;
+
+async function desactivarUsuario(usuarioId) {
+  const confirmar = confirm(
+    "¿Seguro que quieres desactivar este usuario?"
+  );
+
+  if (!confirmar) return;
+
+  try {
+    const usuarioRef = doc(db, "usuarios", usuarioId);
+
+    await updateDoc(usuarioRef, {
+      activo: false
+    });
+
+    alert("Usuario desactivado correctamente.");
+
+    mostrarGestionUsuarios();
+
+  } catch (error) {
+    console.error(error);
+    alert("No se pudo desactivar el usuario.");
+  }
+}
+
+window.desactivarUsuario = desactivarUsuario;
 
