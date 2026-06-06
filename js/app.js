@@ -62,8 +62,10 @@ loginForm.addEventListener("submit", async (e) => {
     loginMessage.textContent = "Error: " + error.code;
   }
 });
-
 function mostrarDashboard(usuario) {
+  const esJuradoExterno =
+    usuario.rol === "jurado" && usuario.esSocio === false;
+
   document.body.innerHTML = `
     <main class="app-page">
 
@@ -75,16 +77,32 @@ function mostrarDashboard(usuario) {
       <div id="content-area"></div>
 
       <nav class="bottom-nav">
-  <button>🏠<span>Inicio</span></button>
-  <button>📅<span>Actividades</span></button>
-  <button>📷<span>Liga</span></button>
-  <button>📄<span>Docs</span></button>
-  ${usuario.rol === "admin" || usuario.rol === "directiva"
-      ? `<button>⚙️<span>Admin</span></button>`
-      : ""
+        ${esJuradoExterno
+      ? `
+              <button>⚖️<span>Jurado</span></button>
+              <button>🏆<span>Clasificación</span></button>
+              <button>👤<span>Perfil</span></button>
+            `
+      : `
+              <button>🏠<span>Inicio</span></button>
+              <button>📅<span>Actividades</span></button>
+              <button>📷<span>Liga</span></button>
+              <button>📄<span>Docs</span></button>
+
+              ${usuario.rol === "admin" || usuario.rol === "directiva"
+        ? `<button>⚙️<span>Admin</span></button>`
+        : ""
+      }
+
+              ${usuario.rol === "jurado" || usuario.rol === "admin"
+        ? `<button>⚖️<span>Jurado</span></button>`
+        : ""
+      }
+
+              <button>👤<span>Perfil</span></button>
+            `
     }
-  <button>👤<span>Perfil</span></button>
-</nav>
+      </nav>
 
     </main>
   `;
@@ -95,24 +113,39 @@ function mostrarDashboard(usuario) {
     location.reload();
   });
 
-  mostrarInicio(usuario);
-
   const botones = document.querySelectorAll(".bottom-nav button");
+
+  if (esJuradoExterno) {
+    mostrarPanelJurado(usuario);
+
+    botones[0].addEventListener("click", () => mostrarPanelJurado(usuario));
+    botones[1].addEventListener("click", () => mostrarClasificacionJurado(usuario));
+    botones[2].addEventListener("click", () => mostrarPerfil(usuario));
+
+    return;
+  }
+
+  mostrarInicio(usuario);
 
   botones[0].addEventListener("click", () => mostrarInicio(usuario));
   botones[1].addEventListener("click", () => mostrarActividades(usuario));
   botones[2].addEventListener("click", () => mostrarLiga(usuario));
   botones[3].addEventListener("click", () => mostrarDocumentos());
 
+  let indice = 4;
+
   if (usuario.rol === "admin" || usuario.rol === "directiva") {
-    botones[4].addEventListener("click", () => mostrarAdmin(usuario));
-    botones[5].addEventListener("click", () => mostrarPerfil(usuario));
-  } else {
-    botones[4].addEventListener("click", () => mostrarPerfil(usuario));
+    botones[indice].addEventListener("click", () => mostrarAdmin(usuario));
+    indice++;
   }
 
-}
+  if (usuario.rol === "jurado" || usuario.rol === "admin") {
+    botones[indice].addEventListener("click", () => mostrarPanelJurado(usuario));
+    indice++;
+  }
 
+  botones[indice].addEventListener("click", () => mostrarPerfil(usuario));
+}
 
 async function mostrarInicio(usuario) {
 
@@ -2297,3 +2330,262 @@ async function guardarJuradoLiga() {
 
 window.guardarJuradoLiga = guardarJuradoLiga;
 
+async function mostrarPanelJurado(usuario) {
+  const contentArea = document.getElementById("content-area");
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
+      <h2>⚖️ Panel del jurado</h2>
+      <p>Cargando fotografías...</p>
+    </section>
+  `;
+
+  try {
+    const convocatoriaQuery = query(
+      collection(db, "convocatorias"),
+      where("activa", "==", true)
+    );
+
+    const convocatoriaSnapshot = await getDocs(convocatoriaQuery);
+
+    if (convocatoriaSnapshot.empty) {
+      contentArea.innerHTML = `
+        <section class="dashboard-card">
+          <h2>⚖️ Panel del jurado</h2>
+          <p>No hay convocatoria activa para valorar.</p>
+        </section>
+      `;
+      return;
+    }
+
+    const convocatoria = convocatoriaSnapshot.docs[0].data();
+
+    const fotosQuery = query(
+      collection(db, "fotos"),
+      where("convocatoriaId", "==", convocatoria.codigo),
+      where("visible", "==", true)
+    );
+
+    const fotosSnapshot = await getDocs(fotosQuery);
+
+    let html = `
+      <section class="dashboard-card">
+        <h2>⚖️ Panel del jurado</h2>
+        <p><strong>Convocatoria:</strong> ${convocatoria.titulo}</p>
+      </section>
+
+      <section class="dashboard-grid">
+    `;
+
+    if (fotosSnapshot.empty) {
+      html += `
+        <article class="dashboard-card">
+          <p>No hay fotografías presentadas todavía.</p>
+        </article>
+      `;
+    } else {
+      let contador = 1;
+
+      fotosSnapshot.forEach((docFoto) => {
+        const foto = docFoto.data();
+        const fotoId = docFoto.id;
+
+        html += `
+          <article class="dashboard-card">
+            <h3>📷 Fotografía ${contador}</h3>
+
+            <p><strong>Título:</strong> ${foto.tituloFoto ?? "-"}</p>
+
+          <img
+  src="${foto.urlFoto}"
+  alt="${foto.tituloFoto ?? "Fotografía"}"
+  class="miniatura-foto"
+>
+
+<br><br>
+
+<button onclick="abrirVisorFoto('${foto.urlFoto}', '${foto.tituloFoto ?? "Fotografía"}')">
+  🔍 Ver fotografía grande
+</button>
+
+<br><br>
+
+<button onclick="mostrarFormularioValoracion('${fotoId}')">
+  Valorar fotografía
+</button>
+          </article>
+        `;
+
+        contador++;
+      });
+    }
+
+    html += `</section>`;
+
+    contentArea.innerHTML = html;
+
+  } catch (error) {
+    console.error(error);
+
+    contentArea.innerHTML = `
+      <section class="dashboard-card">
+        <h2>⚖️ Panel del jurado</h2>
+        <p>Error al cargar fotografías.</p>
+      </section>
+    `;
+  }
+}
+
+window.mostrarPanelJurado = mostrarPanelJurado;
+
+function abrirVisorFoto(urlFoto, tituloFoto) {
+  const visor = document.createElement("div");
+
+  visor.className = "visor-foto";
+
+  visor.innerHTML = `
+    <div class="visor-foto-contenido">
+      <button class="visor-cerrar" onclick="cerrarVisorFoto()">
+        ✕
+      </button>
+
+      <img
+        src="${urlFoto}"
+        alt="${tituloFoto}"
+        class="visor-foto-img"
+      >
+
+      <p>${tituloFoto}</p>
+    </div>
+  `;
+
+  document.body.appendChild(visor);
+}
+
+window.abrirVisorFoto = abrirVisorFoto;
+
+function cerrarVisorFoto() {
+  const visor = document.querySelector(".visor-foto");
+
+  if (visor) {
+    visor.remove();
+  }
+}
+
+window.cerrarVisorFoto = cerrarVisorFoto;
+
+async function mostrarFormularioValoracion(fotoId) {
+  const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
+  const contentArea = document.getElementById("content-area");
+
+  if (!usuario) {
+    alert("No se ha encontrado el usuario.");
+    return;
+  }
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
+      <h2>⚖️ Valorar fotografía</h2>
+      <p>Cargando fotografía...</p>
+    </section>
+  `;
+
+  try {
+    const fotoRef = doc(db, "fotos", fotoId);
+    const fotoSnap = await getDoc(fotoRef);
+
+    if (!fotoSnap.exists()) {
+      alert("No se encontró la fotografía.");
+      mostrarPanelJurado(usuario);
+      return;
+    }
+
+    const foto = fotoSnap.data();
+
+    contentArea.innerHTML = `
+      <section class="dashboard-card">
+        <h2>⚖️ Valorar fotografía</h2>
+
+        <p><strong>Título:</strong> ${foto.tituloFoto ?? "-"}</p>
+
+        <img
+          src="${foto.urlFoto}"
+          alt="${foto.tituloFoto ?? "Fotografía"}"
+          class="miniatura-foto"
+        >
+
+        <br><br>
+
+        <button onclick="abrirVisorFoto('${foto.urlFoto}', '${foto.tituloFoto ?? "Fotografía"}')">
+          🔍 Ver fotografía grande
+        </button>
+
+        <hr>
+
+        <label>Técnica / calidad fotográfica (0 a 5)</label>
+        <input type="number" id="valor-tecnica" min="0" max="5" step="0.5">
+
+        <label>Creatividad / originalidad (0 a 3)</label>
+        <input type="number" id="valor-creatividad" min="0" max="3" step="0.5">
+
+        <label>Dificultad / mérito (0 a 2)</label>
+        <input type="number" id="valor-dificultad" min="0" max="2" step="0.5">
+
+        <button onclick="guardarValoracion('${fotoId}')">
+          Guardar valoración
+        </button>
+
+        <button onclick="mostrarPanelJurado(${JSON.stringify(usuario).replace(/"/g, '&quot;')})">
+          Volver
+        </button>
+      </section>
+    `;
+
+  } catch (error) {
+    console.error(error);
+    alert("Error cargando fotografía.");
+  }
+}
+
+window.mostrarFormularioValoracion = mostrarFormularioValoracion;
+
+async function guardarValoracion(fotoId) {
+  const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
+
+  const tecnica = Number(document.getElementById("valor-tecnica").value);
+  const creatividad = Number(document.getElementById("valor-creatividad").value);
+  const dificultad = Number(document.getElementById("valor-dificultad").value);
+
+  if (
+    tecnica < 0 || tecnica > 5 ||
+    creatividad < 0 || creatividad > 3 ||
+    dificultad < 0 || dificultad > 2
+  ) {
+    alert("Revisa las puntuaciones. Técnica 0-5, creatividad 0-3, dificultad 0-2.");
+    return;
+  }
+
+  const total = tecnica + creatividad + dificultad;
+
+  try {
+    await addDoc(collection(db, "votaciones"), {
+      fotoId,
+      juradoEmail: usuario.email,
+      tecnica,
+      creatividad,
+      dificultad,
+      total,
+      fecha: serverTimestamp()
+    });
+
+    alert(`Valoración guardada. Total: ${total}`);
+
+    mostrarPanelJurado(usuario);
+
+  } catch (error) {
+    console.error(error);
+    alert("No se pudo guardar la valoración.");
+  }
+}
+
+window.guardarValoracion = guardarValoracion;
