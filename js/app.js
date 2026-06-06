@@ -79,11 +79,10 @@ function mostrarDashboard(usuario) {
   <button>📅<span>Actividades</span></button>
   <button>📷<span>Liga</span></button>
   <button>📄<span>Docs</span></button>
-  ${
-    usuario.rol === "admin" || usuario.rol === "directiva"
+  ${usuario.rol === "admin" || usuario.rol === "directiva"
       ? `<button>⚙️<span>Admin</span></button>`
       : ""
-  }
+    }
   <button>👤<span>Perfil</span></button>
 </nav>
 
@@ -100,17 +99,17 @@ function mostrarDashboard(usuario) {
 
   const botones = document.querySelectorAll(".bottom-nav button");
 
-botones[0].addEventListener("click", () => mostrarInicio(usuario));
-botones[1].addEventListener("click", () => mostrarActividades(usuario));
-botones[2].addEventListener("click", () => mostrarLiga(usuario));
-botones[3].addEventListener("click", () => mostrarDocumentos());
+  botones[0].addEventListener("click", () => mostrarInicio(usuario));
+  botones[1].addEventListener("click", () => mostrarActividades(usuario));
+  botones[2].addEventListener("click", () => mostrarLiga(usuario));
+  botones[3].addEventListener("click", () => mostrarDocumentos());
 
-if (usuario.rol === "admin" || usuario.rol === "directiva") {
-  botones[4].addEventListener("click", () => mostrarAdmin(usuario));
-  botones[5].addEventListener("click", () => mostrarPerfil(usuario));
-} else {
-  botones[4].addEventListener("click", () => mostrarPerfil(usuario));
-}
+  if (usuario.rol === "admin" || usuario.rol === "directiva") {
+    botones[4].addEventListener("click", () => mostrarAdmin(usuario));
+    botones[5].addEventListener("click", () => mostrarPerfil(usuario));
+  } else {
+    botones[4].addEventListener("click", () => mostrarPerfil(usuario));
+  }
 
 }
 
@@ -147,16 +146,16 @@ async function mostrarInicio(usuario) {
 
     const actividadesSnapshot = await getDocs(actividadesQuery);
 
-let actividadHtml = "";
+    let actividadHtml = "";
 
-const hoy = new Date().toISOString().split("T")[0];
+    const hoy = new Date().toISOString().split("T")[0];
 
-const actividadesValidas = actividadesSnapshot.docs.filter(doc => {
-  const actividad = doc.data();
-  return actividad.fecha >= hoy;
-});
+    const actividadesValidas = actividadesSnapshot.docs.filter(doc => {
+      const actividad = doc.data();
+      return actividad.fecha >= hoy;
+    });
 
-if (actividadesValidas.length === 0) {
+    if (actividadesValidas.length === 0) {
 
       actividadHtml = `
         <article class="dashboard-card">
@@ -236,14 +235,14 @@ if (actividadesValidas.length === 0) {
 
     const avisosSnapshot = await getDocs(avisosQuery);
 
-let avisosHtml = "";
+    let avisosHtml = "";
 
-const avisosValidos = avisosSnapshot.docs.filter(doc => {
-  const aviso = doc.data();
-  return aviso.fecha >= hoy;
-});
+    const avisosValidos = avisosSnapshot.docs.filter(doc => {
+      const aviso = doc.data();
+      return aviso.fecha >= hoy;
+    });
 
-if (avisosValidos.length === 0) {
+    if (avisosValidos.length === 0) {
 
       avisosHtml = `
         <article class="dashboard-card">
@@ -255,7 +254,7 @@ if (avisosValidos.length === 0) {
       avisosValidos.forEach((doc) => {
         const aviso = doc.data();
 
-       avisosHtml += `
+        avisosHtml += `
   <article class="dashboard-card">
     <h2>📢 Aviso</h2>
     <h3>${aviso.titulo}</h3>
@@ -340,7 +339,7 @@ async function mostrarActividades(usuario) {
 
         const hoy = new Date().toISOString().split("T")[0];
 
-      if (actividad.fecha < hoy) continue;
+        if (actividad.fecha < hoy) continue;
 
         const inscripcionQuery = query(
           collection(db, "inscripciones"),
@@ -1162,6 +1161,18 @@ function mostrarAdmin(usuario) {
 
 </article>
 
+<article class="dashboard-card">
+  <h3>📷 Gestión Liga</h3>
+
+  <p>
+    Crear y gestionar convocatorias de la liga fotográfica.
+  </p>
+
+  <button onclick="mostrarGestionLiga()">
+    Gestionar liga
+  </button>
+</article>
+
     </section>
   `;
 }
@@ -1840,4 +1851,351 @@ async function desactivarUsuario(usuarioId) {
 }
 
 window.desactivarUsuario = desactivarUsuario;
+
+function mostrarGestionLiga() {
+  const contentArea = document.getElementById("content-area");
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
+      <h2>📷 Gestión Liga</h2>
+      <p>Gestión de convocatorias de la liga fotográfica.</p>
+    </section>
+
+    <section class="dashboard-grid">
+      <article class="dashboard-card">
+        <h3>➕ Crear convocatoria</h3>
+        <p>Crear una nueva convocatoria mensual.</p>
+
+        <button onclick="mostrarFormularioConvocatoria()">
+          Crear convocatoria
+        </button>
+      </article>
+
+      <article class="dashboard-card">
+        <h3>📋 Ver convocatorias</h3>
+        <p>Consultar convocatorias creadas.</p>
+
+        <button onclick="mostrarListadoConvocatorias()">
+          Ver convocatorias
+        </button>
+      </article>
+    </section>
+
+    <section class="dashboard-card">
+      <button onclick="volverAdmin()">Volver</button>
+    </section>
+  `;
+}
+
+window.mostrarGestionLiga = mostrarGestionLiga;
+
+function mostrarFormularioConvocatoria() {
+
+  const contentArea = document.getElementById("content-area");
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
+
+      <h2>📷 Nueva convocatoria</h2>
+
+      <label>Título</label>
+      <input
+        type="text"
+        id="convocatoria-titulo"
+        placeholder="Ejemplo: Liga AGAFONA Septiembre 2026"
+      >
+
+      <label>Código</label>
+      <input
+        type="text"
+        id="convocatoria-codigo"
+        placeholder="Ejemplo: SEP2026"
+      >
+
+      <label>Fecha inicio</label>
+      <input
+        type="date"
+        id="convocatoria-fecha-inicio"
+      >
+
+      <label>Fecha fin</label>
+      <input
+        type="date"
+        id="convocatoria-fecha-fin"
+      >
+
+      <button onclick="guardarConvocatoria()">
+        Guardar convocatoria
+      </button>
+
+      <button onclick="mostrarGestionLiga()">
+        Volver
+      </button>
+
+    </section>
+  `;
+}
+
+window.mostrarFormularioConvocatoria = mostrarFormularioConvocatoria;
+
+async function guardarConvocatoria() {
+
+  const titulo =
+    document.getElementById("convocatoria-titulo").value.trim();
+
+  const codigo =
+    document.getElementById("convocatoria-codigo").value.trim();
+
+  const fechaInicio =
+    document.getElementById("convocatoria-fecha-inicio").value;
+
+  const fechaFin =
+    document.getElementById("convocatoria-fecha-fin").value;
+
+  if (
+    !titulo ||
+    !codigo ||
+    !fechaInicio ||
+    !fechaFin
+  ) {
+    alert("Completa todos los campos.");
+    return;
+  }
+
+  try {
+
+    await addDoc(collection(db, "convocatorias"), {
+
+      titulo,
+      codigo,
+      fechaInicio,
+      fechaFin,
+
+      activa: false,
+
+      estado: "Preparada"
+
+    });
+
+    alert("Convocatoria creada correctamente.");
+
+    mostrarGestionLiga();
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert("No se pudo crear la convocatoria.");
+
+  }
+}
+
+window.guardarConvocatoria = guardarConvocatoria;
+
+async function mostrarListadoConvocatorias() {
+  const contentArea = document.getElementById("content-area");
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
+      <h2>📋 Convocatorias</h2>
+      <p>Cargando convocatorias...</p>
+    </section>
+  `;
+
+  try {
+    const snapshot = await getDocs(collection(db, "convocatorias"));
+
+    let html = `
+      <section class="dashboard-card">
+        <h2>📋 Convocatorias</h2>
+      </section>
+
+      <section class="dashboard-grid">
+    `;
+
+    snapshot.forEach((docConvocatoria) => {
+      const convocatoria = docConvocatoria.data();
+      const convocatoriaId = docConvocatoria.id;
+
+      html += `
+        <article class="dashboard-card">
+          <h3>${convocatoria.titulo}</h3>
+          <p><strong>Código:</strong> ${convocatoria.codigo}</p>
+          <p><strong>Inicio:</strong> ${convocatoria.fechaInicio}</p>
+          <p><strong>Fin:</strong> ${convocatoria.fechaFin}</p>
+          <p><strong>Estado:</strong> ${convocatoria.estado}</p>
+          <p><strong>Activa:</strong> ${convocatoria.activa ? "Sí" : "No"}</p>
+
+          <button onclick="activarConvocatoria('${convocatoriaId}')">
+            Activar
+          </button>
+
+          <button onclick="cerrarConvocatoria('${convocatoriaId}')">
+            Cerrar
+          </button>
+
+          <button onclick="verParticipantesConvocatoria('${convocatoria.codigo}')">
+          Ver participantes
+          </button>
+        </article>
+
+      `;
+    });
+
+    html += `
+      </section>
+
+      <section class="dashboard-card">
+        <button onclick="mostrarGestionLiga()">Volver</button>
+      </section>
+    `;
+
+    contentArea.innerHTML = html;
+
+  } catch (error) {
+    console.error(error);
+    alert("Error cargando convocatorias");
+  }
+}
+
+window.mostrarListadoConvocatorias = mostrarListadoConvocatorias;
+
+async function activarConvocatoria(convocatoriaId) {
+  const confirmar = confirm(
+    "¿Seguro que quieres activar esta convocatoria?"
+  );
+
+  if (!confirmar) return;
+
+  try {
+    const convocatoriaRef = doc(db, "convocatorias", convocatoriaId);
+
+    await updateDoc(convocatoriaRef, {
+      activa: true,
+      estado: "Abierta"
+    });
+
+    alert("Convocatoria activada correctamente.");
+
+    mostrarListadoConvocatorias();
+
+  } catch (error) {
+    console.error(error);
+    alert("No se pudo activar la convocatoria.");
+  }
+}
+
+window.activarConvocatoria = activarConvocatoria;
+
+
+async function cerrarConvocatoria(convocatoriaId) {
+  const confirmar = confirm(
+    "¿Seguro que quieres cerrar esta convocatoria?"
+  );
+
+  if (!confirmar) return;
+
+  try {
+    const convocatoriaRef = doc(db, "convocatorias", convocatoriaId);
+
+    await updateDoc(convocatoriaRef, {
+      activa: false,
+      estado: "Cerrada"
+    });
+
+    alert("Convocatoria cerrada correctamente.");
+
+    mostrarListadoConvocatorias();
+
+  } catch (error) {
+    console.error(error);
+    alert("No se pudo cerrar la convocatoria.");
+  }
+}
+
+window.cerrarConvocatoria = cerrarConvocatoria;
+
+async function verParticipantesConvocatoria(codigoConvocatoria) {
+  const contentArea = document.getElementById("content-area");
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
+      <h2>📷 Participantes</h2>
+      <p>Cargando participantes...</p>
+    </section>
+  `;
+
+  try {
+    const q = query(
+      collection(db, "fotos"),
+      where("convocatoriaId", "==", codigoConvocatoria),
+      where("visible", "==", true)
+    );
+
+    const snapshot = await getDocs(q);
+
+    let html = `
+      <section class="dashboard-card">
+        <h2>📷 Participantes</h2>
+        <p><strong>Convocatoria:</strong> ${codigoConvocatoria}</p>
+        <p><strong>Total participantes:</strong> ${snapshot.size}</p>
+      </section>
+
+      <section class="dashboard-grid">
+    `;
+
+    if (snapshot.empty) {
+      html += `
+        <article class="dashboard-card">
+          <p>No hay fotografías presentadas todavía.</p>
+        </article>
+      `;
+    } else {
+      let contador = 1;
+
+      snapshot.forEach((docFoto) => {
+        const foto = docFoto.data();
+
+        html += `
+          <article class="dashboard-card">
+            <h3>${contador}. ${foto.nombreSocio ?? "Socio"}</h3>
+            <p><strong>Título:</strong> ${foto.tituloFoto ?? "-"}</p>
+
+            <img
+              src="${foto.urlFoto}"
+              alt="${foto.tituloFoto ?? "Fotografía"}"
+              class="miniatura-foto"
+            >
+
+            <br><br>
+
+            <a href="${foto.urlFoto}" target="_blank" class="documento-link">
+              Ver fotografía
+            </a>
+          </article>
+        `;
+
+        contador++;
+      });
+    }
+
+    html += `
+      </section>
+
+      <section class="dashboard-card">
+        <button onclick="mostrarListadoConvocatorias()">
+          Volver
+        </button>
+      </section>
+    `;
+
+    contentArea.innerHTML = html;
+
+  } catch (error) {
+    console.error(error);
+    alert("Error cargando participantes");
+  }
+}
+
+window.verParticipantesConvocatoria = verParticipantesConvocatoria;
 
