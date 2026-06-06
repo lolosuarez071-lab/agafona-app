@@ -75,12 +75,17 @@ function mostrarDashboard(usuario) {
       <div id="content-area"></div>
 
       <nav class="bottom-nav">
-        <button>🏠<span>Inicio</span></button>
-        <button>📅<span>Actividades</span></button>
-        <button>📷<span>Liga</span></button>
-        <button>📄<span>Docs</span></button>
-        <button>👤<span>Perfil</span></button>
-      </nav>
+  <button>🏠<span>Inicio</span></button>
+  <button>📅<span>Actividades</span></button>
+  <button>📷<span>Liga</span></button>
+  <button>📄<span>Docs</span></button>
+  ${
+    usuario.rol === "admin" || usuario.rol === "directiva"
+      ? `<button>⚙️<span>Admin</span></button>`
+      : ""
+  }
+  <button>👤<span>Perfil</span></button>
+</nav>
 
     </main>
   `;
@@ -95,12 +100,20 @@ function mostrarDashboard(usuario) {
 
   const botones = document.querySelectorAll(".bottom-nav button");
 
-  botones[0].addEventListener("click", () => mostrarInicio(usuario));
-  botones[1].addEventListener("click", () => mostrarActividades(usuario));
-  botones[2].addEventListener("click", () => mostrarLiga(usuario));
-  botones[3].addEventListener("click", mostrarDocumentos);
+botones[0].addEventListener("click", () => mostrarInicio(usuario));
+botones[1].addEventListener("click", () => mostrarActividades(usuario));
+botones[2].addEventListener("click", () => mostrarLiga(usuario));
+botones[3].addEventListener("click", () => mostrarDocumentos());
+
+if (usuario.rol === "admin" || usuario.rol === "directiva") {
+  botones[4].addEventListener("click", () => mostrarAdmin(usuario));
+  botones[5].addEventListener("click", () => mostrarPerfil(usuario));
+} else {
   botones[4].addEventListener("click", () => mostrarPerfil(usuario));
 }
+
+}
+
 
 async function mostrarInicio(usuario) {
 
@@ -134,9 +147,17 @@ async function mostrarInicio(usuario) {
 
     const actividadesSnapshot = await getDocs(actividadesQuery);
 
-    let actividadHtml = "";
+let actividadHtml = "";
 
-    if (actividadesSnapshot.empty) {
+const hoy = new Date().toISOString().split("T")[0];
+
+const actividadesValidas = actividadesSnapshot.docs.filter(doc => {
+  const actividad = doc.data();
+  return actividad.fecha >= hoy;
+});
+
+if (actividadesValidas.length === 0) {
+
       actividadHtml = `
         <article class="dashboard-card">
           <h2>Próxima actividad</h2>
@@ -144,7 +165,7 @@ async function mostrarInicio(usuario) {
         </article>
       `;
     } else {
-      const actividad = actividadesSnapshot.docs[0].data();
+      const actividad = actividadesValidas[0].data();
 
       actividadHtml = `
         <article class="dashboard-card">
@@ -215,9 +236,15 @@ async function mostrarInicio(usuario) {
 
     const avisosSnapshot = await getDocs(avisosQuery);
 
-    let avisosHtml = "";
+let avisosHtml = "";
 
-    if (avisosSnapshot.empty) {
+const avisosValidos = avisosSnapshot.docs.filter(doc => {
+  const aviso = doc.data();
+  return aviso.fecha >= hoy;
+});
+
+if (avisosValidos.length === 0) {
+
       avisosHtml = `
         <article class="dashboard-card">
           <h2>Avisos</h2>
@@ -225,33 +252,40 @@ async function mostrarInicio(usuario) {
         </article>
       `;
     } else {
-      avisosSnapshot.forEach((doc) => {
+      avisosValidos.forEach((doc) => {
         const aviso = doc.data();
 
-        avisosHtml += `
-          <article class="dashboard-card">
-            <h2>${aviso.titulo}</h2>
-            <p>${aviso.mensaje}</p>
-            <p><strong>Fecha:</strong> ${aviso.fecha}</p>
-          </article>
-        `;
+       avisosHtml += `
+  <article class="dashboard-card">
+    <h2>📢 Aviso</h2>
+    <h3>${aviso.titulo}</h3>
+    <p>${aviso.mensaje}</p>
+    <p><strong>Fecha:</strong> ${aviso.fecha}</p>
+  </article>
+`;
       });
     }
 
     contentArea.innerHTML = `
-      <section class="welcome-card">
-        <h1>Hola, ${usuario.nombre} 👋</h1>
-        <p>${descripcionRol}</p>
-      </section>
+  <section class="welcome-card">
+    <h1>Hola, ${usuario.nombre} 👋</h1>
+    <p>${descripcionRol}</p>
 
-      <section class="dashboard-grid">
-        ${actividadHtml}
+    <br>
 
-        ${ligaHtml}
+    <p>
+       Bienvenido/a a la app AGAFONA.
+      Ya está disponible la primera versión de prueba para socios.
+    </p>
 
-        ${avisosHtml}
-      </section>
-    `;
+  </section>
+
+  <section class="dashboard-grid">
+    ${actividadHtml}
+    ${ligaHtml}
+    ${avisosHtml}
+  </section>
+`;
 
   } catch (error) {
     console.error("Error cargando inicio:", error);
@@ -303,6 +337,10 @@ async function mostrarActividades(usuario) {
       for (const docActividad of actividadesSnapshot.docs) {
         const actividadId = docActividad.id;
         const actividad = docActividad.data();
+
+        const hoy = new Date().toISOString().split("T")[0];
+
+      if (actividad.fecha < hoy) continue;
 
         const inscripcionQuery = query(
           collection(db, "inscripciones"),
@@ -1032,3 +1070,512 @@ async function cancelarInscripcion(actividadId) {
 }
 
 window.cancelarInscripcion = cancelarInscripcion;
+
+function mostrarAdmin(usuario) {
+  const contentArea = document.getElementById("content-area");
+
+  if (usuario.rol !== "admin" && usuario.rol !== "directiva") {
+    contentArea.innerHTML = `
+      <section class="dashboard-card">
+        <h2>Administración</h2>
+        <p>No tienes permisos para acceder a esta sección.</p>
+      </section>
+    `;
+    return;
+  }
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
+      <h2>⚙️ Panel de Administración</h2>
+      <p>Gestión interna de AGAFONA.</p>
+    </section>
+
+    <section class="dashboard-grid">
+      <article class="dashboard-card">
+        <h3>📅 Actividades</h3>
+        <p>Crear nuevas actividades para los socios.</p>
+        <button onclick="mostrarFormularioActividad()">
+          Crear actividad
+        </button>
+      </article>
+
+      <article class="dashboard-card">
+        <h3>📢 Avisos</h3>
+        <p>Publicar avisos importantes en el inicio.</p>
+        <button onclick="mostrarFormularioAviso()">
+          Crear aviso
+        </button>
+      </article>
+
+      <article class="dashboard-card">
+        <h3>📄 Documentos</h3>
+        <p>Añadir documentos visibles para socios o directiva.</p>
+        <button onclick="mostrarFormularioDocumento()">
+          Añadir documento
+        </button>
+      </article>
+
+      <article class="dashboard-card">
+  <h3>📋 Gestionar actividades</h3>
+  <p>Ver actividades creadas y desactivar actividades.</p>
+
+  <button onclick="mostrarGestionActividades()">
+    Gestionar actividades
+  </button>
+</article>
+
+<article class="dashboard-card">
+  <h3>📢 Gestionar avisos</h3>
+
+  <p>
+    Ver avisos creados y desactivar avisos antiguos.
+  </p>
+
+  <button onclick="mostrarGestionAvisos()">
+    Gestionar avisos
+  </button>
+
+</article>
+
+    </section>
+  `;
+}
+
+window.mostrarAdmin = mostrarAdmin;
+
+function mostrarFormularioDocumento() {
+
+  const contentArea = document.getElementById("content-area");
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
+
+      <h2>📄 Nuevo documento</h2>
+
+      <label>Título</label>
+      <input type="text" id="doc-titulo">
+
+      <label>Categoría</label>
+      <input type="text" id="doc-categoria">
+
+      <label>URL</label>
+      <input type="text" id="doc-url">
+
+      <label>Visible para</label>
+
+      <select id="doc-visible">
+        <option value="socios">Socios</option>
+        <option value="directiva">Directiva</option>
+        <option value="admin">Admin</option>
+      </select>
+
+      <br><br>
+
+      <button onclick="guardarDocumento()">
+        Guardar documento
+      </button>
+
+      <button onclick="volverAdmin()">
+        Volver
+      </button>
+
+    </section>
+  `;
+}
+
+window.mostrarFormularioDocumento = mostrarFormularioDocumento;
+
+async function guardarDocumento() {
+
+  const titulo =
+    document.getElementById("doc-titulo").value.trim();
+
+  const categoria =
+    document.getElementById("doc-categoria").value.trim();
+
+  const url =
+    document.getElementById("doc-url").value.trim();
+
+  const visiblePara =
+    document.getElementById("doc-visible").value;
+
+  if (!titulo || !categoria || !url) {
+
+    alert("Completa todos los campos.");
+    return;
+  }
+
+  try {
+
+    await addDoc(collection(db, "documentos"), {
+
+      titulo,
+      categoria,
+      url,
+      visiblePara,
+      publico: true
+
+    });
+
+    alert("Documento creado correctamente.");
+
+    const usuario =
+      JSON.parse(localStorage.getItem("usuarioAgafona"));
+
+    mostrarAdmin(usuario);
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert("No se pudo guardar el documento.");
+  }
+}
+
+window.guardarDocumento = guardarDocumento;
+
+function mostrarFormularioActividad() {
+  const contentArea = document.getElementById("content-area");
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
+      <h2>📅 Crear actividad</h2>
+
+      <label>Título</label>
+      <input type="text" id="actividad-titulo" placeholder="Ejemplo: Salida fotográfica en La Janda">
+
+      <label>Fecha</label>
+      <input type="date" id="actividad-fecha">
+
+      <label>Lugar</label>
+      <input type="text" id="actividad-lugar" placeholder="Ejemplo: Benalup">
+
+      <label>Descripción</label>
+      <textarea id="actividad-descripcion" placeholder="Descripción de la actividad"></textarea>
+
+      <label>Plazas</label>
+      <input type="number" id="actividad-plazas" placeholder="Ejemplo: 25">
+
+      <button onclick="guardarActividad()">
+        Guardar actividad
+      </button>
+
+      <button onclick="volverAdmin()">
+        Volver
+      </button>
+    </section>
+  `;
+}
+
+window.mostrarFormularioActividad = mostrarFormularioActividad;
+
+async function guardarActividad() {
+  const titulo = document.getElementById("actividad-titulo").value.trim();
+  const fecha = document.getElementById("actividad-fecha").value;
+  const lugar = document.getElementById("actividad-lugar").value.trim();
+  const descripcion = document.getElementById("actividad-descripcion").value.trim();
+  const plazas = Number(document.getElementById("actividad-plazas").value);
+
+  if (!titulo || !fecha || !lugar || !descripcion) {
+    alert("Completa los campos obligatorios.");
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, "actividades"), {
+      titulo,
+      fecha,
+      lugar,
+      descripcion,
+      plazas: plazas || 0,
+      inscritos: 0,
+      activa: true,
+      fechaCreacion: serverTimestamp()
+    });
+
+    alert("Actividad creada correctamente.");
+
+    const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
+    mostrarAdmin(usuario);
+
+  } catch (error) {
+    console.error("Error creando actividad:", error);
+    alert("No se pudo crear la actividad.");
+  }
+}
+
+window.guardarActividad = guardarActividad;
+
+function volverAdmin() {
+  const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
+  mostrarAdmin(usuario);
+}
+
+window.volverAdmin = volverAdmin;
+
+function mostrarFormularioAviso() {
+  const contentArea = document.getElementById("content-area");
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
+      <h2>📢 Crear aviso</h2>
+
+      <label>Título</label>
+      <input type="text" id="aviso-titulo">
+
+      <label>Mensaje</label>
+      <textarea id="aviso-mensaje"></textarea>
+
+      <label>Fecha</label>
+      <input type="date" id="aviso-fecha">
+
+      <button onclick="guardarAviso()">
+        Guardar aviso
+      </button>
+
+      <button onclick="volverAdmin()">
+        Volver
+      </button>
+    </section>
+  `;
+}
+
+window.mostrarFormularioAviso = mostrarFormularioAviso;
+
+async function guardarAviso() {
+
+  const titulo = document.getElementById("aviso-titulo").value.trim();
+  const mensaje = document.getElementById("aviso-mensaje").value.trim();
+  const fecha = document.getElementById("aviso-fecha").value;
+
+  if (!titulo || !mensaje || !fecha) {
+    alert("Completa todos los campos.");
+    return;
+  }
+
+  try {
+
+    await addDoc(collection(db, "avisos"), {
+      titulo,
+      mensaje,
+      fecha,
+      activo: true,
+      fechaCreacion: serverTimestamp()
+    });
+
+    alert("Aviso creado correctamente.");
+
+    const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
+    mostrarAdmin(usuario);
+
+  } catch (error) {
+
+    console.error("Error creando aviso:", error);
+    alert("No se pudo crear el aviso.");
+  }
+}
+
+window.guardarAviso = guardarAviso;
+
+async function mostrarGestionActividades() {
+
+  const contentArea = document.getElementById("content-area");
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
+      <h2>📋 Gestionar actividades</h2>
+      <p>Cargando actividades...</p>
+    </section>
+  `;
+
+  try {
+
+    const q = query(collection(db, "actividades"));
+    const snapshot = await getDocs(q);
+
+    let html = `
+      <section class="dashboard-card">
+        <h2>📋 Gestionar actividades</h2>
+      </section>
+
+      <section class="dashboard-grid">
+    `;
+
+    snapshot.forEach((docActividad) => {
+
+      const actividad = docActividad.data();
+      const actividadId = docActividad.id;
+
+      html += `
+        <article class="dashboard-card">
+
+          <h3>${actividad.titulo}</h3>
+
+          <p>📅 ${actividad.fecha}</p>
+
+          <p>📍 ${actividad.lugar}</p>
+
+          <p>
+            <strong>Inscritos:</strong>
+            ${actividad.inscritos ?? 0}
+          </p>
+
+          <p>
+            <strong>Estado:</strong>
+            ${actividad.activa ? "Activa" : "Inactiva"}
+          </p>
+
+          <button onclick="desactivarActividad('${actividadId}')">
+            Desactivar actividad
+          </button>
+
+        </article>
+      `;
+    });
+
+    html += `
+      </section>
+
+      <section class="dashboard-card">
+        <button onclick="volverAdmin()">
+          Volver
+        </button>
+      </section>
+    `;
+
+    contentArea.innerHTML = html;
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert("Error cargando actividades");
+
+  }
+}
+
+window.mostrarGestionActividades = mostrarGestionActividades;
+
+async function desactivarActividad(actividadId) {
+
+  const confirmar = confirm(
+    "¿Seguro que quieres desactivar esta actividad?"
+  );
+
+  if (!confirmar) return;
+
+  try {
+
+    const actividadRef =
+      doc(db, "actividades", actividadId);
+
+    await updateDoc(actividadRef, {
+      activa: false
+    });
+
+    alert("Actividad desactivada correctamente");
+
+    mostrarGestionActividades();
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert("No se pudo desactivar la actividad");
+
+  }
+}
+
+window.desactivarActividad = desactivarActividad;
+
+
+async function desactivarAviso(avisoId) {
+
+  const confirmar = confirm(
+    "¿Seguro que quieres desactivar este aviso?"
+  );
+
+  if (!confirmar) return;
+
+  try {
+
+    const avisoRef =
+      doc(db, "avisos", avisoId);
+
+    await updateDoc(avisoRef, {
+      activo: false
+    });
+
+    alert("Aviso desactivado correctamente");
+
+    mostrarGestionAvisos();
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert("No se pudo desactivar el aviso");
+
+  }
+}
+
+window.desactivarAviso = desactivarAviso;
+
+async function mostrarGestionAvisos() {
+  const contentArea = document.getElementById("content-area");
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
+      <h2>📢 Gestionar avisos</h2>
+      <p>Cargando avisos...</p>
+    </section>
+  `;
+
+  try {
+    const q = query(collection(db, "avisos"));
+    const snapshot = await getDocs(q);
+
+    let html = `
+      <section class="dashboard-card">
+        <h2>📢 Gestionar avisos</h2>
+      </section>
+
+      <section class="dashboard-grid">
+    `;
+
+    snapshot.forEach((docAviso) => {
+      const aviso = docAviso.data();
+      const avisoId = docAviso.id;
+
+      html += `
+        <article class="dashboard-card">
+          <h3>${aviso.titulo}</h3>
+          <p>${aviso.mensaje}</p>
+          <p><strong>Fecha:</strong> ${aviso.fecha}</p>
+          <p><strong>Estado:</strong> ${aviso.activo ? "Activo" : "Inactivo"}</p>
+
+          <button onclick="desactivarAviso('${avisoId}')">
+            Desactivar aviso
+          </button>
+        </article>
+      `;
+    });
+
+    html += `
+      </section>
+
+      <section class="dashboard-card">
+        <button onclick="volverAdmin()">Volver</button>
+      </section>
+    `;
+
+    contentArea.innerHTML = html;
+
+  } catch (error) {
+    console.error(error);
+    alert("Error cargando avisos");
+  }
+}
+
+window.mostrarGestionAvisos = mostrarGestionAvisos;
+
