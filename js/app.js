@@ -17,7 +17,8 @@ import {
   increment,
   addDoc,
   serverTimestamp,
-  orderBy
+  orderBy,
+  limit
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const loginForm = document.getElementById("login-form");
@@ -522,14 +523,9 @@ async function mostrarLiga(usuario) {
     `;
 
   try {
-    const q = query(
-      collection(db, "convocatorias"),
-      where("activa", "==", true)
-    );
+    const convocatoria = await obtenerConvocatoriaActual();
 
-    const snapshot = await getDocs(q);
-
-    if (snapshot.empty) {
+if (!convocatoria) {  
       contentArea.innerHTML = `
           <section class="dashboard-card">
             <h2>Liga Fotográfica</h2>
@@ -539,9 +535,7 @@ async function mostrarLiga(usuario) {
       return;
     }
 
-    const convocatoria = snapshot.docs[0].data();
-
-    const fotosQuery = query(
+    const fotosQuery = query( 
       collection(db, "fotos"),
       where("convocatoriaId", "==", convocatoria.codigo),
       where("email", "==", usuario.email),
@@ -1885,101 +1879,110 @@ async function desactivarUsuario(usuarioId) {
 
 window.desactivarUsuario = desactivarUsuario;
 
-function mostrarGestionLiga() {
+async function mostrarGestionLiga() {
   const contentArea = document.getElementById("content-area");
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
       <h2>📷 Gestión Liga</h2>
-      <p>Gestión de convocatorias de la liga fotográfica.</p>
-    </section>
-
-    <section class="dashboard-grid">
-      <article class="dashboard-card">
-        <h3>➕ Crear convocatoria</h3>
-        <p>Crear una nueva convocatoria mensual.</p>
-
-        <button onclick="mostrarFormularioConvocatoria()">
-          Crear convocatoria
-        </button>
-      </article>
-
-      <article class="dashboard-card">
-        <h3>📋 Ver convocatorias</h3>
-        <p>Consultar convocatorias creadas.</p>
-
-        <button onclick="mostrarListadoConvocatorias()">
-          Ver convocatorias
-        </button>
-      </article>
-
-      <article class="dashboard-card">
-  <h3>👨‍⚖️ Jurado de la liga</h3>
-  <p>Gestionar los jurados que puntuarán toda la liga.</p>
-
-  <button onclick="mostrarGestionJuradoLiga()">
-    Gestionar jurado
-  </button>
-</article>
-
-    </section>
-
-    <section class="dashboard-card">
-      <button onclick="volverAdmin()">Volver</button>
+      <p>Cargando información de la liga...</p>
     </section>
   `;
+
+  try {
+    const ligasQuery = query(
+      collection(db, "ligas"),
+      where("activa", "==", true)
+    );
+
+    const ligasSnapshot = await getDocs(ligasQuery);
+
+    let ligaActualHtml = "";
+
+    if (ligasSnapshot.empty) {
+      ligaActualHtml = `
+        <article class="dashboard-card">
+          <h3>🏆 Liga actual</h3>
+          <p>No hay ninguna liga activa.</p>
+        </article>
+      `;
+    } else {
+      const liga = ligasSnapshot.docs[0].data();
+
+      const convocatoriasQuery = query(
+        collection(db, "convocatorias"),
+        where("ligaId", "==", ligasSnapshot.docs[0].id)
+      );
+
+      const convocatoriasSnapshot = await getDocs(convocatoriasQuery);
+
+      ligaActualHtml = `
+        <article class="dashboard-card">
+          <h3>🏆 Liga actual</h3>
+
+          <p><strong>${liga.titulo}</strong></p>
+          <p><strong>Años:</strong> ${liga.anioInicio} - ${liga.anioFin}</p>
+          <p><strong>Estado:</strong> ${liga.activa ? "Activa" : "Inactiva"}</p>
+          <p><strong>Convocatorias:</strong> ${convocatoriasSnapshot.size}</p>
+        </article>
+      `;
+    }
+
+    contentArea.innerHTML = `
+      <section class="dashboard-card">
+        <h2>📷 Gestión Liga</h2>
+        <p>Crear y gestionar convocatorias de la liga fotográfica.</p>
+      </section>
+
+      ${ligaActualHtml}
+
+      <section class="dashboard-grid">
+        <article class="dashboard-card">
+          <h3>🏆 Crear liga</h3>
+          <p>Crear una liga completa y generar sus convocatorias automáticamente.</p>
+
+          <button onclick="mostrarFormularioLiga()">
+            Crear liga
+          </button>
+        </article>
+
+        <article class="dashboard-card">
+          <h3>📋 Ver convocatorias</h3>
+          <p>Consultar convocatorias creadas.</p>
+
+          <button onclick="mostrarListadoConvocatorias()">
+            Ver convocatorias
+          </button>
+        </article>
+
+        <article class="dashboard-card">
+          <h3>👨‍⚖️ Jurado de la liga</h3>
+          <p>Gestionar los jurados que puntuarán toda la liga.</p>
+
+          <button onclick="mostrarGestionJuradoLiga()">
+            Gestionar jurado
+          </button>
+        </article>
+      </section>
+
+      <section class="dashboard-card">
+        <button onclick="volverAdmin()">Volver</button>
+      </section>
+    `;
+
+  } catch (error) {
+    console.error("Error cargando gestión liga:", error);
+
+    contentArea.innerHTML = `
+      <section class="dashboard-card">
+        <h2>📷 Gestión Liga</h2>
+        <p>Error al cargar la información de la liga.</p>
+      </section>
+    `;
+  }
 }
 
 window.mostrarGestionLiga = mostrarGestionLiga;
-
-function mostrarFormularioConvocatoria() {
-
-  const contentArea = document.getElementById("content-area");
-
-  contentArea.innerHTML = `
-    <section class="dashboard-card">
-
-      <h2>📷 Nueva convocatoria</h2>
-
-      <label>Título</label>
-      <input
-        type="text"
-        id="convocatoria-titulo"
-        placeholder="Ejemplo: Liga AGAFONA Septiembre 2026"
-      >
-
-      <label>Código</label>
-      <input
-        type="text"
-        id="convocatoria-codigo"
-        placeholder="Ejemplo: SEP2026"
-      >
-
-      <label>Fecha inicio</label>
-      <input
-        type="date"
-        id="convocatoria-fecha-inicio"
-      >
-
-      <label>Fecha fin</label>
-      <input
-        type="date"
-        id="convocatoria-fecha-fin"
-      >
-
-      <button onclick="guardarConvocatoria()">
-        Guardar convocatoria
-      </button>
-
-      <button onclick="mostrarGestionLiga()">
-        Volver
-      </button>
-
-    </section>
-  `;
-}
-
-window.mostrarFormularioConvocatoria = mostrarFormularioConvocatoria;
 
 async function guardarConvocatoria() {
 
@@ -2059,6 +2062,7 @@ async function mostrarListadoConvocatorias() {
     snapshot.forEach((docConvocatoria) => {
       const convocatoria = docConvocatoria.data();
       const convocatoriaId = docConvocatoria.id;
+      const estadoCalculado = calcularEstadoConvocatoria(convocatoria);
 
       html += `
         <article class="dashboard-card">
@@ -2066,8 +2070,8 @@ async function mostrarListadoConvocatorias() {
           <p><strong>Código:</strong> ${convocatoria.codigo}</p>
           <p><strong>Inicio:</strong> ${convocatoria.fechaInicio}</p>
           <p><strong>Fin:</strong> ${convocatoria.fechaFin}</p>
-          <p><strong>Estado:</strong> ${convocatoria.estado}</p>
-          <p><strong>Activa:</strong> ${convocatoria.activa ? "Sí" : "No"}</p>
+          <p><strong>Estado:</strong> ${estadoCalculado}</p>
+          
 
           <button onclick="activarConvocatoria('${convocatoriaId}')">
             Activar
@@ -2404,12 +2408,6 @@ async function mostrarPanelJurado(usuario) {
 
 <br><br>
 
-<button onclick="abrirVisorFoto('${foto.urlFoto}', '${foto.tituloFoto ?? "Fotografía"}')">
-  🔍 Ver fotografía grande
-</button>
-
-<br><br>
-
 <button onclick="mostrarFormularioValoracion('${fotoId}')">
   Valorar fotografía
 </button>
@@ -2502,6 +2500,26 @@ async function mostrarFormularioValoracion(fotoId) {
 
     const foto = fotoSnap.data();
 
+    let tecnicaActual = "";
+    let creatividadActual = "";
+    let dificultadActual = "";
+    
+    const votoQuery = query(
+      collection(db, "votaciones"),
+      where("fotoId", "==", fotoId),
+      where("juradoEmail", "==", usuario.email)
+    );
+    
+    const votoSnapshot = await getDocs(votoQuery);
+    
+    if (!votoSnapshot.empty) {
+      const voto = votoSnapshot.docs[0].data();
+    
+      tecnicaActual = voto.tecnica;
+      creatividadActual = voto.creatividad;
+      dificultadActual = voto.dificultad;
+    }
+
     contentArea.innerHTML = `
       <section class="dashboard-card">
         <h2>⚖️ Valorar fotografía</h2>
@@ -2522,14 +2540,35 @@ async function mostrarFormularioValoracion(fotoId) {
 
         <hr>
 
-        <label>Técnica / calidad fotográfica (0 a 5)</label>
-        <input type="number" id="valor-tecnica" min="0" max="5" step="0.5">
+       <label>Técnica / calidad fotográfica (0 a 5)</label>
+<input
+  type="number"
+  id="valor-tecnica"
+  min="0"
+  max="5"
+  step="0.5"
+  value="${tecnicaActual}"
+>
 
-        <label>Creatividad / originalidad (0 a 3)</label>
-        <input type="number" id="valor-creatividad" min="0" max="3" step="0.5">
+<label>Creatividad / originalidad (0 a 3)</label>
+<input
+  type="number"
+  id="valor-creatividad"
+  min="0"
+  max="3"
+  step="0.5"
+  value="${creatividadActual}"
+>
 
-        <label>Dificultad / mérito (0 a 2)</label>
-        <input type="number" id="valor-dificultad" min="0" max="2" step="0.5">
+<label>Dificultad / mérito (0 a 2)</label>
+<input
+  type="number"
+  id="valor-dificultad"
+  min="0"
+  max="2"
+  step="0.5"
+  value="${dificultadActual}"
+>
 
         <button onclick="guardarValoracion('${fotoId}')">
           Guardar valoración
@@ -2568,24 +2607,217 @@ async function guardarValoracion(fotoId) {
   const total = tecnica + creatividad + dificultad;
 
   try {
-    await addDoc(collection(db, "votaciones"), {
-      fotoId,
-      juradoEmail: usuario.email,
-      tecnica,
-      creatividad,
-      dificultad,
-      total,
-      fecha: serverTimestamp()
-    });
 
-    alert(`Valoración guardada. Total: ${total}`);
-
+    const q = query(
+      collection(db, "votaciones"),
+      where("fotoId", "==", fotoId),
+      where("juradoEmail", "==", usuario.email)
+    );
+  
+    const snapshot = await getDocs(q);
+  
+    if (snapshot.empty) {
+  
+      await addDoc(collection(db, "votaciones"), {
+        fotoId,
+        juradoEmail: usuario.email,
+        tecnica,
+        creatividad,
+        dificultad,
+        total,
+        fecha: serverTimestamp()
+      });
+  
+      alert(`Valoración guardada. Total: ${total}`);
+  
+    } else {
+  
+      const votoId = snapshot.docs[0].id;
+  
+      await updateDoc(
+        doc(db, "votaciones", votoId),
+        {
+          tecnica,
+          creatividad,
+          dificultad,
+          total,
+          fecha: serverTimestamp()
+        }
+      );
+  
+      alert(`Valoración actualizada. Total: ${total}`);
+    }
+  
     mostrarPanelJurado(usuario);
 
   } catch (error) {
-    console.error(error);
+    console.error("Error guardando valoración:", error);
     alert("No se pudo guardar la valoración.");
   }
 }
 
 window.guardarValoracion = guardarValoracion;
+
+function mostrarFormularioLiga() {
+
+  const contentArea = document.getElementById("content-area");
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
+
+      <h2>🏆 Nueva Liga</h2>
+
+      <label>Título de la liga</label>
+
+      <input
+        type="text"
+        id="liga-titulo"
+        placeholder="Liga Fotográfica 2026-2027"
+      >
+
+      <label>Año inicio</label>
+
+      <input
+        type="number"
+        id="liga-anio-inicio"
+        value="2026"
+      >
+
+      <label>Año fin</label>
+
+      <input
+        type="number"
+        id="liga-anio-fin"
+        value="2027"
+      >
+
+      <button onclick="guardarLigaYConvocatorias()">
+        Crear liga
+      </button>
+
+      <button onclick="mostrarGestionLiga()">
+        Volver
+      </button>
+
+    </section>
+  `;
+}
+
+window.mostrarFormularioLiga = mostrarFormularioLiga;
+
+async function guardarLigaYConvocatorias() {
+  const titulo = document.getElementById("liga-titulo").value.trim();
+  const anioInicio = Number(document.getElementById("liga-anio-inicio").value);
+  const anioFin = Number(document.getElementById("liga-anio-fin").value);
+
+  if (!titulo || !anioInicio || !anioFin) {
+    alert("Completa todos los campos.");
+    return;
+  }
+
+  try {
+    const ligaRef = await addDoc(collection(db, "ligas"), {
+      titulo,
+      anioInicio,
+      anioFin,
+      activa: true,
+      fechaCreacion: serverTimestamp()
+    });
+
+    const meses = [
+      { nombre: "Noviembre", numero: 11, anio: anioInicio },
+      { nombre: "Diciembre", numero: 12, anio: anioInicio },
+      { nombre: "Enero", numero: 1, anio: anioFin },
+      { nombre: "Febrero", numero: 2, anio: anioFin },
+      { nombre: "Marzo", numero: 3, anio: anioFin },
+      { nombre: "Abril", numero: 4, anio: anioFin },
+      { nombre: "Mayo", numero: 5, anio: anioFin },
+      { nombre: "Junio", numero: 6, anio: anioFin }
+    ];
+
+    for (const mes of meses) {
+      const numeroMes = String(mes.numero).padStart(2, "0");
+      const ultimoDia = new Date(mes.anio, mes.numero, 0).getDate();
+
+      await addDoc(collection(db, "convocatorias"), {
+        ligaId: ligaRef.id,
+        titulo: `${mes.nombre} ${mes.anio}`,
+        codigo: `${mes.anio}-${numeroMes}`,
+        fechaInicioSubida: `${mes.anio}-${numeroMes}-01`,
+        fechaFinSubida: `${mes.anio}-${numeroMes}-15`,
+        fechaInicioVotacion: `${mes.anio}-${numeroMes}-16`,
+        fechaFinVotacion: `${mes.anio}-${numeroMes}-${ultimoDia}`,
+        activa: false,
+        estado: "Programada"
+      });
+    }
+
+    alert("Liga y convocatorias creadas correctamente.");
+
+    mostrarGestionLiga();
+
+  } catch (error) {
+    console.error("Error creando liga:", error);
+    alert("No se pudo crear la liga.");
+  }
+}
+
+window.guardarLigaYConvocatorias = guardarLigaYConvocatorias;
+
+async function obtenerConvocatoriaActual() {
+  const hoy = new Date().toISOString().split("T")[0];
+
+  const snapshot = await getDocs(
+    collection(db, "convocatorias")
+  );
+
+  for (const docConvocatoria of snapshot.docs) {
+    const convocatoria = docConvocatoria.data();
+
+    const estaEnSubida =
+      hoy >= convocatoria.fechaInicioSubida &&
+      hoy <= convocatoria.fechaFinSubida;
+
+    const estaEnVotacion =
+      hoy >= convocatoria.fechaInicioVotacion &&
+      hoy <= convocatoria.fechaFinVotacion;
+
+    if (estaEnSubida || estaEnVotacion) {
+      return {
+        id: docConvocatoria.id,
+        ...convocatoria,
+        estadoCalculado: estaEnSubida ? "subida" : "votacion"
+      };
+    }
+  }
+
+  return null;
+}
+
+window.obtenerConvocatoriaActual = obtenerConvocatoriaActual;
+
+function calcularEstadoConvocatoria(convocatoria) {
+  const hoy = new Date().toISOString().split("T")[0];
+
+  if (
+    hoy >= convocatoria.fechaInicioSubida &&
+    hoy <= convocatoria.fechaFinSubida
+  ) {
+    return "Subida de fotografías";
+  }
+
+  if (
+    hoy >= convocatoria.fechaInicioVotacion &&
+    hoy <= convocatoria.fechaFinVotacion
+  ) {
+    return "Votación del jurado";
+  }
+
+  if (hoy < convocatoria.fechaInicioSubida) {
+    return "Programada";
+  }
+
+  return "Cerrada";
+}
+
+window.calcularEstadoConvocatoria = calcularEstadoConvocatoria;
