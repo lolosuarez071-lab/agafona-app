@@ -59,14 +59,36 @@ loginForm.addEventListener("submit", async (e) => {
 
     mostrarDashboard(usuario);
 
+
+    console.log("Usuario:", usuario);
+    console.log("Roles:", usuario.roles);
+    console.log("Admin:", tieneRol(usuario, "admin"));
+    console.log("Directiva:", tieneRol(usuario, "directiva"));
+    console.log("Jurado:", tieneRol(usuario, "jurado"));
+
+
+
   } catch (error) {
     console.error("Error:", error);
     loginMessage.textContent = "Error: " + error.code;
   }
 });
+function tieneRol(usuario, rolBuscado) {
+  if (Array.isArray(usuario.roles)) {
+    return usuario.roles.includes(rolBuscado);
+  }
+
+  return usuario.rol === rolBuscado;
+}
+
 function mostrarDashboard(usuario) {
+  const esAdmin = tieneRol(usuario, "admin");
+  const esDirectiva = tieneRol(usuario, "directiva");
+  const esJurado = tieneRol(usuario, "jurado");
+  const esSocio = tieneRol(usuario, "socio");
+
   const esJuradoExterno =
-    usuario.rol === "jurado" && usuario.esSocio === false;
+    esJurado && usuario.esSocio === false && !esSocio;
 
   document.body.innerHTML = `
     <main class="app-page">
@@ -91,12 +113,12 @@ function mostrarDashboard(usuario) {
               <button>📷<span>Liga</span></button>
               <button>📄<span>Docs</span></button>
 
-              ${usuario.rol === "admin" || usuario.rol === "directiva"
-        ? `<button>⚙️<span>Admin</span></button>`
+              ${esAdmin || esDirectiva
+        ? `<button>⚙️<span>Gestión</span></button>`
         : ""
       }
 
-              ${usuario.rol === "jurado" || usuario.rol === "admin"
+              ${esJurado || esAdmin
         ? `<button>⚖️<span>Jurado</span></button>`
         : ""
       }
@@ -121,7 +143,7 @@ function mostrarDashboard(usuario) {
     mostrarPanelJurado(usuario);
 
     botones[0].addEventListener("click", () => mostrarPanelJurado(usuario));
-    botones[1].addEventListener("click", () => mostrarClasificacionJurado(usuario));
+    botones[1].addEventListener("click", () => mostrarClasificacionConvocatoria());
     botones[2].addEventListener("click", () => mostrarPerfil(usuario));
 
     return;
@@ -136,18 +158,23 @@ function mostrarDashboard(usuario) {
 
   let indice = 4;
 
-  if (usuario.rol === "admin" || usuario.rol === "directiva") {
+  if (esAdmin) {
     botones[indice].addEventListener("click", () => mostrarAdmin(usuario));
+    indice++;
+  } else if (esDirectiva) {
+    botones[indice].addEventListener("click", () => mostrarDirectiva(usuario));
     indice++;
   }
 
-  if (usuario.rol === "jurado" || usuario.rol === "admin") {
+  if (esJurado || esAdmin) {
     botones[indice].addEventListener("click", () => mostrarPanelJurado(usuario));
     indice++;
   }
 
   botones[indice].addEventListener("click", () => mostrarPerfil(usuario));
 }
+
+
 
 async function mostrarInicio(usuario) {
 
@@ -798,12 +825,24 @@ async function mostrarPerfil(usuario) {
 
   let rolMostrado = "Socio";
 
-  if (usuario.rol === "admin") {
-    rolMostrado = "Administrador";
-  } else if (usuario.rol === "jurado") {
-    rolMostrado = "Jurado";
-  } else if (usuario.rol === "directiva") {
-    rolMostrado = "Directiva";
+  if (Array.isArray(usuario.roles)) {
+    rolMostrado = usuario.roles
+      .map((rol) => {
+        if (rol === "admin") return "Administrador";
+        if (rol === "directiva") return "Directiva";
+        if (rol === "jurado") return "Jurado";
+        if (rol === "socio") return "Socio";
+        return rol;
+      })
+      .join(", ");
+  } else {
+    if (usuario.rol === "admin") {
+      rolMostrado = "Administrador";
+    } else if (usuario.rol === "jurado") {
+      rolMostrado = "Jurado";
+    } else if (usuario.rol === "directiva") {
+      rolMostrado = "Directiva";
+    }
   }
 
   const contentArea = document.getElementById("content-area");
@@ -1107,10 +1146,10 @@ window.cancelarInscripcion = cancelarInscripcion;
 function mostrarAdmin(usuario) {
   const contentArea = document.getElementById("content-area");
 
-  if (usuario.rol !== "admin" && usuario.rol !== "directiva") {
+  if (!tieneRol(usuario, "admin") && !tieneRol(usuario, "directiva")) {
     contentArea.innerHTML = `
       <section class="dashboard-card">
-        <h2>Administración</h2>
+        <h2>⚙️ Administración</h2>
         <p>No tienes permisos para acceder a esta sección.</p>
       </section>
     `;
@@ -1245,7 +1284,7 @@ function mostrarFormularioDocumento() {
         Guardar documento
       </button>
 
-      <button onclick="volverAdmin()">
+      <button onclick="volverGestion()">
         Volver
       </button>
 
@@ -1330,7 +1369,7 @@ function mostrarFormularioActividad() {
         Guardar actividad
       </button>
 
-      <button onclick="volverAdmin()">
+      <button onclick="volverGestion()">
         Volver
       </button>
     </section>
@@ -1377,8 +1416,7 @@ async function guardarActividad() {
 window.guardarActividad = guardarActividad;
 
 function volverAdmin() {
-  const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
-  mostrarAdmin(usuario);
+  volverGestion();
 }
 
 window.volverAdmin = volverAdmin;
@@ -1403,7 +1441,7 @@ function mostrarFormularioAviso() {
         Guardar aviso
       </button>
 
-      <button onclick="volverAdmin()">
+      <button onclick="volverGestion()">
         Volver
       </button>
     </section>
@@ -1447,8 +1485,9 @@ async function guardarAviso() {
 
 window.guardarAviso = guardarAviso;
 
-async function mostrarGestionActividades() {
 
+
+async function mostrarGestionActividades() {
   const contentArea = document.getElementById("content-area");
 
   contentArea.innerHTML = `
@@ -1459,30 +1498,31 @@ async function mostrarGestionActividades() {
   `;
 
   try {
-
     const q = query(collection(db, "actividades"));
     const snapshot = await getDocs(q);
 
     let html = `
       <section class="dashboard-card">
         <h2>📋 Gestionar actividades</h2>
+        <p>Crear, consultar y gestionar actividades de AGAFONA.</p>
+
+        <button onclick="mostrarFormularioActividad()">
+          Crear nueva actividad
+        </button>
       </section>
 
       <section class="dashboard-grid">
     `;
 
     snapshot.forEach((docActividad) => {
-
       const actividad = docActividad.data();
       const actividadId = docActividad.id;
 
       html += `
         <article class="dashboard-card">
-
           <h3>${actividad.titulo}</h3>
 
           <p>📅 ${actividad.fecha}</p>
-
           <p>📍 ${actividad.lugar}</p>
 
           <p>
@@ -1498,7 +1538,6 @@ async function mostrarGestionActividades() {
           <button onclick="desactivarActividad('${actividadId}')">
             Desactivar actividad
           </button>
-
         </article>
       `;
     });
@@ -1507,7 +1546,7 @@ async function mostrarGestionActividades() {
       </section>
 
       <section class="dashboard-card">
-        <button onclick="volverAdmin()">
+        <button onclick="volverGestion()">
           Volver
         </button>
       </section>
@@ -1516,47 +1555,12 @@ async function mostrarGestionActividades() {
     contentArea.innerHTML = html;
 
   } catch (error) {
-
     console.error(error);
-
     alert("Error cargando actividades");
-
   }
 }
 
 window.mostrarGestionActividades = mostrarGestionActividades;
-
-async function desactivarActividad(actividadId) {
-
-  const confirmar = confirm(
-    "¿Seguro que quieres desactivar esta actividad?"
-  );
-
-  if (!confirmar) return;
-
-  try {
-
-    const actividadRef =
-      doc(db, "actividades", actividadId);
-
-    await updateDoc(actividadRef, {
-      activa: false
-    });
-
-    alert("Actividad desactivada correctamente");
-
-    mostrarGestionActividades();
-
-  } catch (error) {
-
-    console.error(error);
-
-    alert("No se pudo desactivar la actividad");
-
-  }
-}
-
-window.desactivarActividad = desactivarActividad;
 
 
 async function desactivarAviso(avisoId) {
@@ -1591,6 +1595,7 @@ async function desactivarAviso(avisoId) {
 
 window.desactivarAviso = desactivarAviso;
 
+
 async function mostrarGestionAvisos() {
   const contentArea = document.getElementById("content-area");
 
@@ -1618,6 +1623,11 @@ async function mostrarGestionAvisos() {
       const avisoId = docAviso.id;
 
       html += `
+
+      <button onclick="mostrarFormularioAviso()">
+    Crear nuevo aviso
+  </button>
+
         <article class="dashboard-card">
           <h3>${aviso.titulo}</h3>
           <p>${aviso.mensaje}</p>
@@ -1635,7 +1645,10 @@ async function mostrarGestionAvisos() {
       </section>
 
       <section class="dashboard-card">
-        <button onclick="volverAdmin()">Volver</button>
+        <button onclick="volverGestion()">
+        Volver
+        </button>
+
       </section>
     `;
 
@@ -1648,6 +1661,8 @@ async function mostrarGestionAvisos() {
 }
 
 window.mostrarGestionAvisos = mostrarGestionAvisos;
+
+
 
 async function mostrarGestionDocumentos() {
   const contentArea = document.getElementById("content-area");
@@ -1676,6 +1691,11 @@ async function mostrarGestionDocumentos() {
       const documentoId = docDocumento.id;
 
       html += `
+
+        <button onclick="mostrarFormularioDocumento()">
+  Subir nuevo documento
+</button>
+
         <article class="dashboard-card">
           <h3>${documento.titulo}</h3>
           <p><strong>Categoría:</strong> ${documento.categoria}</p>
@@ -1699,7 +1719,11 @@ async function mostrarGestionDocumentos() {
       </section>
 
       <section class="dashboard-card">
-        <button onclick="volverAdmin()">Volver</button>
+        <button onclick="volverGestion()">
+        Volver
+        </button>
+
+
       </section>
     `;
 
@@ -2360,6 +2384,16 @@ window.guardarJuradoLiga = guardarJuradoLiga;
 async function mostrarPanelJurado(usuario) {
   const contentArea = document.getElementById("content-area");
 
+  if (!tieneRol(usuario, "jurado") && !tieneRol(usuario, "admin")) {
+    contentArea.innerHTML = `
+      <section class="dashboard-card">
+        <h2>⚖️ Panel Jurado</h2>
+        <p>No tienes permisos para acceder a esta sección.</p>
+      </section>
+    `;
+    return;
+  }
+
   contentArea.innerHTML = `
     <section class="dashboard-card">
       <h2>Panel Jurado</h2>
@@ -2997,9 +3031,11 @@ async function mostrarClasificacionConvocatoria() {
       </section>
 
       <section class="dashboard-card">
-        <button onclick="volverDashboard()">
-          Volver
-        </button>
+      
+       <button onclick="volverGestion()">
+       Volver
+      </button>
+
       </section>
     `;
 
@@ -3016,11 +3052,11 @@ window.mostrarClasificacionJurado = mostrarClasificacionConvocatoria;
 
 
 
-  async function guardarVotoJurado(fotoId, convocatoriaId, emailJurado) {
-    try {
-      const tecnica = Number(document.getElementById(`tecnica-${fotoId}`).value);
-      const creatividad = Number(document.getElementById(`creatividad-${fotoId}`).value);
-      const dificultad = Number(document.getElementById(`dificultad-${fotoId}`).value);
+async function guardarVotoJurado(fotoId, convocatoriaId, emailJurado) {
+  try {
+    const tecnica = Number(document.getElementById(`tecnica-${fotoId}`).value);
+    const creatividad = Number(document.getElementById(`creatividad-${fotoId}`).value);
+    const dificultad = Number(document.getElementById(`dificultad-${fotoId}`).value);
 
     if (
       tecnica < 0 || tecnica > 5 ||
@@ -3126,3 +3162,75 @@ async function calcularClasificacionConvocatoria(convocatoriaId) {
 }
 
 window.calcularClasificacionConvocatoria = calcularClasificacionConvocatoria;
+
+
+
+function mostrarDirectiva(usuario) {
+  const contentArea = document.getElementById("content-area");
+
+  if (!tieneRol(usuario, "directiva") && !tieneRol(usuario, "admin")) {
+    contentArea.innerHTML = `
+      <section class="dashboard-card">
+        <h2>⚙️ Gestión</h2>
+        <p>No tienes permisos para acceder a esta sección.</p>
+      </section>
+    `;
+    return;
+  }
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
+      <h2>⚙️ Gestión Directiva</h2>
+      <p>Panel de gestión para miembros de la directiva.</p>
+    </section>
+
+    <section class="dashboard-grid">
+      <article class="dashboard-card">
+        <h3>📅 Actividades</h3>
+        <p>Crear y gestionar actividades de AGAFONA.</p>
+        <button onclick="mostrarGestionActividades()">Gestionar actividades</button>
+      </article>
+
+      <article class="dashboard-card">
+        <h3>📄 Documentos</h3>
+        <p>Subir y gestionar documentos internos.</p>
+        <button onclick="mostrarGestionDocumentos()">Gestionar documentos</button>
+      </article>
+
+      <article class="dashboard-card">
+        <h3>📢 Avisos</h3>
+        <p>Crear avisos para socios.</p>
+        <button onclick="mostrarGestionAvisos()">Gestionar avisos</button>
+      </article>
+
+      <article class="dashboard-card">
+        <h3>🏆 Clasificación</h3>
+        <p>Consultar clasificaciones de la liga fotográfica.</p>
+        <button onclick="mostrarClasificacionConvocatoria()">Ver clasificación</button>
+      </article>
+    </section>
+  `;
+}
+
+window.mostrarDirectiva = mostrarDirectiva;
+
+
+
+function volverGestion() {
+  const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
+
+  if (!usuario) {
+    location.reload();
+    return;
+  }
+
+  if (tieneRol(usuario, "admin")) {
+    mostrarAdmin(usuario);
+  } else if (tieneRol(usuario, "directiva")) {
+    mostrarDirectiva(usuario);
+  } else {
+    mostrarInicio(usuario);
+  }
+}
+
+window.volverGestion = volverGestion;
