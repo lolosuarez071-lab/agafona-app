@@ -16,6 +16,7 @@ import {
   updateDoc,
   increment,
   addDoc,
+  setDoc,
   serverTimestamp,
   orderBy,
   limit
@@ -525,7 +526,7 @@ async function mostrarLiga(usuario) {
   try {
     const convocatoria = await obtenerConvocatoriaActual();
 
-if (!convocatoria) {  
+    if (!convocatoria) {
       contentArea.innerHTML = `
           <section class="dashboard-card">
             <h2>Liga Fotográfica</h2>
@@ -535,7 +536,7 @@ if (!convocatoria) {
       return;
     }
 
-    const fotosQuery = query( 
+    const fotosQuery = query(
       collection(db, "fotos"),
       where("convocatoriaId", "==", convocatoria.codigo),
       where("email", "==", usuario.email),
@@ -663,10 +664,16 @@ if (!convocatoria) {
           <p>🟢 Convocatoria abierta</p>
 
           <p>
-            Del ${convocatoria.fechaInicio}
-            al
-            ${convocatoria.fechaFin}
-          </p>
+  <strong>Periodo de subida:</strong>
+  del ${convocatoria.fechaInicioSubida}
+  al ${convocatoria.fechaFinSubida}
+</p>
+
+<p>
+  <strong>Periodo de votación:</strong>
+  del ${convocatoria.fechaInicioVotacion}
+  al ${convocatoria.fechaFinVotacion}
+</p>
 
           <hr>
 
@@ -1820,6 +1827,8 @@ async function mostrarGestionUsuarios() {
 
 window.mostrarGestionUsuarios = mostrarGestionUsuarios;
 
+
+
 async function cambiarRol(usuarioId) {
   const nuevoRol = prompt(
     "Introduce el nuevo rol: socio, directiva, jurado o admin"
@@ -1907,25 +1916,27 @@ async function mostrarGestionLiga() {
         </article>
       `;
     } else {
-      const liga = ligasSnapshot.docs[0].data();
+      const ligaDoc = ligasSnapshot.docs[0];
+      const liga = ligaDoc.data();
 
       const convocatoriasQuery = query(
         collection(db, "convocatorias"),
-        where("ligaId", "==", ligasSnapshot.docs[0].id)
+        where("ligaId", "==", ligaDoc.id)
       );
 
       const convocatoriasSnapshot = await getDocs(convocatoriasQuery);
+      const convocatoria = await obtenerConvocatoriaActual();
 
-      ligaActualHtml = `
-        <article class="dashboard-card">
-          <h3>🏆 Liga actual</h3>
+      ligaActualHtml = `  
+  <article class="dashboard-card">
+    <h3>🏆 Liga actual</h3>
 
-          <p><strong>${liga.titulo}</strong></p>
-          <p><strong>Años:</strong> ${liga.anioInicio} - ${liga.anioFin}</p>
-          <p><strong>Estado:</strong> ${liga.activa ? "Activa" : "Inactiva"}</p>
-          <p><strong>Convocatorias:</strong> ${convocatoriasSnapshot.size}</p>
-        </article>
-      `;
+    <p><strong>${liga.titulo}</strong></p>
+    <p><strong>Años:</strong> ${liga.anioInicio} - ${liga.anioFin}</p>
+    <p><strong>Estado:</strong> ${liga.activa ? "Activa" : "Inactiva"}</p>
+    <p><strong>Convocatorias:</strong> ${convocatoriasSnapshot.size}</p>
+  </article>
+`;
     }
 
     contentArea.innerHTML = `
@@ -1965,6 +1976,18 @@ async function mostrarGestionLiga() {
         </article>
       </section>
 
+      <article class="dashboard-card">
+        <h3>🏆 Clasificación</h3>
+
+        <p>
+          Ver clasificación automática de la convocatoria actual.
+        </p>
+
+        <button onclick="mostrarClasificacionConvocatoria()">
+          Ver clasificación
+        </button>
+      </article>
+
       <section class="dashboard-card">
         <button onclick="volverAdmin()">Volver</button>
       </section>
@@ -1983,7 +2006,6 @@ async function mostrarGestionLiga() {
 }
 
 window.mostrarGestionLiga = mostrarGestionLiga;
-
 async function guardarConvocatoria() {
 
   const titulo =
@@ -2334,35 +2356,41 @@ async function guardarJuradoLiga() {
 
 window.guardarJuradoLiga = guardarJuradoLiga;
 
+
 async function mostrarPanelJurado(usuario) {
   const contentArea = document.getElementById("content-area");
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
-      <h2>⚖️ Panel del jurado</h2>
-      <p>Cargando fotografías...</p>
+      <h2>Panel Jurado</h2>
+      <p>Cargando convocatoria...</p>
     </section>
   `;
 
   try {
-    const convocatoriaQuery = query(
-      collection(db, "convocatorias"),
-      where("activa", "==", true)
-    );
+    const convocatoria = await obtenerConvocatoriaActual();
 
-    const convocatoriaSnapshot = await getDocs(convocatoriaQuery);
-
-    if (convocatoriaSnapshot.empty) {
+    if (!convocatoria) {
       contentArea.innerHTML = `
         <section class="dashboard-card">
-          <h2>⚖️ Panel del jurado</h2>
-          <p>No hay convocatoria activa para valorar.</p>
+          <h2>Panel Jurado</h2>
+          <p>No hay convocatoria disponible para el jurado en este momento.</p>
         </section>
       `;
       return;
     }
 
-    const convocatoria = convocatoriaSnapshot.docs[0].data();
+    if (convocatoria.estadoCalculado !== "votacion") {
+      contentArea.innerHTML = `
+        <section class="dashboard-card">
+          <h2>Panel Jurado</h2>
+          <p>La convocatoria actual todavía no está en periodo de votación.</p>
+          <p><strong>Convocatoria:</strong> ${convocatoria.titulo || convocatoria.codigo}</p>
+          <p><strong>Estado actual:</strong> ${convocatoria.estadoCalculado}</p>
+        </section>
+      `;
+      return;
+    }
 
     const fotosQuery = query(
       collection(db, "fotos"),
@@ -2372,69 +2400,128 @@ async function mostrarPanelJurado(usuario) {
 
     const fotosSnapshot = await getDocs(fotosQuery);
 
-    let html = `
-      <section class="dashboard-card">
-        <h2>⚖️ Panel del jurado</h2>
-        <p><strong>Convocatoria:</strong> ${convocatoria.titulo}</p>
-      </section>
-
-      <section class="dashboard-grid">
-    `;
-
     if (fotosSnapshot.empty) {
-      html += `
-        <article class="dashboard-card">
-          <p>No hay fotografías presentadas todavía.</p>
-        </article>
+      contentArea.innerHTML = `
+        <section class="dashboard-card">
+          <h2>Panel Jurado</h2>
+          <p>No hay fotografías para valorar en esta convocatoria.</p>
+        </section>
       `;
-    } else {
-      let contador = 1;
-
-      fotosSnapshot.forEach((docFoto) => {
-        const foto = docFoto.data();
-        const fotoId = docFoto.id;
-
-        html += `
-          <article class="dashboard-card">
-            <h3>📷 Fotografía ${contador}</h3>
-
-            <p><strong>Título:</strong> ${foto.tituloFoto ?? "-"}</p>
-
-          <img
-  src="${foto.urlFoto}"
-  alt="${foto.tituloFoto ?? "Fotografía"}"
-  class="miniatura-foto"
->
-
-<br><br>
-
-<button onclick="mostrarFormularioValoracion('${fotoId}')">
-  Valorar fotografía
-</button>
-          </article>
-        `;
-
-        contador++;
-      });
+      return;
     }
 
-    html += `</section>`;
+    let html = `
+      <section class="dashboard-card">
+        <h2>Panel Jurado</h2>
+        <p><strong>Convocatoria:</strong> ${convocatoria.titulo || convocatoria.codigo}</p>
+        <p>Valora las fotografías de forma anónima.</p>
+      </section>
+    `;
+
+    for (const docFoto of fotosSnapshot.docs) {
+      const foto = docFoto.data();
+
+      const votoId = `${convocatoria.codigo}_${docFoto.id}_${usuario.email}`;
+      const votoSnap = await getDoc(doc(db, "votaciones", votoId));
+
+      let tecnicaActual = "";
+      let creatividadActual = "";
+      let dificultadActual = "";
+      let textoEstado = "⏳ Pendiente de votar";
+      let textoBoton = "Guardar puntuación";
+
+      if (votoSnap.exists()) {
+        const voto = votoSnap.data();
+
+        tecnicaActual = voto.tecnica;
+        creatividadActual = voto.creatividad;
+        dificultadActual = voto.dificultad;
+
+        textoEstado = "✅ Fotografía ya votada. Puedes modificar la puntuación si lo deseas.";
+        textoBoton = "Modificar puntuación";
+      }
+
+      html += `
+        <section class="dashboard-card foto-jurado-card">
+
+          <p>
+            <strong>${foto.tituloFoto || "Sin título"}</strong>
+          </p>
+
+          <p>${textoEstado}</p>
+
+          <img
+            src="${foto.urlFoto}"
+            alt="${foto.tituloFoto || "Fotografía participante"}"
+            class="miniatura-foto"
+          >
+
+          <br><br>
+
+          <button onclick="abrirVisorFoto('${foto.urlFoto}', '${foto.tituloFoto || "Fotografía"}')">
+            🔍 Ver fotografía grande
+          </button>
+
+          <div class="form-group">
+            <label>Técnica /5</label>
+            <input
+              type="number"
+              min="0"
+              max="5"
+              step="0.5"
+              id="tecnica-${docFoto.id}"
+              value="${tecnicaActual}"
+            >
+          </div>
+
+          <div class="form-group">
+            <label>Creatividad /3</label>
+            <input
+              type="number"
+              min="0"
+              max="3"
+              step="0.5"
+              id="creatividad-${docFoto.id}"
+              value="${creatividadActual}"
+            >
+          </div>
+
+          <div class="form-group">
+            <label>Dificultad /2</label>
+            <input
+              type="number"
+              min="0"
+              max="2"
+              step="0.5"
+              id="dificultad-${docFoto.id}"
+              value="${dificultadActual}"
+            >
+          </div>
+
+          <button onclick="guardarVotoJurado('${docFoto.id}', '${convocatoria.codigo}', '${usuario.email}')">
+            ${textoBoton}
+          </button>
+        </section>
+      `;
+    }
 
     contentArea.innerHTML = html;
 
   } catch (error) {
-    console.error(error);
+    console.error("Error en panel jurado:", error);
 
     contentArea.innerHTML = `
       <section class="dashboard-card">
-        <h2>⚖️ Panel del jurado</h2>
-        <p>Error al cargar fotografías.</p>
+        <h2>Panel Jurado</h2>
+        <p>Error al cargar el panel de jurado.</p>
       </section>
     `;
   }
 }
 
 window.mostrarPanelJurado = mostrarPanelJurado;
+
+
 
 function abrirVisorFoto(urlFoto, tituloFoto) {
   const visor = document.createElement("div");
@@ -2503,18 +2590,18 @@ async function mostrarFormularioValoracion(fotoId) {
     let tecnicaActual = "";
     let creatividadActual = "";
     let dificultadActual = "";
-    
+
     const votoQuery = query(
       collection(db, "votaciones"),
       where("fotoId", "==", fotoId),
       where("juradoEmail", "==", usuario.email)
     );
-    
+
     const votoSnapshot = await getDocs(votoQuery);
-    
+
     if (!votoSnapshot.empty) {
       const voto = votoSnapshot.docs[0].data();
-    
+
       tecnicaActual = voto.tecnica;
       creatividadActual = voto.creatividad;
       dificultadActual = voto.dificultad;
@@ -2613,11 +2700,11 @@ async function guardarValoracion(fotoId) {
       where("fotoId", "==", fotoId),
       where("juradoEmail", "==", usuario.email)
     );
-  
+
     const snapshot = await getDocs(q);
-  
+
     if (snapshot.empty) {
-  
+
       await addDoc(collection(db, "votaciones"), {
         fotoId,
         juradoEmail: usuario.email,
@@ -2627,13 +2714,13 @@ async function guardarValoracion(fotoId) {
         total,
         fecha: serverTimestamp()
       });
-  
+
       alert(`Valoración guardada. Total: ${total}`);
-  
+
     } else {
-  
+
       const votoId = snapshot.docs[0].id;
-  
+
       await updateDoc(
         doc(db, "votaciones", votoId),
         {
@@ -2644,10 +2731,10 @@ async function guardarValoracion(fotoId) {
           fecha: serverTimestamp()
         }
       );
-  
+
       alert(`Valoración actualizada. Total: ${total}`);
     }
-  
+
     mostrarPanelJurado(usuario);
 
   } catch (error) {
@@ -2821,3 +2908,221 @@ function calcularEstadoConvocatoria(convocatoria) {
 }
 
 window.calcularEstadoConvocatoria = calcularEstadoConvocatoria;
+
+async function mostrarClasificacionConvocatoria() {
+  const contentArea = document.getElementById("content-area");
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
+      <h2>🏆 Clasificación</h2>
+      <p>Cargando clasificación...</p>
+    </section>
+  `;
+
+  try {
+    const convocatoria = await obtenerConvocatoriaActual();
+
+    if (!convocatoria) {
+      contentArea.innerHTML = `
+        <section class="dashboard-card">
+          <h2>🏆 Clasificación</h2>
+          <p>No existe convocatoria activa.</p>
+        </section>
+      `;
+      return;
+    }
+
+    const fotosQuery = query(
+      collection(db, "fotos"),
+      where("convocatoriaId", "==", convocatoria.codigo),
+      where("visible", "==", true)
+    );
+
+    const fotosSnapshot = await getDocs(fotosQuery);
+
+    const clasificacion = [];
+
+    for (const docFoto of fotosSnapshot.docs) {
+      const foto = docFoto.data();
+
+      const votosQuery = query(
+        collection(db, "votaciones"),
+        where("convocatoriaId", "==", convocatoria.codigo),
+        where("fotoId", "==", docFoto.id)
+      );
+
+      const votosSnapshot = await getDocs(votosQuery);
+
+      let totalPuntos = 0;
+      let numeroVotos = 0;
+
+      votosSnapshot.forEach((docVoto) => {
+        totalPuntos += docVoto.data().total || 0;
+        numeroVotos++;
+      });
+
+      clasificacion.push({
+        nombreSocio: foto.nombreSocio || "Socio",
+        tituloFoto: foto.tituloFoto || "Sin título",
+        puntos: totalPuntos,
+        numeroVotos: numeroVotos
+      });
+    }
+
+    clasificacion.sort((a, b) => b.puntos - a.puntos);
+
+    let html = `
+      <section class="dashboard-card">
+        <h2>🏆 Clasificación</h2>
+        <p>${convocatoria.titulo || convocatoria.codigo}</p>
+      </section>
+
+      <section class="dashboard-card">
+    `;
+
+    clasificacion.forEach((item, index) => {
+      html += `
+        <p>
+          <strong>${index + 1}.</strong>
+          ${item.nombreSocio}
+          (${item.tituloFoto})
+          - ${item.puntos} puntos
+          <br>
+          <small>Votos recibidos: ${item.numeroVotos}</small>
+        </p>
+      `;
+    });
+
+    html += `
+      </section>
+
+      <section class="dashboard-card">
+        <button onclick="volverDashboard()">
+          Volver
+        </button>
+      </section>
+    `;
+
+    contentArea.innerHTML = html;
+
+  } catch (error) {
+    console.error("Error calculando clasificación:", error);
+    alert("Error calculando clasificación.");
+  }
+}
+
+window.mostrarClasificacionConvocatoria = mostrarClasificacionConvocatoria;
+window.mostrarClasificacionJurado = mostrarClasificacionConvocatoria;
+
+
+
+  async function guardarVotoJurado(fotoId, convocatoriaId, emailJurado) {
+    try {
+      const tecnica = Number(document.getElementById(`tecnica-${fotoId}`).value);
+      const creatividad = Number(document.getElementById(`creatividad-${fotoId}`).value);
+      const dificultad = Number(document.getElementById(`dificultad-${fotoId}`).value);
+
+    if (
+      tecnica < 0 || tecnica > 5 ||
+      creatividad < 0 || creatividad > 3 ||
+      dificultad < 0 || dificultad > 2 ||
+      isNaN(tecnica) || isNaN(creatividad) || isNaN(dificultad)
+    ) {
+      alert("Revisa las puntuaciones. Técnica máximo 5, creatividad máximo 3 y dificultad máximo 2.");
+      return;
+    }
+
+    const total = tecnica + creatividad + dificultad;
+
+    const votoId = `${convocatoriaId}_${fotoId}_${emailJurado}`;
+
+    await setDoc(doc(db, "votaciones", votoId), {
+      convocatoriaId,
+      fotoId,
+      emailJurado,
+      tecnica,
+      creatividad,
+      dificultad,
+      total,
+      fechaVoto: serverTimestamp()
+    });
+
+    alert(`✅ Puntuación guardada correctamente. Total: ${total} puntos`);
+
+  } catch (error) {
+    console.error("Error al guardar voto:", error);
+    alert("Error al guardar la puntuación.");
+  }
+}
+
+window.guardarVotoJurado = guardarVotoJurado;
+
+
+async function calcularClasificacionConvocatoria(convocatoriaId) {
+  try {
+    const fotosQuery = query(
+      collection(db, "fotos"),
+      where("convocatoriaId", "==", convocatoriaId),
+      where("visible", "==", true)
+    );
+
+    const fotosSnapshot = await getDocs(fotosQuery);
+
+    if (fotosSnapshot.empty) {
+      alert("No hay fotos para calcular la clasificación.");
+      return;
+    }
+
+    let clasificacion = [];
+
+    for (const docFoto of fotosSnapshot.docs) {
+      const foto = docFoto.data();
+
+      const votosQuery = query(
+        collection(db, "votaciones"),
+        where("convocatoriaId", "==", convocatoriaId),
+        where("fotoId", "==", docFoto.id)
+      );
+
+      const votosSnapshot = await getDocs(votosQuery);
+
+      let puntosTotales = 0;
+      let numeroVotos = 0;
+
+      votosSnapshot.forEach((docVoto) => {
+        const voto = docVoto.data();
+        puntosTotales += voto.total || 0;
+        numeroVotos++;
+      });
+
+      clasificacion.push({
+        fotoId: docFoto.id,
+        convocatoriaId: convocatoriaId,
+        socioEmail: foto.email,
+        nombreSocio: foto.nombreSocio || "Socio",
+        puntos: puntosTotales,
+        numeroVotos: numeroVotos
+      });
+    }
+
+    clasificacion.sort((a, b) => b.puntos - a.puntos);
+
+    for (let i = 0; i < clasificacion.length; i++) {
+      const item = clasificacion[i];
+
+      await setDoc(doc(db, "clasificaciones", `${convocatoriaId}_${item.fotoId}`), {
+        ...item,
+        posicion: i + 1,
+        fechaCalculo: serverTimestamp()
+      });
+    }
+
+    alert("Clasificación mensual calculada correctamente.");
+
+  } catch (error) {
+    console.error("Error al calcular clasificación:", error);
+    alert("Error al calcular la clasificación.");
+  }
+}
+
+window.calcularClasificacionConvocatoria = calcularClasificacionConvocatoria;
