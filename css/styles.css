@@ -87,7 +87,7 @@
   .app-page {
     min-height: 100vh;
     padding: 20px;
-    padding-bottom: 130px;
+    padding-bottom: 95px;
     background:
   linear-gradient(
     rgba(242,245,243,0.72),
@@ -157,40 +157,59 @@
   margin: 0;
 }
 
-  .bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
+.bottom-nav {
+  position: fixed;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
 
-    display: flex;
-    justify-content: space-around;
+  width: calc(100% - 24px);
+  max-width: 760px;
 
-    background: linear-gradient(
-        90deg,
-        #8b6f47,
-        #b89b6b,
-        #d8c19a
-    );
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
 
-    border-top: 1px solid rgba(0,0,0,0.1);
-    padding: 12px 0;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  border: 1px solid rgba(255,255,255,0.45);
+  border-radius: 22px;
+
+  padding: 6px 6px;
+
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  z-index: 999;
 }
 
 .bottom-nav button {
+  width: auto;
+  margin: 0;
+  padding: 6px 8px;
+
   border: none;
-  background: none;
+  background: transparent;
+
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: #234d20;
-  font-size: 1.35rem;
+  gap: 2px;
+
+  color: #234326;
+  font-size: 1.55rem;
   cursor: pointer;
 }
 
+.bottom-nav button:hover {
+  background: rgba(35, 67, 38, 0.08);
+  border-radius: 16px;
+}
+
 .bottom-nav span {
-  font-size: 0.75rem;
-  margin-top: 4px;
+  font-size: 0.68rem;
+  margin-top: 0;
+  font-weight: 600;
 }
 
 .actividad-card {
