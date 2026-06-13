@@ -1162,30 +1162,6 @@ function mostrarAdmin(usuario) {
       <p>Gestión interna de AGAFONA.</p>
     </section>
 
-    <section class="dashboard-grid">
-      <article class="dashboard-card">
-        <h3>📅 Actividades</h3>
-        <p>Crear nuevas actividades para los socios.</p>
-        <button onclick="mostrarFormularioActividad()">
-          Crear actividad
-        </button>
-      </article>
-
-      <article class="dashboard-card">
-        <h3>📢 Avisos</h3>
-        <p>Publicar avisos importantes en el inicio.</p>
-        <button onclick="mostrarFormularioAviso()">
-          Crear aviso
-        </button>
-      </article>
-
-      <article class="dashboard-card">
-        <h3>📄 Documentos</h3>
-        <p>Añadir documentos visibles para socios o directiva.</p>
-        <button onclick="mostrarFormularioDocumento()">
-          Añadir documento
-        </button>
-      </article>
 
       <article class="dashboard-card">
   <h3>📋 Gestionar actividades</h3>
@@ -1317,13 +1293,13 @@ async function guardarDocumento() {
   try {
 
     await addDoc(collection(db, "documentos"), {
-
       titulo,
       categoria,
       url,
       visiblePara,
-      publico: true
-
+      activo: true,
+      publico: true,
+      fechaCreacion: serverTimestamp()
     });
 
     alert("Documento creado correctamente.");
@@ -1514,6 +1490,14 @@ async function mostrarGestionActividades() {
       <section class="dashboard-grid">
     `;
 
+    if (snapshot.empty) {
+      html += `
+        <article class="dashboard-card">
+          <p>No hay actividades creadas todavía.</p>
+        </article>
+      `;
+    }
+
     snapshot.forEach((docActividad) => {
       const actividad = docActividad.data();
       const actividadId = docActividad.id;
@@ -1535,8 +1519,12 @@ async function mostrarGestionActividades() {
             ${actividad.activa ? "Activa" : "Inactiva"}
           </p>
 
-          <button onclick="desactivarActividad('${actividadId}')">
-            Desactivar actividad
+          <button onclick="cambiarEstadoActividad('${actividadId}', ${actividad.activa === true})">
+            ${actividad.activa ? "Desactivar actividad" : "Activar actividad"}
+          </button>
+
+          <button onclick="borrarActividad('${actividadId}')">
+            Borrar actividad
           </button>
         </article>
       `;
@@ -1563,39 +1551,6 @@ async function mostrarGestionActividades() {
 window.mostrarGestionActividades = mostrarGestionActividades;
 
 
-async function desactivarAviso(avisoId) {
-
-  const confirmar = confirm(
-    "¿Seguro que quieres desactivar este aviso?"
-  );
-
-  if (!confirmar) return;
-
-  try {
-
-    const avisoRef =
-      doc(db, "avisos", avisoId);
-
-    await updateDoc(avisoRef, {
-      activo: false
-    });
-
-    alert("Aviso desactivado correctamente");
-
-    mostrarGestionAvisos();
-
-  } catch (error) {
-
-    console.error(error);
-
-    alert("No se pudo desactivar el aviso");
-
-  }
-}
-
-window.desactivarAviso = desactivarAviso;
-
-
 async function mostrarGestionAvisos() {
   const contentArea = document.getElementById("content-area");
 
@@ -1613,29 +1568,40 @@ async function mostrarGestionAvisos() {
     let html = `
       <section class="dashboard-card">
         <h2>📢 Gestionar avisos</h2>
+
+        <button onclick="mostrarFormularioAviso()">
+          Crear nuevo aviso
+        </button>
       </section>
 
       <section class="dashboard-grid">
     `;
+
+    if (snapshot.empty) {
+      html += `
+        <article class="dashboard-card">
+          <p>No hay avisos creados todavía.</p>
+        </article>
+      `;
+    }
 
     snapshot.forEach((docAviso) => {
       const aviso = docAviso.data();
       const avisoId = docAviso.id;
 
       html += `
-
-      <button onclick="mostrarFormularioAviso()">
-    Crear nuevo aviso
-  </button>
-
         <article class="dashboard-card">
           <h3>${aviso.titulo}</h3>
           <p>${aviso.mensaje}</p>
           <p><strong>Fecha:</strong> ${aviso.fecha}</p>
           <p><strong>Estado:</strong> ${aviso.activo ? "Activo" : "Inactivo"}</p>
 
-          <button onclick="desactivarAviso('${avisoId}')">
-            Desactivar aviso
+          <button onclick="cambiarEstadoAviso('${avisoId}', ${aviso.activo === true})">
+            ${aviso.activo ? "Desactivar aviso" : "Activar aviso"}
+          </button>
+
+          <button onclick="borrarAviso('${avisoId}')">
+            Borrar aviso
           </button>
         </article>
       `;
@@ -1646,9 +1612,8 @@ async function mostrarGestionAvisos() {
 
       <section class="dashboard-card">
         <button onclick="volverGestion()">
-        Volver
+          Volver
         </button>
-
       </section>
     `;
 
@@ -1661,6 +1626,34 @@ async function mostrarGestionAvisos() {
 }
 
 window.mostrarGestionAvisos = mostrarGestionAvisos;
+
+
+
+async function cambiarEstadoAviso(avisoId, estadoActual) {
+  console.log("Cambiando aviso:", avisoId, estadoActual);
+
+  const nuevoEstado = !estadoActual;
+
+  try {
+    await updateDoc(doc(db, "avisos", avisoId), {
+      activo: nuevoEstado
+    });
+
+    alert(
+      nuevoEstado
+        ? "Aviso activado correctamente"
+        : "Aviso desactivado correctamente"
+    );
+
+    mostrarGestionAvisos();
+
+  } catch (error) {
+    console.error("Error cambiando estado del aviso:", error);
+    alert("No se pudo cambiar el estado del aviso");
+  }
+}
+
+window.cambiarEstadoAviso = cambiarEstadoAviso;
 
 
 
@@ -1681,21 +1674,28 @@ async function mostrarGestionDocumentos() {
     let html = `
       <section class="dashboard-card">
         <h2>📄 Gestionar documentos</h2>
+
+        <button onclick="mostrarFormularioDocumento()">
+          Subir nuevo documento
+        </button>
       </section>
 
       <section class="dashboard-grid">
     `;
+
+    if (snapshot.empty) {
+      html += `
+        <article class="dashboard-card">
+          <p>No hay documentos disponibles.</p>
+        </article>
+      `;
+    }
 
     snapshot.forEach((docDocumento) => {
       const documento = docDocumento.data();
       const documentoId = docDocumento.id;
 
       html += `
-
-        <button onclick="mostrarFormularioDocumento()">
-  Subir nuevo documento
-</button>
-
         <article class="dashboard-card">
           <h3>${documento.titulo}</h3>
           <p><strong>Categoría:</strong> ${documento.categoria}</p>
@@ -1708,8 +1708,12 @@ async function mostrarGestionDocumentos() {
 
           <br><br>
 
-          <button onclick="desactivarDocumento('${documentoId}')">
-            Desactivar documento
+          <button onclick="cambiarEstadoDocumento('${documentoId}', ${documento.activo !== false})">
+            ${documento.activo === false ? "Activar documento" : "Desactivar documento"}
+          </button>
+
+          <button onclick="borrarDocumento('${documentoId}')">
+            Borrar documento
           </button>
         </article>
       `;
@@ -1720,10 +1724,8 @@ async function mostrarGestionDocumentos() {
 
       <section class="dashboard-card">
         <button onclick="volverGestion()">
-        Volver
+          Volver
         </button>
-
-
       </section>
     `;
 
@@ -1737,29 +1739,39 @@ async function mostrarGestionDocumentos() {
 
 window.mostrarGestionDocumentos = mostrarGestionDocumentos;
 
-async function desactivarDocumento(documentoId) {
-  const confirmar = confirm("¿Seguro que quieres desactivar este documento?");
 
-  if (!confirmar) return;
+
+async function cambiarEstadoDocumento(documentoId, estadoActual) {
+  console.log("Cambiando documento:", documentoId, estadoActual);
+
+  const nuevoEstado = !estadoActual;
 
   try {
-    const documentoRef = doc(db, "documentos", documentoId);
+    console.log("Antes de updateDoc");
 
-    await updateDoc(documentoRef, {
-      activo: false
+    await updateDoc(doc(db, "documentos", documentoId), {
+      activo: nuevoEstado
     });
 
-    alert("Documento desactivado correctamente");
+    console.log("Después de updateDoc");
+
+    alert(
+      nuevoEstado
+        ? "Documento activado correctamente"
+        : "Documento desactivado correctamente"
+    );
 
     mostrarGestionDocumentos();
 
   } catch (error) {
-    console.error(error);
-    alert("No se pudo desactivar el documento");
+    console.error("ERROR DOCUMENTO:", error);
+    alert("Error al cambiar el estado del documento");
   }
 }
 
-window.desactivarDocumento = desactivarDocumento;
+window.cambiarEstadoDocumento = cambiarEstadoDocumento;
+
+
 
 async function mostrarGestionUsuarios() {
 
@@ -3234,3 +3246,86 @@ function volverGestion() {
 }
 
 window.volverGestion = volverGestion;
+
+
+async function borrarActividad(actividadId) {
+  console.log("Borrando actividad:", actividadId);
+
+  try {
+    await deleteDoc(doc(db, "actividades", actividadId));
+
+    alert("Actividad borrada correctamente");
+
+    mostrarGestionActividades();
+
+  } catch (error) {
+    console.error("ERROR BORRANDO ACTIVIDAD:", error);
+    alert("Error al borrar la actividad");
+  }
+}
+
+window.borrarActividad = borrarActividad;
+
+
+async function borrarAviso(avisoId) {
+  const confirmar = confirm("¿Seguro que quieres borrar este aviso definitivamente?");
+
+  if (!confirmar) return;
+
+  try {
+    await deleteDoc(doc(db, "avisos", avisoId));
+    alert("Aviso borrado correctamente");
+    mostrarGestionAvisos();
+  } catch (error) {
+    console.error(error);
+    alert("Error al borrar el aviso");
+  }
+}
+
+window.borrarAviso = borrarAviso;
+
+
+async function borrarDocumento(documentoId) {
+  console.log("Borrando documento:", documentoId);
+
+  try {
+    await deleteDoc(doc(db, "documentos", documentoId));
+
+    alert("Documento borrado correctamente");
+
+    mostrarGestionDocumentos();
+
+  } catch (error) {
+    console.error("ERROR BORRANDO DOCUMENTO:", error);
+    alert("Error al borrar el documento");
+  }
+}
+
+window.borrarDocumento = borrarDocumento;
+
+
+async function cambiarEstadoActividad(actividadId, estadoActual) {
+  console.log("Cambiando actividad:", actividadId, estadoActual);
+
+  const nuevoEstado = !estadoActual;
+
+  try {
+    await updateDoc(doc(db, "actividades", actividadId), {
+      activa: nuevoEstado
+    });
+
+    alert(
+      nuevoEstado
+        ? "Actividad activada correctamente"
+        : "Actividad desactivada correctamente"
+    );
+
+    mostrarGestionActividades();
+
+  } catch (error) {
+    console.error("ERROR CAMBIANDO ACTIVIDAD:", error);
+    alert("Error al cambiar el estado de la actividad");
+  }
+}
+
+window.cambiarEstadoActividad = cambiarEstadoActividad;
