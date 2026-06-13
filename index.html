@@ -10,11 +10,13 @@
 
   <main class="login-page">
     <section class="login-card">
-        <img
+
+      <img
         src="assets/logo-agafona.png"
         alt="AGAFONA"
         class="logo"
       />
+
       <p class="subtitle">Acceso a la app de socios</p>
 
       <form id="login-form">
@@ -28,9 +30,39 @@
       </form>
 
       <p id="login-message"></p>
+
     </section>
   </main>
 
+  <!-- Modal de confirmación -->
+  <div id="modal-confirmacion" class="modal oculto">
+    <div class="modal-contenido">
+
+      <h3>Confirmar acción</h3>
+
+      <p id="modal-mensaje">
+        ¿Seguro que quieres continuar?
+      </p>
+
+      <div class="modal-botones">
+        <button
+          id="btn-cancelar-modal"
+          type="button">
+          Cancelar
+        </button>
+
+        <button
+          id="btn-confirmar-modal"
+          type="button"
+          class="btn-peligro">
+          Borrar
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <script type="module" src="js/app.js"></script>
+
 </body>
 </html>

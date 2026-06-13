@@ -3063,6 +3063,71 @@ window.mostrarClasificacionConvocatoria = mostrarClasificacionConvocatoria;
 window.mostrarClasificacionJurado = mostrarClasificacionConvocatoria;
 
 
+let accionConfirmada = null;
+
+function crearModalConfirmacionSiNoExiste() {
+  let modal = document.getElementById("modal-confirmacion");
+
+  if (modal) return;
+
+  const modalHtml = `
+    <div id="modal-confirmacion" class="modal oculto">
+      <div class="modal-contenido">
+        <h3>Confirmar acción</h3>
+
+        <p id="modal-mensaje">
+          ¿Seguro que quieres continuar?
+        </p>
+
+        <div class="modal-botones">
+          <button id="btn-cancelar-modal" type="button">
+            Cancelar
+          </button>
+
+          <button id="btn-confirmar-modal" type="button" class="btn-peligro">
+            Borrar
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML("beforeend", modalHtml);
+
+  document.getElementById("btn-cancelar-modal").addEventListener("click", function () {
+    cerrarConfirmacion();
+  });
+
+  document.getElementById("btn-confirmar-modal").addEventListener("click", async function () {
+    if (accionConfirmada) {
+      await accionConfirmada();
+    }
+  });
+}
+
+window.mostrarConfirmacion = function (mensaje, callback) {
+  crearModalConfirmacionSiNoExiste();
+
+  const modal = document.getElementById("modal-confirmacion");
+  const texto = document.getElementById("modal-mensaje");
+
+  texto.textContent = mensaje;
+
+  accionConfirmada = callback;
+
+  modal.classList.remove("oculto");
+};
+
+window.cerrarConfirmacion = function () {
+  const modal = document.getElementById("modal-confirmacion");
+
+  if (modal) {
+    modal.classList.add("oculto");
+  }
+
+  accionConfirmada = null;
+};
+
 
 async function guardarVotoJurado(fotoId, convocatoriaId, emailJurado) {
   try {
@@ -3249,19 +3314,29 @@ window.volverGestion = volverGestion;
 
 
 async function borrarActividad(actividadId) {
-  console.log("Borrando actividad:", actividadId);
+  mostrarConfirmacion(
+    "¿Seguro que quieres borrar esta actividad definitivamente?",
+    async function () {
+      console.log("Borrando actividad:", actividadId);
 
-  try {
-    await deleteDoc(doc(db, "actividades", actividadId));
+      try {
+        await deleteDoc(doc(db, "actividades", actividadId));
 
-    alert("Actividad borrada correctamente");
+        cerrarConfirmacion();
 
-    mostrarGestionActividades();
+        alert("Actividad borrada correctamente");
 
-  } catch (error) {
-    console.error("ERROR BORRANDO ACTIVIDAD:", error);
-    alert("Error al borrar la actividad");
-  }
+        mostrarGestionActividades();
+
+      } catch (error) {
+        console.error("ERROR BORRANDO ACTIVIDAD:", error);
+
+        cerrarConfirmacion();
+
+        alert("Error al borrar la actividad");
+      }
+    }
+  );
 }
 
 window.borrarActividad = borrarActividad;
