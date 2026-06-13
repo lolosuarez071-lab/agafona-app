@@ -3343,37 +3343,62 @@ window.borrarActividad = borrarActividad;
 
 
 async function borrarAviso(avisoId) {
-  const confirmar = confirm("¿Seguro que quieres borrar este aviso definitivamente?");
 
-  if (!confirmar) return;
+  mostrarConfirmacion(
+    "¿Seguro que quieres borrar este aviso definitivamente?",
+    async function () {
 
-  try {
-    await deleteDoc(doc(db, "avisos", avisoId));
-    alert("Aviso borrado correctamente");
-    mostrarGestionAvisos();
-  } catch (error) {
-    console.error(error);
-    alert("Error al borrar el aviso");
-  }
+      try {
+        await deleteDoc(doc(db, "avisos", avisoId));
+
+        cerrarConfirmacion();
+
+        alert("Aviso borrado correctamente");
+
+        mostrarGestionAvisos();
+
+      } catch (error) {
+
+        console.error(error);
+
+        cerrarConfirmacion();
+
+        alert("Error al borrar el aviso");
+      }
+    }
+  );
 }
 
 window.borrarAviso = borrarAviso;
 
 
 async function borrarDocumento(documentoId) {
-  console.log("Borrando documento:", documentoId);
 
-  try {
-    await deleteDoc(doc(db, "documentos", documentoId));
+  mostrarConfirmacion(
+    "¿Seguro que quieres borrar este documento definitivamente?",
+    async function () {
 
-    alert("Documento borrado correctamente");
+      console.log("Borrando documento:", documentoId);
 
-    mostrarGestionDocumentos();
+      try {
+        await deleteDoc(doc(db, "documentos", documentoId));
 
-  } catch (error) {
-    console.error("ERROR BORRANDO DOCUMENTO:", error);
-    alert("Error al borrar el documento");
-  }
+        cerrarConfirmacion();
+
+        alert("Documento borrado correctamente");
+
+        mostrarGestionDocumentos();
+
+      } catch (error) {
+
+        console.error("ERROR BORRANDO DOCUMENTO:", error);
+
+        cerrarConfirmacion();
+
+        alert("Error al borrar el documento");
+      }
+    }
+  );
 }
 
 window.borrarDocumento = borrarDocumento;
