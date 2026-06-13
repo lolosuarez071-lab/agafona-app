@@ -88,16 +88,20 @@
     min-height: 100vh;
     padding: 20px;
     padding-bottom: 95px;
+  
     background:
-  linear-gradient(
-    rgba(242,245,243,0.72),
-    rgba(242,245,243,0.72)
-  ),
-  url("../assets/fondo-app.jpg");
-    background-size: cover;
-    background-position: center;
+      linear-gradient(
+        rgba(242,245,243,0.82),
+        rgba(242,245,243,0.82)
+      ),
+      url("../assets/fondo-app.jpg");
+  
+    background-size: 90%;
+    background-position: top center;
+    background-repeat: no-repeat;
     background-attachment: fixed;
   }
+
   
   .app-header {
     max-width: 760px;
@@ -264,7 +268,8 @@
 .bottom-nav span {
   font-size: 0.68rem;
   margin-top: 0;
-  font-weight: 600;
+  font-weight: 700;
+  color: #234326 !important;
 }
 
 .actividad-card {
