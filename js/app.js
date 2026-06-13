@@ -93,10 +93,25 @@ function mostrarDashboard(usuario) {
   document.body.innerHTML = `
     <main class="app-page">
 
-      <header class="app-header">
-        <img src="assets/logo-agafona.png" alt="AGAFONA" class="app-logo">
-        <button id="logout-button" class="logout-button">Salir</button>
-      </header>
+     <header class="app-header">
+  <img src="assets/logo-agafona.png" alt="AGAFONA" class="app-logo">
+
+  <div class="header-actions">
+
+    <button
+      id="btn-volver-header"
+      class="header-button oculto">
+      Volver
+    </button>
+
+    <button
+      id="logout-button"
+      class="logout-button">
+      Salir
+    </button>
+
+  </div>
+</header>
 
       <div id="content-area"></div>
 
@@ -135,6 +150,10 @@ function mostrarDashboard(usuario) {
     await signOut(auth);
     localStorage.removeItem("usuarioAgafona");
     location.reload();
+  });
+  
+  document.getElementById("btn-volver-header").addEventListener("click", () => {
+    mostrarAdmin(usuario);
   });
 
   const botones = document.querySelectorAll(".bottom-nav button");
@@ -1145,6 +1164,7 @@ window.cancelarInscripcion = cancelarInscripcion;
 
 function mostrarAdmin(usuario) {
   const contentArea = document.getElementById("content-area");
+  document.getElementById("btn-volver-header").classList.add("oculto");
 
   if (!tieneRol(usuario, "admin") && !tieneRol(usuario, "directiva")) {
     contentArea.innerHTML = `
@@ -1231,6 +1251,7 @@ window.mostrarAdmin = mostrarAdmin;
 function mostrarFormularioDocumento() {
 
   const contentArea = document.getElementById("content-area");
+  document.getElementById("btn-volver-header").classList.remove("oculto");
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
@@ -1258,10 +1279,6 @@ function mostrarFormularioDocumento() {
 
       <button onclick="guardarDocumento()">
         Guardar documento
-      </button>
-
-      <button onclick="volverGestion()">
-        Volver
       </button>
 
     </section>
@@ -1321,6 +1338,7 @@ window.guardarDocumento = guardarDocumento;
 
 function mostrarFormularioActividad() {
   const contentArea = document.getElementById("content-area");
+  document.getElementById("btn-volver-header").classList.remove("oculto");
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
@@ -1345,9 +1363,6 @@ function mostrarFormularioActividad() {
         Guardar actividad
       </button>
 
-      <button onclick="volverGestion()">
-        Volver
-      </button>
     </section>
   `;
 }
@@ -1399,6 +1414,7 @@ window.volverAdmin = volverAdmin;
 
 function mostrarFormularioAviso() {
   const contentArea = document.getElementById("content-area");
+  document.getElementById("btn-volver-header").classList.remove("oculto");
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
@@ -1417,9 +1433,6 @@ function mostrarFormularioAviso() {
         Guardar aviso
       </button>
 
-      <button onclick="volverGestion()">
-        Volver
-      </button>
     </section>
   `;
 }
@@ -1465,6 +1478,7 @@ window.guardarAviso = guardarAviso;
 
 async function mostrarGestionActividades() {
   const contentArea = document.getElementById("content-area");
+  document.getElementById("btn-volver-header").classList.remove("oculto");  
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
@@ -1531,14 +1545,8 @@ async function mostrarGestionActividades() {
     });
 
     html += `
-      </section>
-
-      <section class="dashboard-card">
-        <button onclick="volverGestion()">
-          Volver
-        </button>
-      </section>
-    `;
+    </section>
+  `;
 
     contentArea.innerHTML = html;
 
@@ -1553,6 +1561,7 @@ window.mostrarGestionActividades = mostrarGestionActividades;
 
 async function mostrarGestionAvisos() {
   const contentArea = document.getElementById("content-area");
+  document.getElementById("btn-volver-header").classList.remove("oculto");
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
@@ -1609,12 +1618,6 @@ async function mostrarGestionAvisos() {
 
     html += `
       </section>
-
-      <section class="dashboard-card">
-        <button onclick="volverGestion()">
-          Volver
-        </button>
-      </section>
     `;
 
     contentArea.innerHTML = html;
@@ -1659,6 +1662,7 @@ window.cambiarEstadoAviso = cambiarEstadoAviso;
 
 async function mostrarGestionDocumentos() {
   const contentArea = document.getElementById("content-area");
+  document.getElementById("btn-volver-header").classList.remove("oculto");
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
@@ -1720,12 +1724,6 @@ async function mostrarGestionDocumentos() {
     });
 
     html += `
-      </section>
-
-      <section class="dashboard-card">
-        <button onclick="volverGestion()">
-          Volver
-        </button>
       </section>
     `;
 

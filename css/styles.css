@@ -404,3 +404,26 @@
   background: #b71c1c;
 }
 
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-button {
+  width: auto;
+  margin: 0;
+  padding: 10px 16px;
+  background: #234326;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.header-button:hover {
+  background: #315f36;
+}
+
