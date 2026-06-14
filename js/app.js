@@ -358,7 +358,7 @@ async function mostrarInicio(usuario) {
       actividadHtml = `
       <article class="dashboard-card tarjeta-clickable"
         onclick="mostrarActividades(window.usuarioActual)">
-       <h2>📅 Próxima actividad →</h2>
+       <h2>📅 Actividades →</h2>
         <p>No hay actividades publicadas todavía.</p>
     
       </article>
@@ -369,14 +369,13 @@ async function mostrarInicio(usuario) {
 
       actividadHtml = `
       <article class="dashboard-card tarjeta-clickable"
-       onclick="window.mostrarLiga(window.usuarioActual)"
-    <h2>Próxima actividad</h2>
-    <p><strong>${actividad.titulo}</strong></p>
-    <p>📅 ${actividad.fecha}</p>
-    <p>📍 ${actividad.lugar}</p>
-
-  </article>
-`;
+        onclick="mostrarActividades(window.usuarioActual)">
+        <h2>📅 Actividades →</h2>
+        <p><strong>${actividad.titulo}</strong></p>
+        <p>📅 ${actividad.fecha}</p>
+        <p>📍 ${actividad.lugar}</p>
+      </article>
+    `;
     }
 
     const convocatoria = await obtenerConvocatoriaActual();
@@ -663,13 +662,8 @@ async function mostrarAvisos() {
     }
 
     let avisosHtml = `
-  <section class="dashboard-card">
-    <h2>📢 Avisos</h2>
-    <p>Últimos avisos publicados por AGAFONA.</p>
-  </section>
-
-  <section class="dashboard-grid">
-`;
+    <section class="dashboard-grid">
+  `;
 
     avisosValidos.forEach((docAviso) => {
       const aviso = docAviso.data();
@@ -952,6 +946,8 @@ async function mostrarLiga(usuario) {
 }
 
 window.mostrarLiga = mostrarLiga;
+
+
 async function mostrarDocumentos() {
   const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
   const contentArea = document.getElementById("content-area");
@@ -991,13 +987,8 @@ async function mostrarDocumentos() {
     }
 
     let html = `
-      <section class="dashboard-card">
-        <h2>Documentos</h2>
-        <p>Consulta estatutos, bases y documentación disponible para los socios.</p>
-      </section>
-
-      <section class="dashboard-grid">
-    `;
+    <section class="dashboard-grid">
+  `;
 
     snapshot.forEach((doc) => {
       const documento = doc.data();
@@ -1010,14 +1001,12 @@ async function mostrarDocumentos() {
       if (!puedeVer) return;
 
       html += `
-        <article class="dashboard-card">
+        <article class="dashboard-card compact-card">
           <h2>📄 ${documento.titulo}</h2>
 
           <div class="documento-categoria">
             ${documento.categoria}
           </div>
-
-          <br>
 
           <a
             href="${documento.url}"
@@ -1883,8 +1872,6 @@ async function mostrarGestionDocumentos() {
 
     let html = `
       <section class="dashboard-card">
-        <h2>📄 Gestionar documentos</h2>
-
         <button onclick="mostrarFormularioDocumento()">
           Subir nuevo documento
         </button>

@@ -145,7 +145,7 @@
   
   .dashboard-grid {
     display: grid;
-    gap: 14px;
+    gap: 22px;
   }
   
   .dashboard-card {
@@ -159,7 +159,7 @@
     border-right: 1px solid rgba(255,255,255,0.15);
     border-bottom: 1px solid rgba(0,0,0,0.05);
   
-    padding: 16px;
+    padding: 20px;
     border-radius: 18px;
   
     box-shadow:
@@ -194,6 +194,21 @@
   .dashboard-card h3,
   .dashboard-card p {
     color: #1a1a1a;
+  }
+
+  .dashboard-card h2 {
+    margin-top: 0;
+    margin-bottom: 10px;
+  }
+  
+  .dashboard-card h3 {
+    margin-top: 0;
+    margin-bottom: 8px;
+  }
+  
+  .dashboard-card p {
+    margin: 4px 0;
+    line-height: 1.4;
   }
 
 .bottom-nav {
@@ -710,5 +725,23 @@
   margin: 30px 0 20px;
   font-size: 0.85rem;
   color: rgba(0,0,0,0.55);
+}
+
+.compact-card {
+  padding: 14px 18px;
+  min-height: auto;
+}
+
+.compact-card h2,
+.compact-card h3 {
+  margin: 0 0 8px 0;
+}
+
+.compact-card p {
+  margin: 4px 0;
+}
+
+.compact-card .documento-categoria {
+  margin: 8px 0;
 }
 
