@@ -90,61 +90,92 @@ function mostrarDashboard(usuario) {
   const esJuradoExterno =
     esJurado && usuario.esSocio === false && !esSocio;
 
-  document.body.innerHTML = `
+    document.body.innerHTML = `
     <main class="app-page">
-
-     <header class="app-header">
-  <img src="assets/logo-agafona.png" alt="AGAFONA" class="app-logo">
-
-  <div class="header-actions">
-
-    <button
-      id="btn-volver-header"
-      class="header-button oculto">
-      Volver
-    </button>
-
-    <button
-      id="logout-button"
-      class="logout-button">
-      Salir
-    </button>
-
-  </div>
-</header>
-
+  
+      <header class="app-header">
+  
+        <button id="menu-toggle" class="menu-toggle">
+          ☰
+        </button>
+  
+        <img src="assets/logo-agafona.png" alt="AGAFONA" class="app-logo">
+  
+        <div class="header-actions">
+  
+          <button
+            id="btn-volver-header"
+            class="header-button oculto">
+            Volver
+          </button>
+  
+          <button
+            id="logout-button"
+            class="logout-button">
+            Salir
+          </button>
+  
+        </div>
+      </header>
+  
+      <aside id="side-menu" class="side-menu oculto">
+        <div class="side-menu-header">
+          <h2>Menú</h2>
+          <button id="menu-close" class="menu-close">×</button>
+        </div>
+  
+        <button id="menu-inicio">🏠 Inicio</button>
+        <button id="menu-actividades">📅 Actividades</button>
+        <button id="menu-liga">📷 Liga Fotográfica</button>
+        <button id="menu-documentos">📄 Documentos</button>
+        <button id="menu-perfil">👤 Perfil</button>
+  
+        ${esJurado || esAdmin || esJuradoExterno
+          ? `<button id="menu-jurado">⚖️ Jurado</button>`
+          : ""
+        }
+  
+        ${esAdmin || esDirectiva
+          ? `<button id="menu-gestion">⚙️ Gestión</button>`
+          : ""
+        }
+      </aside>
+  
+      <div id="menu-overlay" class="menu-overlay oculto"></div>
+  
       <div id="content-area"></div>
-
+  
       <nav class="bottom-nav">
         ${esJuradoExterno
-      ? `
-              <button>⚖️<span>Jurado</span></button>
-              <button>🏆<span>Clasificación</span></button>
-              <button>👤<span>Perfil</span></button>
-            `
-      : `
-              <button>🏠<span>Inicio</span></button>
-              <button>📅<span>Actividades</span></button>
-              <button>📷<span>Liga</span></button>
-              <button>📄<span>Docs</span></button>
-
-              ${esAdmin || esDirectiva
-        ? `<button>⚙️<span>Gestión</span></button>`
-        : ""
-      }
-
-              ${esJurado || esAdmin
-        ? `<button>⚖️<span>Jurado</span></button>`
-        : ""
-      }
-
-              <button>👤<span>Perfil</span></button>
-            `
-    }
+          ? `
+            <button>⚖️<span>Jurado</span></button>
+            <button>🏆<span>Clasificación</span></button>
+            <button>👤<span>Perfil</span></button>
+          `
+          : `
+            <button>🏠<span>Inicio</span></button>
+            <button>📅<span>Actividades</span></button>
+            <button>📷<span>Liga</span></button>
+            <button>📄<span>Docs</span></button>
+  
+            ${esAdmin || esDirectiva
+              ? `<button>⚙️<span>Gestión</span></button>`
+              : ""
+            }
+  
+            ${esJurado || esAdmin
+              ? `<button>⚖️<span>Jurado</span></button>`
+              : ""
+            }
+  
+            <button>👤<span>Perfil</span></button>
+          `
+        }
       </nav>
-
+  
     </main>
   `;
+
 
   document.getElementById("logout-button").addEventListener("click", async () => {
     await signOut(auth);
@@ -155,6 +186,37 @@ function mostrarDashboard(usuario) {
   document.getElementById("btn-volver-header").addEventListener("click", () => {
     mostrarAdmin(usuario);
   });
+
+  document.getElementById("logout-button").addEventListener("click", async () => {
+    await signOut(auth);
+    localStorage.removeItem("usuarioAgafona");
+    location.reload();
+  });
+  
+  document.getElementById("btn-volver-header").addEventListener("click", () => {
+    mostrarAdmin(usuario);
+  });
+  
+  /* MENU HAMBURGUESA */
+  
+  const sideMenu = document.getElementById("side-menu");
+  const menuOverlay = document.getElementById("menu-overlay");
+  
+  function abrirMenu() {
+    sideMenu.classList.remove("oculto");
+    menuOverlay.classList.remove("oculto");
+  }
+  
+  function cerrarMenu() {
+    sideMenu.classList.add("oculto");
+    menuOverlay.classList.add("oculto");
+  }
+  
+  document.getElementById("menu-toggle").addEventListener("click", abrirMenu);
+  document.getElementById("menu-close").addEventListener("click", cerrarMenu);
+  menuOverlay.addEventListener("click", cerrarMenu);
+  
+  /* FIN MENU HAMBURGUESA */
 
   const botones = document.querySelectorAll(".bottom-nav button");
 
