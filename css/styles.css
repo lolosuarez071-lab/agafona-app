@@ -745,3 +745,12 @@
   margin: 8px 0;
 }
 
+/* Cambio botones menú superior */
+
+@media (max-width: 600px) {
+  .app-logo {
+    max-width: 180px;
+  }
+}
+
+
