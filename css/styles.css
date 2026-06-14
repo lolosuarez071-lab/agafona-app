@@ -684,3 +684,17 @@
   display: none !important;
 }
 
+
+.tarjeta-clickable {
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.tarjeta-clickable:hover {
+  transform: translateY(-3px);
+}
+
+.tarjeta-clickable:active {
+  transform: scale(0.98);
+}
+

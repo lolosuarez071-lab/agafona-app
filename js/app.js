@@ -230,6 +230,8 @@ function mostrarDashboard(usuario) {
     return;
   }
 
+  window.usuarioActual = usuario;
+
   mostrarInicio(usuario);
 
   botones[0].addEventListener("click", () => mostrarInicio(usuario));
@@ -258,6 +260,10 @@ function mostrarDashboard(usuario) {
 
 
 async function mostrarInicio(usuario) {
+
+  document
+  .getElementById("btn-volver-header")
+  .classList.add("oculto");
 
   let descripcionRol = "";
 
@@ -301,22 +307,31 @@ async function mostrarInicio(usuario) {
     if (actividadesValidas.length === 0) {
 
       actividadHtml = `
-        <article class="dashboard-card">
-          <h2>Próxima actividad</h2>
-          <p>No hay actividades publicadas todavía.</p>
-        </article>
-      `;
+      <article class="dashboard-card tarjeta-clickable"
+        onclick="mostrarActividades(window.usuarioActual)">
+       <h2>📅 Próxima actividad →</h2>
+        <p>No hay actividades publicadas todavía.</p>
+    
+      </article>
+    `;
+
     } else {
       const actividad = actividadesValidas[0].data();
 
       actividadHtml = `
-        <article class="dashboard-card">
-          <h2>Próxima actividad</h2>
-          <p><strong>${actividad.titulo}</strong></p>
-          <p>📅 ${actividad.fecha}</p>
-          <p>📍 ${actividad.lugar}</p>
-        </article>
-      `;
+      <article class="dashboard-card tarjeta-clickable"
+        onclick="mostrarActividades(window.usuarioActual)">
+    <h2>Próxima actividad</h2>
+    <p><strong>${actividad.titulo}</strong></p>
+    <p>📅 ${actividad.fecha}</p>
+    <p>📍 ${actividad.lugar}</p>
+
+    <button onclick="mostrarActividades(window.usuarioActual)">
+      Ver actividades
+    </button>
+
+  </article>
+`;
     }
 
     const convocatoriaQuery = query(
@@ -449,6 +464,14 @@ async function mostrarInicio(usuario) {
 async function mostrarActividades(usuario) {
   const contentArea = document.getElementById("content-area");
 
+  document
+  .getElementById("btn-volver-header")
+  .classList.remove("oculto");
+
+document
+  .getElementById("btn-volver-header")
+  .onclick = () => mostrarInicio(usuario);
+
   contentArea.innerHTML = `
     <section class="dashboard-card">
       <h2>Actividades</h2>
@@ -469,7 +492,7 @@ async function mostrarActividades(usuario) {
     if (actividadesSnapshot.empty) {
       actividadesHtml = `
         <section class="dashboard-card">
-          <h2>Actividades</h2>
+         
           <p>No hay actividades disponibles.</p>
         </section>
       `;
