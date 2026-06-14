@@ -573,18 +573,17 @@
   top: 0;
   left: 0;
 
-  width: 220px;
+  width: 250px;
   height: 100vh;
 
-  background: rgba(190, 170, 130, 0.22);
+  background: rgba(255,255,255,0.18);
 
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+
   border-top: 1px solid rgba(255,255,255,0.55);
   border-left: 1px solid rgba(255,255,255,0.25);
   border-right: 1px solid rgba(255,255,255,0.15);
-  border-bottom: 1px solid rgba(0,0,0,0.08);
   
   box-shadow:
     0 10px 30px rgba(0,0,0,0.20),
@@ -607,12 +606,12 @@
   left: 0;
 
   width: 100%;
-  height: 40%;
+  height: 30%;
 
   background: linear-gradient(
     to bottom,
-    rgba(255,255,255,0.35),
-    rgba(255,255,255,0.10),
+    rgba(255,255,255,0.45),
+    rgba(255,255,255,0.12),
     transparent
   );
 
@@ -649,21 +648,28 @@
 }
 
 .side-menu button {
+
   width: 100%;
   margin: 0;
+
+  display: flex;
+  align-items: center;
+  gap: 14px;
 
   text-align: left;
 
   background: transparent;
-  color: #000;
+  color: #000000;
 
   border: none;
   border-radius: 12px;
 
-  padding: 12px;
+  padding: 14px;
 
-  font-size: 1rem;
+  font-size: 1.35rem;
   font-weight: 600;
+
+  cursor: pointer;
 }
 
 .side-menu button:hover {
@@ -696,5 +702,13 @@
 
 .tarjeta-clickable:active {
   transform: scale(0.98);
+}
+
+
+.app-footer {
+  text-align: center;
+  margin: 30px 0 20px;
+  font-size: 0.85rem;
+  color: rgba(0,0,0,0.55);
 }
 

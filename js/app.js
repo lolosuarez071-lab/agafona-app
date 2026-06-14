@@ -218,6 +218,53 @@ function mostrarDashboard(usuario) {
   
   /* FIN MENU HAMBURGUESA */
 
+  document.getElementById("menu-inicio")
+  ?.addEventListener("click", () => {
+    cerrarMenu();
+    mostrarInicio(usuario);
+  });
+
+document.getElementById("menu-actividades")
+  ?.addEventListener("click", () => {
+    cerrarMenu();
+    mostrarActividades(usuario);
+  });
+
+document.getElementById("menu-liga")
+  ?.addEventListener("click", () => {
+    cerrarMenu();
+    mostrarLiga(usuario);
+  });
+
+document.getElementById("menu-documentos")
+  ?.addEventListener("click", () => {
+    cerrarMenu();
+    mostrarDocumentos();
+  });
+
+document.getElementById("menu-perfil")
+  ?.addEventListener("click", () => {
+    cerrarMenu();
+    mostrarPerfil(usuario);
+  });
+
+document.getElementById("menu-jurado")
+  ?.addEventListener("click", () => {
+    cerrarMenu();
+    mostrarPanelJurado(usuario);
+  });
+
+document.getElementById("menu-gestion")
+  ?.addEventListener("click", () => {
+    cerrarMenu();
+
+    if (esAdmin) {
+      mostrarAdmin(usuario);
+    } else if (esDirectiva) {
+      mostrarDirectiva(usuario);
+    }
+  });
+
   const botones = document.querySelectorAll(".bottom-nav button");
 
   if (esJuradoExterno) {
@@ -322,66 +369,58 @@ async function mostrarInicio(usuario) {
 
       actividadHtml = `
       <article class="dashboard-card tarjeta-clickable"
-        onclick="mostrarActividades(window.usuarioActual)">
+       onclick="window.mostrarLiga(window.usuarioActual)"
     <h2>Próxima actividad</h2>
     <p><strong>${actividad.titulo}</strong></p>
     <p>📅 ${actividad.fecha}</p>
     <p>📍 ${actividad.lugar}</p>
 
-    <button onclick="mostrarActividades(window.usuarioActual)">
-      Ver actividades
-    </button>
-
   </article>
 `;
     }
 
-    const convocatoriaQuery = query(
-      collection(db, "convocatorias"),
-      where("activa", "==", true)
-    );
+    const convocatoria = await obtenerConvocatoriaActual();
 
-    const convocatoriaSnapshot = await getDocs(convocatoriaQuery);
+console.log("Convocatoria inicio:", convocatoria);
 
-    let ligaHtml = "";
+let ligaHtml = "";
 
-    if (convocatoriaSnapshot.empty) {
+if (convocatoria) {
+  const fotoQuery = query(
+    collection(db, "fotos"),
+    where("email", "==", usuario.email),
+    where("convocatoriaId", "==", convocatoria.codigo)
+  );
 
-      ligaHtml = `
-      <article class="dashboard-card tarjeta-clickable"
-        onclick="mostrarLiga(window.usuarioActual)">
-        <h2>📷 Liga Fotográfica →</h2>
+  const fotoSnapshot = await getDocs(fotoQuery);
 
-          <p>Sin convocatoria activa.</p>
-        </article>
-      `;
+  let estadoFoto = "⚠️ No has enviado fotografía";
 
-    } else {
+  if (!fotoSnapshot.empty) {
+    estadoFoto = `📷 ${fotoSnapshot.docs[0].data().tituloFoto}`;
+  }
 
-      const convocatoria = convocatoriaSnapshot.docs[0].data();
+  ligaHtml = `
+    <article class="dashboard-card tarjeta-clickable"
+      onclick="window.mostrarLiga(window.usuarioActual)">
+      <h2>📷 Liga Fotográfica →</h2>
 
-      const fotoQuery = query(
-        collection(db, "fotos"),
-        where("email", "==", usuario.email),
-        where("convocatoriaId", "==", convocatoria.codigo)
-      );
+      <p><strong>${convocatoria.titulo}</strong></p>
+      <p>🟢 Convocatoria ${convocatoria.estado}</p>
+      <p>📅 Hasta ${convocatoria.fechaFinSubida}</p>
+      <p>${estadoFoto}</p>
+    </article>
+  `;
 
-      const fotoSnapshot = await getDocs(fotoQuery);
-
-      let estadoFoto = "⚠️ No has enviado fotografía";
-
-      if (!fotoSnapshot.empty) {
-        estadoFoto = `📷 ${fotoSnapshot.docs[0].data().tituloFoto}`;
-      }
-
-    ligaHtml = `
-  <article class="dashboard-card tarjeta-clickable"
-    onclick="mostrarLiga(window.usuarioActual)">
-    <h2>📷 Liga Fotográfica →</h2>
-    <p>Sin convocatoria activa.</p>
-  </article>
-`;
-    }
+} else {
+  ligaHtml = `
+    <article class="dashboard-card tarjeta-clickable"
+      onclick="window.mostrarLiga(window.usuarioActual)">
+      <h2>📷 Liga Fotográfica →</h2>
+      <p>Sin convocatoria activa.</p>
+    </article>
+  `;
+}
 
     const avisosQuery = query(
       collection(db, "avisos"),
@@ -437,10 +476,14 @@ async function mostrarInicio(usuario) {
   </section>
 
   <section class="dashboard-grid">
-    ${actividadHtml}
-    ${ligaHtml}
-    ${avisosHtml}
-  </section>
+  ${actividadHtml}
+  ${ligaHtml}
+  ${avisosHtml}
+</section>
+
+<footer class="app-footer">
+  © MSD · AGAFONA App 2026
+</footer>
 `;
 
   } catch (error) {
@@ -619,7 +662,14 @@ async function mostrarAvisos() {
       return;
     }
 
-    let avisosHtml = `<section class="dashboard-grid">`;
+    let avisosHtml = `
+  <section class="dashboard-card">
+    <h2>📢 Avisos</h2>
+    <p>Últimos avisos publicados por AGAFONA.</p>
+  </section>
+
+  <section class="dashboard-grid">
+`;
 
     avisosValidos.forEach((docAviso) => {
       const aviso = docAviso.data();
@@ -636,12 +686,8 @@ async function mostrarAvisos() {
     avisosHtml += `</section>`;
 
     contentArea.innerHTML = `
-      <section class="dashboard-card">
-        <h2>📢 Avisos</h2>
-      </section>
-
-      ${avisosHtml}
-    `;
+    ${avisosHtml}
+  `;
 
   } catch (error) {
     console.error("Error cargando avisos:", error);
@@ -728,25 +774,25 @@ async function mostrarLiga(usuario) {
   const contentArea = document.getElementById("content-area");
 
   document.getElementById("btn-volver-header").classList.remove("oculto");
-document.getElementById("btn-volver-header").onclick = () => mostrarInicio(usuario);
+  document.getElementById("btn-volver-header").onclick = () => mostrarInicio(usuario);
 
   contentArea.innerHTML = `
-      <section class="dashboard-card">
-        <h2>Liga Fotográfica</h2>
-        <p>Cargando convocatoria...</p>
-      </section>
-    `;
+    <section class="dashboard-card">
+      <h2>📷 Liga Fotográfica</h2>
+      <p>Cargando convocatoria...</p>
+    </section>
+  `;
 
   try {
     const convocatoria = await obtenerConvocatoriaActual();
 
     if (!convocatoria) {
       contentArea.innerHTML = `
-          <section class="dashboard-card">
-            <h2>Liga Fotográfica</h2>
-            <p>No hay convocatoria activa.</p>
-          </section>
-        `;
+        <section class="dashboard-card">
+          <h2>📷 Liga Fotográfica</h2>
+          <p>No hay convocatoria activa.</p>
+        </section>
+      `;
       return;
     }
 
@@ -768,36 +814,28 @@ document.getElementById("btn-volver-header").onclick = () => mostrarInicio(usuar
 
     const clasificacionSnapshot = await getDocs(clasificacionQuery);
 
-    console.log(
-      "Clasificaciones encontradas:",
-      clasificacionSnapshot.docs.length
-    );
-    clasificacionSnapshot.forEach((doc) => {
-      console.log(doc.data());
-    });
-
     let clasificacionHtml = "";
 
     if (clasificacionSnapshot.empty) {
       clasificacionHtml = `
-          <p>No hay clasificación publicada todavía.</p>
-        `;
+        <p>No hay clasificación publicada todavía.</p>
+      `;
     } else {
       clasificacionHtml = `
-          <hr>
-          <h3>🏆 Clasificación provisional</h3>
-        `;
+        <hr>
+        <h3>🏆 Clasificación provisional</h3>
+      `;
 
       clasificacionSnapshot.forEach((doc) => {
         const item = doc.data();
 
         clasificacionHtml += `
-            <p>
-              <strong>${item.posicion}.</strong>
-              ${item.nombreSocio}
-              — ${item.puntos} puntos
-            </p>
-          `;
+          <p>
+            <strong>${item.posicion}.</strong>
+            ${item.nombreSocio}
+            — ${item.puntos} puntos
+          </p>
+        `;
       });
     }
 
@@ -806,33 +844,33 @@ document.getElementById("btn-volver-header").onclick = () => mostrarInicio(usuar
 
     if (fotosSnapshot.empty) {
       bloqueFoto = `
-          <p><strong>Mi fotografía:</strong></p>
-          <p>No has enviado ninguna fotografía.</p>
-      
-          <label for="titulo-foto">
-          <strong>Título de la fotografía</strong>
-          </label>
+        <p><strong>Mi fotografía:</strong></p>
+        <p>No has enviado ninguna fotografía.</p>
 
-          <input
+        <label for="titulo-foto">
+          <strong>Título de la fotografía</strong>
+        </label>
+
+        <input
           type="text"
           id="titulo-foto"
           placeholder="Ejemplo: Avoceta al amanecer"
           required
-          >
-      
-          <input type="file" id="foto-liga" accept="image/*">
-      
-          <button id="subir-foto-btn" class="actividad-btn">
-            Subir fotografía
-          </button>
-        `;
+        >
+
+        <input type="file" id="foto-liga" accept="image/*">
+
+        <button id="subir-foto-btn" class="actividad-btn">
+          Subir fotografía
+        </button>
+      `;
     } else {
       const fotoDoc = fotosSnapshot.docs[0];
       const foto = fotoDoc.data();
       fotoDocId = fotoDoc.id;
 
       bloqueFoto = `
-         <p><strong>Fotografía presentada:</strong></p>
+        <p><strong>Fotografía presentada:</strong></p>
         <p>${foto.tituloFoto}</p>
 
         <img
@@ -841,62 +879,61 @@ document.getElementById("btn-volver-header").onclick = () => mostrarInicio(usuar
           class="miniatura-foto"
         >
 
-          <br><br>
-      
-          <a href="${foto.urlFoto}" target="_blank" class="documento-link">
-            Ver fotografía
-          </a>
-      
-          <br><br>
-      
-          <label for="titulo-foto">
-          <strong>Título de la fotografía</strong>
-          </label>
+        <br><br>
 
-          <input
+        <a href="${foto.urlFoto}" target="_blank" class="documento-link">
+          Ver fotografía
+        </a>
+
+        <br><br>
+
+        <label for="titulo-foto">
+          <strong>Título de la fotografía</strong>
+        </label>
+
+        <input
           type="text"
           id="titulo-foto"
           value="${foto.tituloFoto ?? ""}"
           placeholder="Ejemplo: Avoceta al amanecer"
           required
-          >
-      
-          <input type="file" id="foto-liga" accept="image/*">
-      
-          <button id="subir-foto-btn" class="actividad-btn">
-            Cambiar fotografía
-          </button>
-        `;
+        >
+
+        <input type="file" id="foto-liga" accept="image/*">
+
+        <button id="subir-foto-btn" class="actividad-btn">
+          Cambiar fotografía
+        </button>
+      `;
     }
 
     contentArea.innerHTML = `
-        <section class="dashboard-card">
-          <h2>📷 Liga Fotográfica</h2>
+      <section class="dashboard-card">
+        <h2>📷 Liga Fotográfica</h2>
 
-          <h3>${convocatoria.titulo}</h3>
+        <h3>${convocatoria.titulo}</h3>
 
-          <p>🟢 Convocatoria abierta</p>
+        <p>🟢 Convocatoria abierta</p>
 
-          <p>
-  <strong>Periodo de subida:</strong>
-  del ${convocatoria.fechaInicioSubida}
-  al ${convocatoria.fechaFinSubida}
-</p>
+        <p>
+          <strong>Periodo de subida:</strong>
+          del ${convocatoria.fechaInicioSubida}
+          al ${convocatoria.fechaFinSubida}
+        </p>
 
-<p>
-  <strong>Periodo de votación:</strong>
-  del ${convocatoria.fechaInicioVotacion}
-  al ${convocatoria.fechaFinVotacion}
-</p>
+        <p>
+          <strong>Periodo de votación:</strong>
+          del ${convocatoria.fechaInicioVotacion}
+          al ${convocatoria.fechaFinVotacion}
+        </p>
 
-          <hr>
+        <hr>
 
-          ${bloqueFoto}
+        ${bloqueFoto}
 
-          ${clasificacionHtml}
-
-        </section>
-      `;
+        ${clasificacionHtml}
+      </section>
+    `;
 
     document.getElementById("subir-foto-btn").addEventListener("click", () => {
       subirFotoLiga(usuario, convocatoria, fotoDocId);
@@ -906,14 +943,15 @@ document.getElementById("btn-volver-header").onclick = () => mostrarInicio(usuar
     console.error(error);
 
     contentArea.innerHTML = `
-        <section class="dashboard-card">
-          <h2>Liga Fotográfica</h2>
-          <p>Error al cargar la convocatoria.</p>
-        </section>
-      `;
+      <section class="dashboard-card">
+        <h2>📷 Liga Fotográfica</h2>
+        <p>Error al cargar la convocatoria.</p>
+      </section>
+    `;
   }
 }
 
+window.mostrarLiga = mostrarLiga;
 async function mostrarDocumentos() {
   const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
   const contentArea = document.getElementById("content-area");
