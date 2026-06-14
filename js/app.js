@@ -261,6 +261,8 @@ function mostrarDashboard(usuario) {
 
 async function mostrarInicio(usuario) {
 
+   window.usuarioActual = usuario;
+
   document
   .getElementById("btn-volver-header")
   .classList.add("oculto");
@@ -346,8 +348,10 @@ async function mostrarInicio(usuario) {
     if (convocatoriaSnapshot.empty) {
 
       ligaHtml = `
-        <article class="dashboard-card">
-          <h2>Liga Fotográfica</h2>
+      <article class="dashboard-card tarjeta-clickable"
+        onclick="mostrarLiga(window.usuarioActual)">
+        <h2>📷 Liga Fotográfica →</h2>
+
           <p>Sin convocatoria activa.</p>
         </article>
       `;
@@ -370,20 +374,13 @@ async function mostrarInicio(usuario) {
         estadoFoto = `📷 ${fotoSnapshot.docs[0].data().tituloFoto}`;
       }
 
-      ligaHtml = `
-        <article class="dashboard-card">
-          <h2>📷 Liga Fotográfica</h2>
-    
-          <p><strong>${convocatoria.titulo}</strong></p>
-    
-          <p>🟢 Convocatoria ${convocatoria.estado}</p>
-    
-          <p>📅 Hasta ${convocatoria.fechaFin}</p>
-    
-          <p>${estadoFoto}</p>
-    
-        </article>
-      `;
+    ligaHtml = `
+  <article class="dashboard-card tarjeta-clickable"
+    onclick="mostrarLiga(window.usuarioActual)">
+    <h2>📷 Liga Fotográfica →</h2>
+    <p>Sin convocatoria activa.</p>
+  </article>
+`;
     }
 
     const avisosQuery = query(
@@ -403,8 +400,9 @@ async function mostrarInicio(usuario) {
     if (avisosValidos.length === 0) {
 
       avisosHtml = `
-        <article class="dashboard-card">
-          <h2>Avisos</h2>
+        <article class="dashboard-card tarjeta-clickable"
+  onclick="window.mostrarAvisos()">
+          <h2>📢 Avisos →</h2>
           <p>No hay avisos nuevos.</p>
         </article>
       `;
@@ -413,8 +411,9 @@ async function mostrarInicio(usuario) {
         const aviso = doc.data();
 
         avisosHtml += `
-  <article class="dashboard-card">
-    <h2>📢 Aviso</h2>
+  <article class="dashboard-card tarjeta-clickable"
+  onclick="window.mostrarAvisos()">
+     <h2>📢 Avisos →</h2>
     <h3>${aviso.titulo}</h3>
     <p>${aviso.mensaje}</p>
     <p><strong>Fecha:</strong> ${aviso.fecha}</p>
@@ -432,7 +431,7 @@ async function mostrarInicio(usuario) {
 
     <p>
        Bienvenido/a a la app AGAFONA.
-      Ya está disponible la primera versión de prueba para socios.
+      © msd AGAFONA-app 2026
     </p>
 
   </section>
@@ -460,6 +459,9 @@ async function mostrarInicio(usuario) {
     `;
   }
 }
+
+window.mostrarLiga = mostrarLiga;
+
 
 async function mostrarActividades(usuario) {
   const contentArea = document.getElementById("content-area");
@@ -578,6 +580,84 @@ document
 
 window.mostrarActividades = mostrarActividades;
 
+
+async function mostrarAvisos() {
+  const contentArea = document.getElementById("content-area");
+
+  document.getElementById("btn-volver-header").classList.remove("oculto");
+  document.getElementById("btn-volver-header").onclick = () => mostrarInicio(window.usuarioActual);
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
+      <h2>📢 Avisos</h2>
+      <p>Cargando avisos...</p>
+    </section>
+  `;
+
+  try {
+    const avisosQuery = query(
+      collection(db, "avisos"),
+      where("activo", "==", true)
+    );
+
+    const avisosSnapshot = await getDocs(avisosQuery);
+
+    const hoy = new Date().toISOString().split("T")[0];
+
+    const avisosValidos = avisosSnapshot.docs.filter(doc => {
+      const aviso = doc.data();
+      return aviso.fecha >= hoy;
+    });
+
+    if (avisosValidos.length === 0) {
+      contentArea.innerHTML = `
+        <section class="dashboard-card">
+          <h2>📢 Avisos</h2>
+          <p>No hay avisos nuevos.</p>
+        </section>
+      `;
+      return;
+    }
+
+    let avisosHtml = `<section class="dashboard-grid">`;
+
+    avisosValidos.forEach((docAviso) => {
+      const aviso = docAviso.data();
+
+      avisosHtml += `
+        <article class="dashboard-card">
+          <h3>${aviso.titulo}</h3>
+          <p>${aviso.mensaje}</p>
+          <p><strong>Fecha:</strong> ${aviso.fecha}</p>
+        </article>
+      `;
+    });
+
+    avisosHtml += `</section>`;
+
+    contentArea.innerHTML = `
+      <section class="dashboard-card">
+        <h2>📢 Avisos</h2>
+      </section>
+
+      ${avisosHtml}
+    `;
+
+  } catch (error) {
+    console.error("Error cargando avisos:", error);
+
+    contentArea.innerHTML = `
+      <section class="dashboard-card">
+        <h2>📢 Avisos</h2>
+        <p>Error al cargar los avisos.</p>
+      </section>
+    `;
+  }
+}
+
+window.mostrarAvisos = mostrarAvisos;
+
+
 async function verInscritosActividad(actividadId) {
   const contentArea = document.getElementById("content-area");
 
@@ -646,6 +726,9 @@ window.verInscritosActividad = verInscritosActividad;
 
 async function mostrarLiga(usuario) {
   const contentArea = document.getElementById("content-area");
+
+  document.getElementById("btn-volver-header").classList.remove("oculto");
+document.getElementById("btn-volver-header").onclick = () => mostrarInicio(usuario);
 
   contentArea.innerHTML = `
       <section class="dashboard-card">
