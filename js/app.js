@@ -94,29 +94,26 @@ function mostrarDashboard(usuario) {
     <main class="app-page">
   
       <header class="app-header">
-  
-        <button id="menu-toggle" class="menu-toggle">
-          ☰
-        </button>
-  
-        <img src="assets/logo-agafona.png" alt="AGAFONA" class="app-logo">
-  
-        <div class="header-actions">
-  
-          <button
-            id="btn-volver-header"
-            class="header-button oculto">
-            Volver
-          </button>
-  
-          <button
-            id="logout-button"
-            class="logout-button">
-            Salir
-          </button>
-  
-        </div>
-      </header>
+
+  <div class="app-header-top">
+
+    <button id="menu-toggle" class="menu-toggle">
+      ☰
+    </button>
+
+    <img src="assets/logo-agafona.png"
+         alt="AGAFONA"
+         class="app-logo">
+
+  </div>
+
+  <div class="header-actions">
+
+    ...
+
+  </div>
+
+</header>
   
       <aside id="side-menu" class="side-menu oculto">
         <div class="side-menu-header">
