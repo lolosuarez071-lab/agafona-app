@@ -90,7 +90,7 @@ function mostrarDashboard(usuario) {
   const esJuradoExterno =
     esJurado && usuario.esSocio === false && !esSocio;
 
-    document.body.innerHTML = `
+  document.body.innerHTML = `
     <main class="app-page">
   
       <header class="app-header">
@@ -131,14 +131,14 @@ function mostrarDashboard(usuario) {
         <button id="menu-perfil">👤 Perfil</button>
   
         ${esJurado || esAdmin || esJuradoExterno
-          ? `<button id="menu-jurado">⚖️ Jurado</button>`
-          : ""
-        }
+      ? `<button id="menu-jurado">⚖️ Jurado</button>`
+      : ""
+    }
   
         ${esAdmin || esDirectiva
-          ? `<button id="menu-gestion">⚙️ Gestión</button>`
-          : ""
-        }
+      ? `<button id="menu-gestion">⚙️ Gestión</button>`
+      : ""
+    }
       </aside>
   
       <div id="menu-overlay" class="menu-overlay oculto"></div>
@@ -147,30 +147,30 @@ function mostrarDashboard(usuario) {
   
       <nav class="bottom-nav">
         ${esJuradoExterno
-          ? `
+      ? `
             <button>⚖️<span>Jurado</span></button>
             <button>🏆<span>Clasificación</span></button>
             <button>👤<span>Perfil</span></button>
           `
-          : `
+      : `
             <button>🏠<span>Inicio</span></button>
             <button>📅<span>Actividades</span></button>
             <button>📷<span>Liga</span></button>
             <button>📄<span>Docs</span></button>
   
             ${esAdmin || esDirectiva
-              ? `<button>⚙️<span>Gestión</span></button>`
-              : ""
-            }
+        ? `<button>⚙️<span>Gestión</span></button>`
+        : ""
+      }
   
             ${esJurado || esAdmin
-              ? `<button>⚖️<span>Jurado</span></button>`
-              : ""
-            }
+        ? `<button>⚖️<span>Jurado</span></button>`
+        : ""
+      }
   
             <button>👤<span>Perfil</span></button>
           `
-        }
+    }
       </nav>
   
     </main>
@@ -182,7 +182,7 @@ function mostrarDashboard(usuario) {
     localStorage.removeItem("usuarioAgafona");
     location.reload();
   });
-  
+
   document.getElementById("btn-volver-header").addEventListener("click", () => {
     mostrarAdmin(usuario);
   });
@@ -192,78 +192,78 @@ function mostrarDashboard(usuario) {
     localStorage.removeItem("usuarioAgafona");
     location.reload();
   });
-  
+
   document.getElementById("btn-volver-header").addEventListener("click", () => {
     mostrarAdmin(usuario);
   });
-  
+
   /* MENU HAMBURGUESA */
-  
+
   const sideMenu = document.getElementById("side-menu");
   const menuOverlay = document.getElementById("menu-overlay");
-  
+
   function abrirMenu() {
     sideMenu.classList.remove("oculto");
     menuOverlay.classList.remove("oculto");
   }
-  
+
   function cerrarMenu() {
     sideMenu.classList.add("oculto");
     menuOverlay.classList.add("oculto");
   }
-  
+
   document.getElementById("menu-toggle").addEventListener("click", abrirMenu);
   document.getElementById("menu-close").addEventListener("click", cerrarMenu);
   menuOverlay.addEventListener("click", cerrarMenu);
-  
+
   /* FIN MENU HAMBURGUESA */
 
   document.getElementById("menu-inicio")
-  ?.addEventListener("click", () => {
-    cerrarMenu();
-    mostrarInicio(usuario);
-  });
+    ?.addEventListener("click", () => {
+      cerrarMenu();
+      mostrarInicio(usuario);
+    });
 
-document.getElementById("menu-actividades")
-  ?.addEventListener("click", () => {
-    cerrarMenu();
-    mostrarActividades(usuario);
-  });
+  document.getElementById("menu-actividades")
+    ?.addEventListener("click", () => {
+      cerrarMenu();
+      mostrarActividades(usuario);
+    });
 
-document.getElementById("menu-liga")
-  ?.addEventListener("click", () => {
-    cerrarMenu();
-    mostrarLiga(usuario);
-  });
+  document.getElementById("menu-liga")
+    ?.addEventListener("click", () => {
+      cerrarMenu();
+      mostrarLiga(usuario);
+    });
 
-document.getElementById("menu-documentos")
-  ?.addEventListener("click", () => {
-    cerrarMenu();
-    mostrarDocumentos();
-  });
+  document.getElementById("menu-documentos")
+    ?.addEventListener("click", () => {
+      cerrarMenu();
+      mostrarDocumentos();
+    });
 
-document.getElementById("menu-perfil")
-  ?.addEventListener("click", () => {
-    cerrarMenu();
-    mostrarPerfil(usuario);
-  });
+  document.getElementById("menu-perfil")
+    ?.addEventListener("click", () => {
+      cerrarMenu();
+      mostrarPerfil(usuario);
+    });
 
-document.getElementById("menu-jurado")
-  ?.addEventListener("click", () => {
-    cerrarMenu();
-    mostrarPanelJurado(usuario);
-  });
+  document.getElementById("menu-jurado")
+    ?.addEventListener("click", () => {
+      cerrarMenu();
+      mostrarPanelJurado(usuario);
+    });
 
-document.getElementById("menu-gestion")
-  ?.addEventListener("click", () => {
-    cerrarMenu();
+  document.getElementById("menu-gestion")
+    ?.addEventListener("click", () => {
+      cerrarMenu();
 
-    if (esAdmin) {
-      mostrarAdmin(usuario);
-    } else if (esDirectiva) {
-      mostrarDirectiva(usuario);
-    }
-  });
+      if (esAdmin) {
+        mostrarAdmin(usuario);
+      } else if (esDirectiva) {
+        mostrarDirectiva(usuario);
+      }
+    });
 
   const botones = document.querySelectorAll(".bottom-nav button");
 
@@ -308,11 +308,11 @@ document.getElementById("menu-gestion")
 
 async function mostrarInicio(usuario) {
 
-   window.usuarioActual = usuario;
+  window.usuarioActual = usuario;
 
   document
-  .getElementById("btn-volver-header")
-  .classList.add("oculto");
+    .getElementById("btn-volver-header")
+    .classList.add("oculto");
 
   let descripcionRol = "";
 
@@ -380,26 +380,26 @@ async function mostrarInicio(usuario) {
 
     const convocatoria = await obtenerConvocatoriaActual();
 
-console.log("Convocatoria inicio:", convocatoria);
+    console.log("Convocatoria inicio:", convocatoria);
 
-let ligaHtml = "";
+    let ligaHtml = "";
 
-if (convocatoria) {
-  const fotoQuery = query(
-    collection(db, "fotos"),
-    where("email", "==", usuario.email),
-    where("convocatoriaId", "==", convocatoria.codigo)
-  );
+    if (convocatoria) {
+      const fotoQuery = query(
+        collection(db, "fotos"),
+        where("email", "==", usuario.email),
+        where("convocatoriaId", "==", convocatoria.codigo)
+      );
 
-  const fotoSnapshot = await getDocs(fotoQuery);
+      const fotoSnapshot = await getDocs(fotoQuery);
 
-  let estadoFoto = "⚠️ No has enviado fotografía";
+      let estadoFoto = "⚠️ No has enviado fotografía";
 
-  if (!fotoSnapshot.empty) {
-    estadoFoto = `📷 ${fotoSnapshot.docs[0].data().tituloFoto}`;
-  }
+      if (!fotoSnapshot.empty) {
+        estadoFoto = `📷 ${fotoSnapshot.docs[0].data().tituloFoto}`;
+      }
 
-  ligaHtml = `
+      ligaHtml = `
     <article class="dashboard-card tarjeta-clickable"
       onclick="window.mostrarLiga(window.usuarioActual)">
       <h2>📷 Liga Fotográfica →</h2>
@@ -411,15 +411,15 @@ if (convocatoria) {
     </article>
   `;
 
-} else {
-  ligaHtml = `
+    } else {
+      ligaHtml = `
     <article class="dashboard-card tarjeta-clickable"
       onclick="window.mostrarLiga(window.usuarioActual)">
       <h2>📷 Liga Fotográfica →</h2>
       <p>Sin convocatoria activa.</p>
     </article>
   `;
-}
+    }
 
     const avisosQuery = query(
       collection(db, "avisos"),
@@ -509,12 +509,12 @@ async function mostrarActividades(usuario) {
   const contentArea = document.getElementById("content-area");
 
   document
-  .getElementById("btn-volver-header")
-  .classList.remove("oculto");
+    .getElementById("btn-volver-header")
+    .classList.remove("oculto");
 
-document
-  .getElementById("btn-volver-header")
-  .onclick = () => mostrarInicio(usuario);
+  document
+    .getElementById("btn-volver-header")
+    .onclick = () => mostrarInicio(usuario);
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
@@ -601,9 +601,9 @@ document
     }
 
     contentArea.innerHTML = `
-      <section class="dashboard-card">
-        <h2>Actividades</h2>
-      </section>
+      <section class="dashboard-card page-title-card">
+  <h2>Actividades</h2>
+</section>
 
       ${actividadesHtml}
     `;
@@ -1673,7 +1673,7 @@ window.guardarAviso = guardarAviso;
 
 async function mostrarGestionActividades() {
   const contentArea = document.getElementById("content-area");
-  document.getElementById("btn-volver-header").classList.remove("oculto");  
+  document.getElementById("btn-volver-header").classList.remove("oculto");
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
@@ -2008,9 +2008,9 @@ async function mostrarGestionUsuarios() {
           </p>
 
           <p>
-            <strong>Rol:</strong>
-            ${usuario.rol}
-          </p>
+  <strong>Roles:</strong>
+  ${usuario.roles ? usuario.roles.join(", ") : "Sin roles"}
+</p>
 
           <p>
             <strong>Estado:</strong>
@@ -2023,9 +2023,9 @@ async function mostrarGestionUsuarios() {
 
           <br><br>
 
-          <button onclick="desactivarUsuario('${usuarioId}')">
-            Desactivar usuario
-          </button>
+          <button onclick="cambiarEstadoUsuario('${usuarioId}', ${usuario.activo === true})">
+  ${usuario.activo === true ? "Desactivar usuario" : "Activar usuario"}
+</button>
 
         </article>
       `;
@@ -2051,6 +2051,31 @@ async function mostrarGestionUsuarios() {
 
   }
 }
+
+
+async function cambiarEstadoUsuario(usuarioId, estadoActual) {
+  const nuevoEstado = !estadoActual;
+
+  try {
+    await updateDoc(doc(db, "usuarios", usuarioId), {
+      activo: nuevoEstado
+    });
+
+    alert(
+      nuevoEstado
+        ? "Usuario activado correctamente"
+        : "Usuario desactivado correctamente"
+    );
+
+    mostrarGestionUsuarios();
+
+  } catch (error) {
+    console.error("Error cambiando estado del usuario:", error);
+    alert("Error al cambiar el estado del usuario");
+  }
+}
+
+window.cambiarEstadoUsuario = cambiarEstadoUsuario;
 
 window.mostrarGestionUsuarios = mostrarGestionUsuarios;
 
