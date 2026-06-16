@@ -683,3 +683,18 @@ button:hover {
     padding: 16px 18px;
   }
 }
+
+/* Corrección menú lateral oculto */
+.oculto {
+  display: none !important;
+}
+
+.side-menu.oculto,
+.menu-overlay.oculto {
+  display: none !important;
+}
+
+/* Ocultar navegación inferior antigua */
+.bottom-nav {
+  display: none !important;
+}
