@@ -814,3 +814,57 @@
 .welcome-card:hover {
   transform: translateY(-2px);
 }
+
+
+.app-header {
+  width: 100%;
+  padding: 25px 20px 20px;
+  text-align: center;
+}
+
+.app-logo {
+  width: 240px;
+  max-width: 70%;
+  display: block;
+  margin: 0 auto 16px;
+}
+
+.header-controls {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.menu-icon,
+.volver-icon {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: #1f4d2b;
+  font-size: 30px;
+  font-weight: 700;
+  padding: 0;
+  cursor: pointer;
+}
+
+.logout-link {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: #555;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0;
+  cursor: pointer;
+}
+
+.oculto {
+  display: none !important;
+}
