@@ -101,17 +101,15 @@ function mostrarDashboard(usuario) {
     class="app-logo"
   >
 
-  <div class="header-controls">
+  <div class="header-nav">
 
-    <div class="header-left">
-      <button id="menu-toggle" class="menu-icon">
-        ☰
-      </button>
+    <button id="btn-volver-header" class="header-icon oculto">
+      ←
+    </button>
 
-      <button id="btn-volver-header" class="volver-icon oculto">
-        ←
-      </button>
-    </div>
+    <button id="menu-toggle" class="header-icon">
+      ☰
+    </button>
 
     <button id="logout-button" class="logout-link">
       Salir
