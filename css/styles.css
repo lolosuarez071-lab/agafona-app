@@ -804,3 +804,13 @@
 .dashboard-grid .dashboard-card + .dashboard-card {
   margin-top: 0;
 }
+
+
+.welcome-card {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.welcome-card:hover {
+  transform: translateY(-2px);
+}
