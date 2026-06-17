@@ -1533,7 +1533,11 @@ window.guardarDocumento = guardarDocumento;
 
 function mostrarFormularioActividad() {
   const contentArea = document.getElementById("content-area");
+
   document.getElementById("btn-volver-header").classList.remove("oculto");
+  document.getElementById("btn-volver-header").onclick = () => {
+    mostrarGestionActividades();
+  };
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
@@ -1673,7 +1677,12 @@ window.guardarAviso = guardarAviso;
 
 async function mostrarGestionActividades() {
   const contentArea = document.getElementById("content-area");
+  const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
+
   document.getElementById("btn-volver-header").classList.remove("oculto");
+  document.getElementById("btn-volver-header").onclick = () => {
+    mostrarAdmin(usuario);
+  };
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
