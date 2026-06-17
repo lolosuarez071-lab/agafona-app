@@ -103,9 +103,9 @@ function mostrarDashboard(usuario) {
 
   <div class="header-nav">
 
-    <button id="btn-volver-header" class="header-icon oculto">
-      ←
-    </button>
+   <button id="btn-volver-header" class="header-icon oculto" type="button">
+  ←
+</button>
 
     <button id="menu-toggle" class="header-icon">
       ☰
@@ -305,9 +305,39 @@ function mostrarDashboard(usuario) {
   botones[indice].addEventListener("click", () => mostrarPerfil(usuario));
 }
 
+function ocultarBotonVolver() {
+  const btnVolver = document.getElementById("btn-volver-header");
 
+  if (!btnVolver) return;
+
+  btnVolver.classList.add("oculto");
+  btnVolver.onclick = null;
+}
+
+
+function configurarBotonVolver(callback) {
+  const btnVolver = document.getElementById("btn-volver-header");
+
+  console.log("Configurando volver:", callback);
+
+  btnVolver.classList.remove("oculto");
+
+  btnVolver.onclick = function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  
+    console.log("CLICK VOLVER EJECUTA:", callback);
+  
+    callback();
+  };
+}
+
+window.configurarBotonVolver = configurarBotonVolver;
+window.ocultarBotonVolver = ocultarBotonVolver;
 
 async function mostrarInicio(usuario) {
+
+  ocultarBotonVolver();
 
   window.usuarioActual = usuario;
 
@@ -630,8 +660,7 @@ window.mostrarActividades = mostrarActividades;
 async function mostrarAvisos() {
   const contentArea = document.getElementById("content-area");
 
-  document.getElementById("btn-volver-header").classList.remove("oculto");
-  document.getElementById("btn-volver-header").onclick = () => mostrarInicio(window.usuarioActual);
+  configurarBotonVolver(() => alert("AVISOS"));
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
@@ -1085,6 +1114,8 @@ document.getElementById("btn-volver-header").onclick = () => {
   }
 }
 async function mostrarPerfil(usuario) {
+
+  configurarBotonVolver(() => mostrarInicio(usuario));
   const numeroSocio = usuario.numeroSocio ?? "-";
 
   document.getElementById("btn-volver-header").classList.remove("oculto");
@@ -1415,13 +1446,8 @@ window.cancelarInscripcion = cancelarInscripcion;
 
 function mostrarAdmin(usuario) {
   const contentArea = document.getElementById("content-area");
-  document.getElementById("btn-volver-header").classList.add("oculto");
 
-  document.getElementById("btn-volver-header").classList.remove("oculto");
-document.getElementById("btn-volver-header").onclick = () => {
-  const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
-  mostrarInicio(usuario);
-};
+  configurarBotonVolver(() => mostrarInicio(usuario));
 
   if (!tieneRol(usuario, "admin") && !tieneRol(usuario, "directiva")) {
     contentArea.innerHTML = `
@@ -1485,6 +1511,7 @@ window.mostrarAdmin = mostrarAdmin;
 
 function mostrarFormularioDocumento() {
 
+  configurarBotonVolver(() => mostrarGestionDocumentos());
   const contentArea = document.getElementById("content-area");
 
   document.getElementById("btn-volver-header").classList.remove("oculto");
@@ -1574,10 +1601,11 @@ async function guardarDocumento() {
 window.guardarDocumento = guardarDocumento;
 
 function mostrarFormularioActividad() {
+
+  configurarBotonVolver(() => mostrarGestionActividades());
   const contentArea = document.getElementById("content-area");
 
-  document.getElementById("btn-volver-header").classList.remove("oculto");
-  document.getElementById("btn-volver-header").onclick = () => mostrarGestionActividades();
+  configurarBotonVolver(() => mostrarGestionActividades());
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
@@ -1728,12 +1756,13 @@ window.guardarAviso = guardarAviso;
 
 
 async function mostrarGestionActividades() {
+
   const contentArea = document.getElementById("content-area");
   const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
 
-  document.getElementById("btn-volver-header").classList.remove("oculto");
-  document.getElementById("btn-volver-header").onclick = () => mostrarAdmin(usuario);
+  configurarBotonVolver(() => mostrarAdmin(usuario));
 
+  
   contentArea.innerHTML = `
     <section class="dashboard-card">
       <h2>📋 Gestionar actividades</h2>
@@ -1919,6 +1948,8 @@ window.cambiarEstadoAviso = cambiarEstadoAviso;
 
 
 async function mostrarGestionDocumentos() {
+
+  configurarBotonVolver(() => mostrarGestion());
   const contentArea = document.getElementById("content-area");
   const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
 
@@ -3727,3 +3758,4 @@ async function cambiarEstadoActividad(actividadId, estadoActual) {
 }
 
 window.cambiarEstadoActividad = cambiarEstadoActividad;
+
