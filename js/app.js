@@ -1447,6 +1447,9 @@ function mostrarFormularioDocumento() {
 
   const contentArea = document.getElementById("content-area");
   document.getElementById("btn-volver-header").classList.remove("oculto");
+  document.getElementById("btn-volver-header").onclick = () => {
+    mostrarGestionDocumentos();
+  };
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
@@ -1614,6 +1617,9 @@ window.volverAdmin = volverAdmin;
 function mostrarFormularioAviso() {
   const contentArea = document.getElementById("content-area");
   document.getElementById("btn-volver-header").classList.remove("oculto");
+document.getElementById("btn-volver-header").onclick = () => {
+  mostrarGestionAvisos();
+};
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
@@ -1765,7 +1771,12 @@ window.mostrarGestionActividades = mostrarGestionActividades;
 
 async function mostrarGestionAvisos() {
   const contentArea = document.getElementById("content-area");
+  const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
+
   document.getElementById("btn-volver-header").classList.remove("oculto");
+  document.getElementById("btn-volver-header").onclick = () => {
+    mostrarAdmin(usuario);
+  };
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
@@ -1866,7 +1877,12 @@ window.cambiarEstadoAviso = cambiarEstadoAviso;
 
 async function mostrarGestionDocumentos() {
   const contentArea = document.getElementById("content-area");
-  document.getElementById("btn-volver-header").classList.remove("oculto");
+  const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
+
+document.getElementById("btn-volver-header").classList.remove("oculto");
+document.getElementById("btn-volver-header").onclick = () => {
+  mostrarAdmin(usuario);
+};
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
