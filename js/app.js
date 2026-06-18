@@ -1375,7 +1375,7 @@ function mostrarAdmin(usuario) {
     <section class="dashboard-card">
       <h2>⚙️ Panel de Administración</h2>
       <p>Gestión interna de AGAFONA.</p>
-      
+        
        <button onclick="window.mostrarInicio(window.usuarioActual)">
       Volver a Inicio
     </button>
