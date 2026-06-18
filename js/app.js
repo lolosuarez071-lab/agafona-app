@@ -93,11 +93,7 @@ function mostrarDashboard(usuario) {
   document.body.innerHTML = `
     <main class="app-page">
   
-      <header class="app-header">
-  
-  <button id="menu-toggle" class="menu-toggle">
-    ☰
-  </button>
+  <header class="app-header">
 
   <img src="assets/logo-agafona.png" alt="AGAFONA" class="app-logo">
 
@@ -106,7 +102,11 @@ function mostrarDashboard(usuario) {
     <button
       id="btn-volver-header"
       class="header-button oculto">
-      Volver
+      ←
+    </button>
+
+    <button id="menu-toggle" class="menu-toggle">
+      ☰
     </button>
 
     <button
@@ -116,6 +116,7 @@ function mostrarDashboard(usuario) {
     </button>
 
   </div>
+
 </header>
   
       <aside id="side-menu" class="side-menu oculto">
@@ -1357,9 +1358,21 @@ async function cancelarInscripcion(actividadId) {
 
 window.cancelarInscripcion = cancelarInscripcion;
 
+
+
 function mostrarAdmin(usuario) {
   const contentArea = document.getElementById("content-area");
-  document.getElementById("btn-volver-header").classList.add("oculto");
+
+  let btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.replaceWith(btnVolver.cloneNode(true));
+
+  btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.classList.remove("oculto");
+  btnVolver.onclick = () => {
+    mostrarInicio(usuario);
+  };
+ 
+ 
 
   if (!tieneRol(usuario, "admin") && !tieneRol(usuario, "directiva")) {
     contentArea.innerHTML = `
@@ -1375,10 +1388,6 @@ function mostrarAdmin(usuario) {
     <section class="dashboard-card">
       <h2>⚙️ Panel de Administración</h2>
       <p>Gestión interna de AGAFONA.</p>
-        
-       <button onclick="window.mostrarInicio(window.usuarioActual)">
-      Volver a Inicio
-    </button>
 
   </section>
 

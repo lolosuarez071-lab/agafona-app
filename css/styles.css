@@ -746,46 +746,72 @@
 }
 
 /* Cambio botones menú superior */
+.app-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 15px;
+}
+
+.app-logo {
+  width: 300px;
+  max-width: 90%;
+  height: auto;
+}
+
+.header-actions {
+  width: 100%;
+  max-width: 500px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: center;
+}
+
+#btn-volver-header {
+  justify-self: start;
+}
+
+#menu-toggle {
+  justify-self: center;
+}
+
+#logout-button {
+  justify-self: end;
+}
+
+.header-button,
+.menu-toggle,
+.logout-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #000;
+}
+
+.header-button,
+.menu-toggle {
+  font-size: 1.8rem;
+}
+
+.logout-button {
+  font-size: 1rem;
+  font-weight: 600;
+}
 
 @media (max-width: 600px) {
-
-  .app-header {
-    max-width: 100%;
-    display: grid;
-    grid-template-columns: auto auto;
-    grid-template-areas:
-      "menu logo"
-      "actions actions";
-    justify-content: center;
-    align-items: center;
-    gap: 10px 12px;
-    padding: 22px 14px 16px;
-  }
-
-  .menu-toggle {
-    grid-area: menu;
-    width: 44px;
-    height: 44px;
-    font-size: 1.4rem;
-  }
-
   .app-logo {
-    grid-area: logo;
-    width: 175px !important;
-    max-width: 175px !important;
-    height: auto;
-  }
-
-  .header-actions {
-    grid-area: actions;
-    justify-content: center;
-    gap: 10px;
+    width: 220px;
+    max-width: 90%;
   }
 
   .header-button,
+  .menu-toggle {
+    font-size: 1.6rem;
+  }
+
   .logout-button {
-    padding: 9px 16px;
-    font-size: 15px;
+    font-size: 0.95rem;
   }
 }
 
