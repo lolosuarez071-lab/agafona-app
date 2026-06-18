@@ -764,7 +764,6 @@ async function verInscritosActividad(actividadId) {
 }
 
 window.verInscritosActividad = verInscritosActividad;
-
 async function mostrarLiga(usuario) {
   const contentArea = document.getElementById("content-area");
 
@@ -790,6 +789,8 @@ async function mostrarLiga(usuario) {
       `;
       return;
     }
+
+    const subidaAbierta = convocatoria.estadoCalculado === "subida";
 
     const fotosQuery = query(
       collection(db, "fotos"),
@@ -838,68 +839,97 @@ async function mostrarLiga(usuario) {
     let fotoDocId = null;
 
     if (fotosSnapshot.empty) {
-      bloqueFoto = `
-        <p><strong>Mi fotografía:</strong></p>
-        <p>No has enviado ninguna fotografía.</p>
+      if (subidaAbierta) {
+        bloqueFoto = `
+          <p><strong>Mi fotografía:</strong></p>
+          <p>No has enviado ninguna fotografía.</p>
 
-        <label for="titulo-foto">
-          <strong>Título de la fotografía</strong>
-        </label>
+          <label for="titulo-foto">
+            <strong>Título de la fotografía</strong>
+          </label>
 
-        <input
-          type="text"
-          id="titulo-foto"
-          placeholder="Ejemplo: Avoceta al amanecer"
-          required
-        >
+          <input
+            type="text"
+            id="titulo-foto"
+            placeholder="Ejemplo: Avoceta al amanecer"
+            required
+          >
 
-        <input type="file" id="foto-liga" accept="image/*">
+          <input type="file" id="foto-liga" accept="image/*">
 
-        <button id="subir-foto-btn" class="actividad-btn">
-          Subir fotografía
-        </button>
-      `;
+          <button id="subir-foto-btn" class="actividad-btn">
+            Subir fotografía
+          </button>
+        `;
+      } else {
+        bloqueFoto = `
+          <p><strong>Mi fotografía:</strong></p>
+          <p>No has enviado ninguna fotografía.</p>
+          <p>El periodo de subida está cerrado.</p>
+        `;
+      }
     } else {
       const fotoDoc = fotosSnapshot.docs[0];
       const foto = fotoDoc.data();
       fotoDocId = fotoDoc.id;
 
-      bloqueFoto = `
-        <p><strong>Fotografía presentada:</strong></p>
-        <p>${foto.tituloFoto}</p>
+      if (subidaAbierta) {
+        bloqueFoto = `
+          <p><strong>Fotografía presentada:</strong></p>
+          <p>${foto.tituloFoto}</p>
 
-        <img
-          src="${foto.urlFoto}"
-          alt="${foto.tituloFoto}"
-          class="miniatura-foto"
-        >
+          <img
+            src="${foto.urlFoto}"
+            alt="${foto.tituloFoto}"
+            class="miniatura-foto"
+          >
 
-        <br><br>
+          <br><br>
 
-        <a href="${foto.urlFoto}" target="_blank" class="documento-link">
-          Ver fotografía
-        </a>
+          <a href="${foto.urlFoto}" target="_blank" class="documento-link">
+            Ver fotografía
+          </a>
 
-        <br><br>
+          <br><br>
 
-        <label for="titulo-foto">
-          <strong>Título de la fotografía</strong>
-        </label>
+          <label for="titulo-foto">
+            <strong>Título de la fotografía</strong>
+          </label>
 
-        <input
-          type="text"
-          id="titulo-foto"
-          value="${foto.tituloFoto ?? ""}"
-          placeholder="Ejemplo: Avoceta al amanecer"
-          required
-        >
+          <input
+            type="text"
+            id="titulo-foto"
+            value="${foto.tituloFoto ?? ""}"
+            placeholder="Ejemplo: Avoceta al amanecer"
+            required
+          >
 
-        <input type="file" id="foto-liga" accept="image/*">
+          <input type="file" id="foto-liga" accept="image/*">
 
-        <button id="subir-foto-btn" class="actividad-btn">
-          Cambiar fotografía
-        </button>
-      `;
+          <button id="subir-foto-btn" class="actividad-btn">
+            Cambiar fotografía
+          </button>
+        `;
+      } else {
+        bloqueFoto = `
+          <p><strong>Fotografía presentada:</strong></p>
+          <p>${foto.tituloFoto}</p>
+
+          <img
+            src="${foto.urlFoto}"
+            alt="${foto.tituloFoto}"
+            class="miniatura-foto"
+          >
+
+          <br><br>
+
+          <a href="${foto.urlFoto}" target="_blank" class="documento-link">
+            Ver fotografía
+          </a>
+
+          <p>El periodo de subida está cerrado. Ya no se puede cambiar la fotografía.</p>
+        `;
+      }
     }
 
     contentArea.innerHTML = `
@@ -908,7 +938,11 @@ async function mostrarLiga(usuario) {
 
         <h3>${convocatoria.titulo}</h3>
 
-        <p>🟢 Convocatoria abierta</p>
+        <p>
+          ${subidaAbierta
+            ? "🟢 Convocatoria abierta"
+            : "🔒 Periodo de subida cerrado"}
+        </p>
 
         <p>
           <strong>Periodo de subida:</strong>
@@ -930,9 +964,13 @@ async function mostrarLiga(usuario) {
       </section>
     `;
 
-    document.getElementById("subir-foto-btn").addEventListener("click", () => {
-      subirFotoLiga(usuario, convocatoria, fotoDocId);
-    });
+    const subirFotoBtn = document.getElementById("subir-foto-btn");
+
+    if (subirFotoBtn) {
+      subirFotoBtn.addEventListener("click", () => {
+        subirFotoLiga(usuario, convocatoria, fotoDocId);
+      });
+    }
 
   } catch (error) {
     console.error(error);
@@ -952,6 +990,15 @@ window.mostrarLiga = mostrarLiga;
 async function mostrarDocumentos() {
   const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
   const contentArea = document.getElementById("content-area");
+
+  let btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.replaceWith(btnVolver.cloneNode(true));
+
+  btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.classList.remove("oculto");
+  btnVolver.onclick = () => {
+    mostrarInicio(window.usuarioActual);
+  };
 
   if (!usuario) {
     contentArea.innerHTML = `
@@ -1036,8 +1083,17 @@ async function mostrarDocumentos() {
   }
 }
 async function mostrarPerfil(usuario) {
-  const numeroSocio = usuario.numeroSocio ?? "-";
 
+  let btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.replaceWith(btnVolver.cloneNode(true));
+
+  btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.classList.remove("oculto");
+  btnVolver.onclick = () => {
+    mostrarInicio(window.usuarioActual);
+  };
+
+  const numeroSocio = usuario.numeroSocio ?? "-";
   let rolMostrado = "Socio";
 
   if (Array.isArray(usuario.roles)) {
@@ -1910,14 +1966,17 @@ document.getElementById("btn-volver-header").onclick = () => {
     const snapshot = await getDocs(q);
 
     let html = `
-      <section class="dashboard-card">
-        <button onclick="mostrarFormularioDocumento()">
-          Subir nuevo documento
-        </button>
-      </section>
-
-      <section class="dashboard-grid">
-    `;
+    <section class="dashboard-card">
+      <h2>📄 Gestionar documentos</h2>
+      <p>
+        Crear, consultar y gestionar documentos de AGAFONA.
+      </p>
+  
+      <button onclick="mostrarFormularioDocumento()">
+        Subir nuevo documento
+      </button>
+    </section>
+  `;
 
     if (snapshot.empty) {
       html += `
@@ -2669,6 +2728,15 @@ window.guardarJuradoLiga = guardarJuradoLiga;
 
 async function mostrarPanelJurado(usuario) {
   const contentArea = document.getElementById("content-area");
+
+  let btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.replaceWith(btnVolver.cloneNode(true));
+
+  btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.classList.remove("oculto");
+  btnVolver.onclick = () => {
+    mostrarInicio(window.usuarioActual);
+  };
 
   if (!tieneRol(usuario, "jurado") && !tieneRol(usuario, "admin")) {
     contentArea.innerHTML = `
