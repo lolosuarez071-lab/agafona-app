@@ -2007,6 +2007,15 @@ async function mostrarGestionUsuarios() {
 
   const contentArea = document.getElementById("content-area");
 
+  let btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.replaceWith(btnVolver.cloneNode(true));
+
+  btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.classList.remove("oculto");
+  btnVolver.onclick = () => {
+    mostrarAdmin(window.usuarioActual);
+  };
+
   contentArea.innerHTML = `
     <section class="dashboard-card">
       <h2>👥 Gestión de usuarios</h2>
@@ -2181,6 +2190,16 @@ window.desactivarUsuario = desactivarUsuario;
 
 async function mostrarGestionLiga() {
   const contentArea = document.getElementById("content-area");
+
+  let btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.replaceWith(btnVolver.cloneNode(true));
+
+  btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.classList.remove("oculto");
+  btnVolver.onclick = () => {
+    mostrarAdmin(window.usuarioActual);
+  };
+
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
@@ -3050,6 +3069,15 @@ function mostrarFormularioLiga() {
 
   const contentArea = document.getElementById("content-area");
 
+  let btnVolver = document.getElementById("btn-volver-header");
+btnVolver.replaceWith(btnVolver.cloneNode(true));
+
+btnVolver = document.getElementById("btn-volver-header");
+btnVolver.classList.remove("oculto");
+btnVolver.onclick = () => {
+  mostrarGestionLiga();
+};
+
   contentArea.innerHTML = `
     <section class="dashboard-card">
 
@@ -3083,10 +3111,7 @@ function mostrarFormularioLiga() {
         Crear liga
       </button>
 
-      <button onclick="mostrarGestionLiga()">
-        Volver
-      </button>
-
+     
     </section>
   `;
 }
