@@ -764,6 +764,9 @@ async function verInscritosActividad(actividadId) {
 }
 
 window.verInscritosActividad = verInscritosActividad;
+
+
+
 async function mostrarLiga(usuario) {
   const contentArea = document.getElementById("content-area");
 
@@ -950,17 +953,27 @@ async function mostrarLiga(usuario) {
           al ${convocatoria.fechaFinSubida}
         </p>
 
-        <p>
-          <strong>Periodo de votación:</strong>
-          del ${convocatoria.fechaInicioVotacion}
-          al ${convocatoria.fechaFinVotacion}
-        </p>
+      <p>
+  <strong>Periodo de votación:</strong>
+  del ${convocatoria.fechaInicioVotacion}
+  al ${convocatoria.fechaFinVotacion}
+</p>
 
-        <hr>
+<hr>
 
-        ${bloqueFoto}
+${bloqueFoto}
 
-        ${clasificacionHtml}
+<div class="liga-actions">
+  <button onclick="mostrarClasificacionConvocatoria()">
+    🏆 Clasificación convocatoria
+  </button>
+
+  <button onclick="mostrarClasificacionGeneral()">
+    🥇 Clasificación general
+  </button>
+</div>
+
+${clasificacionHtml}
       </section>
     `;
 
@@ -1757,7 +1770,7 @@ async function mostrarGestionActividades() {
 
   document.getElementById("btn-volver-header").classList.remove("oculto");
   document.getElementById("btn-volver-header").onclick = () => {
-    mostrarAdmin(usuario);
+    volverGestion();
   };
 
   contentArea.innerHTML = `
@@ -1845,7 +1858,8 @@ async function mostrarGestionAvisos() {
 
   document.getElementById("btn-volver-header").classList.remove("oculto");
   document.getElementById("btn-volver-header").onclick = () => {
-    mostrarAdmin(usuario);
+    volverGestion();
+  
   };
 
   contentArea.innerHTML = `
@@ -1951,7 +1965,8 @@ async function mostrarGestionDocumentos() {
 
 document.getElementById("btn-volver-header").classList.remove("oculto");
 document.getElementById("btn-volver-header").onclick = () => {
-  mostrarAdmin(usuario);
+  volverGestion();
+
 };
 
   contentArea.innerHTML = `
@@ -3409,9 +3424,105 @@ async function mostrarClasificacionConvocatoria() {
 
 window.mostrarClasificacionConvocatoria = mostrarClasificacionConvocatoria;
 window.mostrarClasificacionJurado = mostrarClasificacionConvocatoria;
-
-
 let accionConfirmada = null;
+
+
+async function mostrarClasificacionGeneral() {
+  const contentArea = document.getElementById("content-area");
+
+  let btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.replaceWith(btnVolver.cloneNode(true));
+
+  btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.classList.remove("oculto");
+  btnVolver.onclick = () => {
+    mostrarLiga(window.usuarioActual);
+  };
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
+      <h2>🏆 Clasificación general</h2>
+      <p>Cargando clasificación...</p>
+    </section>
+  `;
+
+  try {
+    const q = query(
+      collection(db, "clasificaciones"),
+      where("visible", "==", true)
+    );
+
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      contentArea.innerHTML = `
+        <section class="dashboard-card">
+          <h2>🏆 Clasificación general</h2>
+          <p>No hay clasificaciones publicadas todavía.</p>
+        </section>
+      `;
+      return;
+    }
+
+    const acumulado = {};
+
+    snapshot.forEach((docClasificacion) => {
+      const item = docClasificacion.data();
+
+      const clave = item.email || item.nombreSocio;
+
+      if (!acumulado[clave]) {
+        acumulado[clave] = {
+          nombreSocio: item.nombreSocio,
+          puntos: 0
+        };
+      }
+
+      acumulado[clave].puntos += Number(item.puntos) || 0;
+    });
+
+    const clasificacionGeneral = Object.values(acumulado).sort(
+      (a, b) => b.puntos - a.puntos
+    );
+
+    let html = `
+      <section class="dashboard-card">
+        <h2>🏆 Clasificación general</h2>
+        <p>Puntuación acumulada de todas las convocatorias publicadas.</p>
+      </section>
+
+      <section class="dashboard-grid">
+    `;
+
+    clasificacionGeneral.forEach((item, index) => {
+      html += `
+        <article class="dashboard-card">
+          <h3>${index + 1}. ${item.nombreSocio}</h3>
+          <p><strong>${item.puntos}</strong> puntos</p>
+        </article>
+      `;
+    });
+
+    html += `
+      </section>
+    `;
+
+    contentArea.innerHTML = html;
+
+  } catch (error) {
+    console.error(error);
+
+    contentArea.innerHTML = `
+      <section class="dashboard-card">
+        <h2>🏆 Clasificación general</h2>
+        <p>Error al cargar la clasificación general.</p>
+      </section>
+    `;
+  }
+}
+
+window.mostrarClasificacionGeneral = mostrarClasificacionGeneral;
+
 
 function crearModalConfirmacionSiNoExiste() {
   let modal = document.getElementById("modal-confirmacion");
@@ -3593,6 +3704,16 @@ window.calcularClasificacionConvocatoria = calcularClasificacionConvocatoria;
 function mostrarDirectiva(usuario) {
   const contentArea = document.getElementById("content-area");
 
+  let btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.replaceWith(btnVolver.cloneNode(true));
+
+  btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.classList.remove("oculto");
+  btnVolver.onclick = () => {
+    mostrarInicio(window.usuarioActual);
+  };
+
+
   if (!tieneRol(usuario, "directiva") && !tieneRol(usuario, "admin")) {
     contentArea.innerHTML = `
       <section class="dashboard-card">
@@ -3628,11 +3749,6 @@ function mostrarDirectiva(usuario) {
         <button onclick="mostrarGestionAvisos()">Gestionar avisos</button>
       </article>
 
-      <article class="dashboard-card">
-        <h3>🏆 Clasificación</h3>
-        <p>Consultar clasificaciones de la liga fotográfica.</p>
-        <button onclick="mostrarClasificacionConvocatoria()">Ver clasificación</button>
-      </article>
     </section>
   `;
 }
