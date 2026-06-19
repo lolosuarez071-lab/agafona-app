@@ -3321,9 +3321,18 @@ window.calcularEstadoConvocatoria = calcularEstadoConvocatoria;
 async function mostrarClasificacionConvocatoria() {
   const contentArea = document.getElementById("content-area");
 
+  let btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.replaceWith(btnVolver.cloneNode(true));
+
+  btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.classList.remove("oculto");
+  btnVolver.onclick = () => {
+    mostrarLiga(window.usuarioActual);
+  };
+
   contentArea.innerHTML = `
     <section class="dashboard-card">
-      <h2>🏆 Clasificación</h2>
+      <h2>🏆 Clasificación convocatoria</h2>
       <p>Cargando clasificación...</p>
     </section>
   `;
@@ -3334,7 +3343,7 @@ async function mostrarClasificacionConvocatoria() {
     if (!convocatoria) {
       contentArea.innerHTML = `
         <section class="dashboard-card">
-          <h2>🏆 Clasificación</h2>
+          <h2>🏆 Clasificación convocatoria</h2>
           <p>No existe convocatoria activa.</p>
         </section>
       `;
@@ -3373,6 +3382,7 @@ async function mostrarClasificacionConvocatoria() {
       clasificacion.push({
         nombreSocio: foto.nombreSocio || "Socio",
         tituloFoto: foto.tituloFoto || "Sin título",
+        urlFoto: foto.urlFoto || "",
         puntos: totalPuntos,
         numeroVotos: numeroVotos
       });
@@ -3382,18 +3392,36 @@ async function mostrarClasificacionConvocatoria() {
 
     let html = `
       <section class="dashboard-card">
-        <h2>🏆 Clasificación</h2>
+        <h2>🏆 Clasificación convocatoria</h2>
         <p>${convocatoria.titulo || convocatoria.codigo}</p>
+        <p>Pincha en el nombre del socio para ver la fotografía presentada.</p>
       </section>
 
       <section class="dashboard-card">
     `;
 
+    if (clasificacion.length === 0) {
+      html += `
+        <p>No hay fotografías presentadas en esta convocatoria.</p>
+      `;
+    }
+
     clasificacion.forEach((item, index) => {
+      const nombreSeguro = item.nombreSocio.replace(/'/g, "\\'");
+      const tituloSeguro = item.tituloFoto.replace(/'/g, "\\'");
+      const urlSegura = item.urlFoto.replace(/'/g, "\\'");
+
       html += `
         <p>
           <strong>${index + 1}.</strong>
-          ${item.nombreSocio}
+
+          <button
+            type="button"
+            class="link-button"
+            onclick="abrirVisorFoto('${urlSegura}', '${tituloSeguro}')">
+            ${nombreSeguro}
+          </button>
+
           (${item.tituloFoto})
           - ${item.puntos} puntos
           <br>
@@ -3403,14 +3431,6 @@ async function mostrarClasificacionConvocatoria() {
     });
 
     html += `
-      </section>
-
-      <section class="dashboard-card">
-      
-       <button onclick="volverGestion()">
-       Volver
-      </button>
-
       </section>
     `;
 
@@ -3424,7 +3444,6 @@ async function mostrarClasificacionConvocatoria() {
 
 window.mostrarClasificacionConvocatoria = mostrarClasificacionConvocatoria;
 window.mostrarClasificacionJurado = mostrarClasificacionConvocatoria;
-let accionConfirmada = null;
 
 
 async function mostrarClasificacionGeneral() {
