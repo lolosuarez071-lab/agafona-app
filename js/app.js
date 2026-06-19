@@ -137,10 +137,10 @@ function mostrarDashboard(usuario) {
             <button id="menu-documentos">📄 Documentos</button>
             <button id="menu-perfil">👤 Perfil</button>
         
-            ${esJurado || esAdmin
-              ? `<button id="menu-jurado">⚖️ Votaciones</button>`
-              : ""
-            }
+ ${esJurado
+  ? `<button id="menu-jurado">⚖️ Jurado</button>`
+  : ""
+}
         
             ${esAdmin || esDirectiva
               ? `<button id="menu-gestion">⚙️ Gestión</button>`
@@ -172,10 +172,10 @@ function mostrarDashboard(usuario) {
         : ""
       }
   
-            ${esJurado || esAdmin
-        ? `<button>⚖️<span>Jurado</span></button>`
-        : ""
-      }
+      ${esJurado
+  ? `<button>⚖️<span>Jurado</span></button>`
+  : ""
+}
   
             <button>👤<span>Perfil</span></button>
           `
@@ -2378,14 +2378,18 @@ async function mostrarGestionLiga() {
           </button>
         </article>
 
-        <article class="dashboard-card">
-          <h3>👨‍⚖️ Jurado de la liga</h3>
-          <p>Gestionar los jurados que puntuarán toda la liga.</p>
+       <article class="dashboard-card">
+  <h3>👨‍⚖️ Jurado de la liga</h3>
+  <p>Gestionar los jurados que puntuarán toda la liga.</p>
 
-          <button onclick="mostrarGestionJuradoLiga()">
-            Gestionar jurado
-          </button>
-        </article>
+  <button onclick="mostrarGestionJuradoLiga()">
+    Gestionar jurado
+  </button>
+
+  <button onclick="mostrarEditarInfoJurado()">
+    Editar biografías y méritos
+  </button>
+</article>
       </section>
 
       <article class="dashboard-card">
@@ -2683,6 +2687,15 @@ window.verParticipantesConvocatoria = verParticipantesConvocatoria;
 async function mostrarGestionJuradoLiga() {
   const contentArea = document.getElementById("content-area");
 
+  let btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.replaceWith(btnVolver.cloneNode(true));
+
+  btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.classList.remove("oculto");
+  btnVolver.onclick = () => {
+    mostrarGestionLiga();
+  };
+
   contentArea.innerHTML = `
     <section class="dashboard-card">
       <h2>👨‍⚖️ Jurado de la liga</h2>
@@ -2723,9 +2736,6 @@ async function mostrarGestionJuradoLiga() {
           Guardar jurado
         </button>
 
-        <button onclick="mostrarGestionLiga()">
-          Volver
-        </button>
       </section>
     `;
 
@@ -3048,6 +3058,102 @@ async function mostrarJuradoLiga() {
 }
 
 window.mostrarJuradoLiga = mostrarJuradoLiga;
+
+
+async function mostrarEditarInfoJurado() {
+  const contentArea = document.getElementById("content-area");
+
+  let btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.replaceWith(btnVolver.cloneNode(true));
+
+  btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.classList.remove("oculto");
+  btnVolver.onclick = () => {
+    mostrarGestionLiga();
+  };
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
+      <h2>👥 Editar biografías y méritos</h2>
+      <p>Cargando jurado...</p>
+    </section>
+  `;
+
+  try {
+    const usuariosQuery = query(
+      collection(db, "usuarios"),
+      where("roles", "array-contains", "jurado")
+    );
+
+    const snapshot = await getDocs(usuariosQuery);
+
+    let html = `
+      <section class="dashboard-card">
+        <h2>👥 Editar biografías y méritos</h2>
+        <p>Edita la información pública de los miembros del jurado.</p>
+      </section>
+
+      <section class="dashboard-grid">
+    `;
+
+    snapshot.forEach((docUsuario) => {
+      const usuario = docUsuario.data();
+      const usuarioId = docUsuario.id;
+
+      html += `
+        <article class="dashboard-card">
+          <h3>${usuario.nombre || "Jurado"}</h3>
+          <p><strong>Email:</strong> ${usuario.email}</p>
+
+          <label>Biografía</label>
+          <textarea id="bio-${usuarioId}" rows="4">${usuario.bioJurado || ""}</textarea>
+
+          <label>Méritos</label>
+          <textarea id="meritos-${usuarioId}" rows="4">${usuario.meritosJurado || ""}</textarea>
+
+          <button onclick="guardarInfoJurado('${usuarioId}')">
+            Guardar información
+          </button>
+        </article>
+      `;
+    });
+
+    html += `
+      </section>
+    `;
+
+    contentArea.innerHTML = html;
+
+  } catch (error) {
+    console.error(error);
+    alert("Error cargando la información del jurado.");
+  }
+}
+
+window.mostrarEditarInfoJurado = mostrarEditarInfoJurado;
+
+
+async function guardarInfoJurado(usuarioId) {
+  const bio = document.getElementById(`bio-${usuarioId}`).value.trim();
+  const meritos = document.getElementById(`meritos-${usuarioId}`).value.trim();
+
+  try {
+    await updateDoc(doc(db, "usuarios", usuarioId), {
+      bioJurado: bio,
+      meritosJurado: meritos
+    });
+
+    alert("Información del jurado actualizada correctamente.");
+
+    mostrarEditarInfoJurado();
+
+  } catch (error) {
+    console.error(error);
+    alert("Error guardando la información del jurado.");
+  }
+}
+
+window.guardarInfoJurado = guardarInfoJurado;
 
 
 
