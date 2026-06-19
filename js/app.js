@@ -93,25 +93,25 @@ function mostrarDashboard(usuario) {
   document.body.innerHTML = `
     <main class="app-page">
   
-     <header class="app-header">
+  <header class="app-header">
 
-  <img
-    src="assets/logo-agafona.png"
-    alt="AGAFONA"
-    class="app-logo"
-  >
+  <img src="assets/logo-agafona.png" alt="AGAFONA" class="app-logo">
 
-  <div class="header-nav">
+  <div class="header-actions">
 
-   <button id="btn-volver-header" class="header-icon oculto" type="button">
-  ←
-</button>
+    <button
+      id="btn-volver-header"
+      class="header-button oculto">
+      ←
+    </button>
 
-    <button id="menu-toggle" class="header-icon">
+    <button id="menu-toggle" class="menu-toggle">
       ☰
     </button>
 
-    <button id="logout-button" class="logout-link">
+    <button
+      id="logout-button"
+      class="logout-button">
       Salir
     </button>
 
@@ -125,21 +125,29 @@ function mostrarDashboard(usuario) {
           <button id="menu-close" class="menu-close">×</button>
         </div>
   
-        <button id="menu-inicio">🏠 Inicio</button>
-        <button id="menu-actividades">📅 Actividades</button>
-        <button id="menu-liga">📷 Liga Fotográfica</button>
-        <button id="menu-documentos">📄 Documentos</button>
-        <button id="menu-perfil">👤 Perfil</button>
-  
-        ${esJurado || esAdmin || esJuradoExterno
-      ? `<button id="menu-jurado">⚖️ Jurado</button>`
-      : ""
-    }
-  
-        ${esAdmin || esDirectiva
-      ? `<button id="menu-gestion">⚙️ Gestión</button>`
-      : ""
-    }
+        ${esJuradoExterno
+          ? `
+            <button id="menu-inicio">🏠 Inicio</button>
+            <button id="menu-jurado">⚖️ Votaciones</button>
+          `
+          : `
+            <button id="menu-inicio">🏠 Inicio</button>
+            <button id="menu-actividades">📅 Actividades</button>
+            <button id="menu-liga">📷 Liga Fotográfica</button>
+            <button id="menu-documentos">📄 Documentos</button>
+            <button id="menu-perfil">👤 Perfil</button>
+        
+ ${esJurado
+  ? `<button id="menu-jurado">⚖️ Jurado</button>`
+  : ""
+}
+        
+            ${esAdmin || esDirectiva
+              ? `<button id="menu-gestion">⚙️ Gestión</button>`
+              : ""
+            }
+          `
+        }
       </aside>
   
       <div id="menu-overlay" class="menu-overlay oculto"></div>
@@ -164,10 +172,10 @@ function mostrarDashboard(usuario) {
         : ""
       }
   
-            ${esJurado || esAdmin
-        ? `<button>⚖️<span>Jurado</span></button>`
-        : ""
-      }
+      ${esJurado
+  ? `<button>⚖️<span>Jurado</span></button>`
+  : ""
+}
   
             <button>👤<span>Perfil</span></button>
           `
@@ -269,12 +277,7 @@ function mostrarDashboard(usuario) {
   const botones = document.querySelectorAll(".bottom-nav button");
 
   if (esJuradoExterno) {
-    mostrarPanelJurado(usuario);
-
-    botones[0].addEventListener("click", () => mostrarPanelJurado(usuario));
-    botones[1].addEventListener("click", () => mostrarClasificacionConvocatoria());
-    botones[2].addEventListener("click", () => mostrarPerfil(usuario));
-
+    mostrarInicio(usuario);
     return;
   }
 
@@ -305,45 +308,38 @@ function mostrarDashboard(usuario) {
   botones[indice].addEventListener("click", () => mostrarPerfil(usuario));
 }
 
-function ocultarBotonVolver() {
-  const btnVolver = document.getElementById("btn-volver-header");
 
-  if (!btnVolver) return;
-
-  btnVolver.classList.add("oculto");
-  btnVolver.onclick = null;
-}
-
-
-function configurarBotonVolver(callback) {
-  const btnVolver = document.getElementById("btn-volver-header");
-
-  console.log("Configurando volver:", callback);
-
-  btnVolver.classList.remove("oculto");
-
-  btnVolver.onclick = function (event) {
-    event.preventDefault();
-    event.stopPropagation();
-  
-    console.log("CLICK VOLVER EJECUTA:", callback);
-  
-    callback();
-  };
-}
-
-window.configurarBotonVolver = configurarBotonVolver;
-window.ocultarBotonVolver = ocultarBotonVolver;
 
 async function mostrarInicio(usuario) {
 
-  ocultarBotonVolver();
-
   window.usuarioActual = usuario;
+
+  const contentArea = document.getElementById("content-area");
 
   document
     .getElementById("btn-volver-header")
     .classList.add("oculto");
+
+  const esJurado = tieneRol(usuario, "jurado");
+  const esSocio = tieneRol(usuario, "socio");
+  const esJuradoExterno = esJurado && usuario.esSocio === false && !esSocio;
+
+  if (esJuradoExterno) {
+    contentArea.innerHTML = `
+      <section class="welcome-card">
+        <h1>Hola, ${usuario.nombre} 👋</h1>
+        <p>Jurado de la liga fotográfica</p>
+      </section>
+
+        <article class="dashboard-card" onclick="mostrarPanelJurado(window.usuarioActual)">
+          <h3>⚖️ Votaciones</h3>
+          <p>Acceder al panel actual de votación.</p>
+        </article>
+      </section>
+    `;
+
+    return;
+  }
 
   let descripcionRol = "";
 
@@ -353,22 +349,17 @@ async function mostrarInicio(usuario) {
     descripcionRol = `Socio nº ${usuario.numeroSocio ?? "-"}`;
   }
 
-  const contentArea = document.getElementById("content-area");
-
   contentArea.innerHTML = `
-  <section class="welcome-card"
-           onclick="mostrarPerfil(JSON.parse(localStorage.getItem('usuarioAgafona')))"
-           style="cursor:pointer;">
-    <h1>Hola, ${usuario.nombre} 👋</h1>
-    <p>${descripcionRol}</p>
-    <small>👤 Ver perfil</small>
-  </section>
+    <section class="welcome-card">
+      <h1>Hola, ${usuario.nombre} 👋</h1>
+      <p>${descripcionRol}</p>
+    </section>
 
-  <section class="dashboard-card">
-    <h2>Inicio</h2>
-    <p>Cargando información...</p>
-  </section>
-`;
+    <section class="dashboard-card">
+      <h2>Inicio</h2>
+      <p>Cargando información...</p>
+    </section>
+  `;
 
   try {
     const actividadesQuery = query(
@@ -495,29 +486,29 @@ async function mostrarInicio(usuario) {
     }
 
     contentArea.innerHTML = `
-    <section class="welcome-card"
-             onclick="mostrarPerfil(window.usuarioActual)"
-             style="cursor:pointer;">
-      <h1>Hola, ${usuario.nombre} 👋</h1>
-      <p>${descripcionRol}</p>
-  
-      <br>
-  
-      <p>Bienvenido/a a la app AGAFONA.</p>
-      <small>👤 Ver perfil</small>
-  
-    </section>
-  
-    <section class="dashboard-grid">
-      ${actividadHtml}
-      ${ligaHtml}
-      ${avisosHtml}
-    </section>
-  
-    <footer class="app-footer">
-      © MSD · AGAFONA App 2026
-    </footer>
-  `;
+  <section class="welcome-card">
+    <h1>Hola, ${usuario.nombre} 👋</h1>
+    <p>${descripcionRol}</p>
+
+    <br>
+
+    <p>
+       Bienvenido/a a la app AGAFONA.
+      © msd AGAFONA-app 2026
+    </p>
+
+  </section>
+
+  <section class="dashboard-grid">
+  ${actividadHtml}
+  ${ligaHtml}
+  ${avisosHtml}
+</section>
+
+<footer class="app-footer">
+  © MSD · AGAFONA App 2026
+</footer>
+`;
 
   } catch (error) {
     console.error("Error cargando inicio:", error);
@@ -536,7 +527,7 @@ async function mostrarInicio(usuario) {
   }
 }
 
-window.mostrarPerfil = mostrarPerfil;
+window.mostrarInicio = mostrarInicio;
 
 
 async function mostrarActividades(usuario) {
@@ -660,7 +651,8 @@ window.mostrarActividades = mostrarActividades;
 async function mostrarAvisos() {
   const contentArea = document.getElementById("content-area");
 
-  configurarBotonVolver(() => alert("AVISOS"));
+  document.getElementById("btn-volver-header").classList.remove("oculto");
+  document.getElementById("btn-volver-header").onclick = () => mostrarInicio(window.usuarioActual);
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
@@ -797,6 +789,8 @@ async function verInscritosActividad(actividadId) {
 
 window.verInscritosActividad = verInscritosActividad;
 
+
+
 async function mostrarLiga(usuario) {
   const contentArea = document.getElementById("content-area");
 
@@ -823,6 +817,8 @@ async function mostrarLiga(usuario) {
       return;
     }
 
+    const subidaAbierta = convocatoria.estadoCalculado === "subida";
+
     const fotosQuery = query(
       collection(db, "fotos"),
       where("convocatoriaId", "==", convocatoria.codigo),
@@ -831,13 +827,6 @@ async function mostrarLiga(usuario) {
     );
 
     const fotosSnapshot = await getDocs(fotosQuery);
-
-    const hoy = new Date().toISOString().split("T")[0];
-
-const puedeSubirFoto =
-  convocatoria.estado === "subida" &&
-  hoy >= convocatoria.fechaInicioSubida &&
-  hoy <= convocatoria.fechaFinSubida;
 
     const clasificacionQuery = query(
       collection(db, "clasificaciones"),
@@ -876,81 +865,64 @@ const puedeSubirFoto =
     let bloqueFoto = "";
     let fotoDocId = null;
 
-    const requisitosFotoHtml = `
-  <div class="info-liga">
-    <p><strong>Requisitos de la fotografía:</strong></p>
-    <ul>
-      <li>Formato JPG</li>
-      <li>Lado mayor máximo 1920 px</li>
-      <li>72 ppp recomendado</li>
-      <li>Tamaño entre 0,5 MB y 1,5 MB</li>
-    </ul>
-  </div>
-`;
+    if (fotosSnapshot.empty) {
+      if (subidaAbierta) {
+        bloqueFoto = `
+          <p><strong>Mi fotografía:</strong></p>
+          <p>No has enviado ninguna fotografía.</p>
 
-if (fotosSnapshot.empty) {
-  if (puedeSubirFoto) {
-    bloqueFoto = `
-      <p><strong>Mi fotografía:</strong></p>
-      <p>No has enviado ninguna fotografía.</p>
+          <label for="titulo-foto">
+            <strong>Título de la fotografía</strong>
+          </label>
 
-      ${requisitosFotoHtml}
+          <input
+            type="text"
+            id="titulo-foto"
+            placeholder="Ejemplo: Avoceta al amanecer"
+            required
+          >
 
-      <label for="titulo-foto">
-        <strong>Título de la fotografía</strong>
-      </label>
+          <input type="file" id="foto-liga" accept="image/*">
 
-      <input
-        type="text"
-        id="titulo-foto"
-        placeholder="Ejemplo: Avoceta al amanecer"
-        required
-      >
-
-      <input type="file" id="foto-liga" accept="image/jpeg">
-
-      <button id="subir-foto-btn" class="actividad-btn">
-        Subir fotografía
-      </button>
-    `;
-  } else {
-    bloqueFoto = `
-      <p><strong>Mi fotografía:</strong></p>
-      <p>No has enviado ninguna fotografía.</p>
-
-      <p><strong>El periodo de subida de fotografías está cerrado.</strong></p>
-    `;
-  }
-} else {
+          <button id="subir-foto-btn" class="actividad-btn">
+            Subir fotografía
+          </button>
+        `;
+      } else {
+        bloqueFoto = `
+          <p><strong>Mi fotografía:</strong></p>
+          <p>No has enviado ninguna fotografía.</p>
+          <p>El periodo de subida está cerrado.</p>
+        `;
+      }
+    } else {
       const fotoDoc = fotosSnapshot.docs[0];
       const foto = fotoDoc.data();
       fotoDocId = fotoDoc.id;
 
-      bloqueFoto = `
-        <p><strong>Fotografía presentada:</strong></p>
-        <p>${foto.tituloFoto}</p>
+      if (subidaAbierta) {
+        bloqueFoto = `
+          <p><strong>Fotografía presentada:</strong></p>
+          <p>${foto.tituloFoto}</p>
 
-        <img
-          src="${foto.urlFoto}"
-          alt="${foto.tituloFoto}"
-          class="miniatura-foto"
-        >
+          <img
+            src="${foto.urlFoto}"
+            alt="${foto.tituloFoto}"
+            class="miniatura-foto"
+          >
 
-        <br><br>
+          <br><br>
 
-        <a href="${foto.urlFoto}" target="_blank" class="documento-link">
-          Ver fotografía
-        </a>
+          <a href="${foto.urlFoto}" target="_blank" class="documento-link">
+            Ver fotografía
+          </a>
 
-        <br><br>
+          <br><br>
 
-        ${puedeSubirFoto ? `
-          ${requisitosFotoHtml}
-        
           <label for="titulo-foto">
             <strong>Título de la fotografía</strong>
           </label>
-        
+
           <input
             type="text"
             id="titulo-foto"
@@ -958,16 +930,33 @@ if (fotosSnapshot.empty) {
             placeholder="Ejemplo: Avoceta al amanecer"
             required
           >
-        
-          <input type="file" id="foto-liga" accept="image/jpeg">
-        
+
+          <input type="file" id="foto-liga" accept="image/*">
+
           <button id="subir-foto-btn" class="actividad-btn">
             Cambiar fotografía
           </button>
-        ` : `
-          <p><strong>El periodo de subida de fotografías está cerrado. Ya no se puede cambiar la fotografía.</strong></p>
-        `}
-      `;
+        `;
+      } else {
+        bloqueFoto = `
+          <p><strong>Fotografía presentada:</strong></p>
+          <p>${foto.tituloFoto}</p>
+
+          <img
+            src="${foto.urlFoto}"
+            alt="${foto.tituloFoto}"
+            class="miniatura-foto"
+          >
+
+          <br><br>
+
+          <a href="${foto.urlFoto}" target="_blank" class="documento-link">
+            Ver fotografía
+          </a>
+
+          <p>El periodo de subida está cerrado. Ya no se puede cambiar la fotografía.</p>
+        `;
+      }
     }
 
     contentArea.innerHTML = `
@@ -976,7 +965,11 @@ if (fotosSnapshot.empty) {
 
         <h3>${convocatoria.titulo}</h3>
 
-        <p>🟢 Convocatoria abierta</p>
+        <p>
+          ${subidaAbierta
+            ? "🟢 Convocatoria abierta"
+            : "🔒 Periodo de subida cerrado"}
+        </p>
 
         <p>
           <strong>Periodo de subida:</strong>
@@ -984,27 +977,41 @@ if (fotosSnapshot.empty) {
           al ${convocatoria.fechaFinSubida}
         </p>
 
-        <p>
-          <strong>Periodo de votación:</strong>
-          del ${convocatoria.fechaInicioVotacion}
-          al ${convocatoria.fechaFinVotacion}
-        </p>
+      <p>
+  <strong>Periodo de votación:</strong>
+  del ${convocatoria.fechaInicioVotacion}
+  al ${convocatoria.fechaFinVotacion}
+</p>
 
-        <hr>
+<hr>
 
-        ${bloqueFoto}
+${bloqueFoto}
 
-        ${clasificacionHtml}
+<div class="liga-actions">
+  <button onclick="mostrarClasificacionConvocatoria()">
+    🏆 Clasificación convocatoria
+  </button>
+
+  <button onclick="mostrarClasificacionGeneral()">
+    🏅 Clasificación general
+  </button>
+
+  <button onclick="mostrarJuradoLiga()">
+    👥 Jurado de la liga
+  </button>
+</div>
+
+${clasificacionHtml}
       </section>
     `;
 
     const subirFotoBtn = document.getElementById("subir-foto-btn");
 
-if (subirFotoBtn) {
-  subirFotoBtn.addEventListener("click", () => {
-    subirFotoLiga(usuario, convocatoria, fotoDocId);
-  });
-}
+    if (subirFotoBtn) {
+      subirFotoBtn.addEventListener("click", () => {
+        subirFotoLiga(usuario, convocatoria, fotoDocId);
+      });
+    }
 
   } catch (error) {
     console.error(error);
@@ -1025,11 +1032,14 @@ async function mostrarDocumentos() {
   const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
   const contentArea = document.getElementById("content-area");
 
-  document.getElementById("btn-volver-header").classList.remove("oculto");
+  let btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.replaceWith(btnVolver.cloneNode(true));
 
-document.getElementById("btn-volver-header").onclick = () => {
-  mostrarInicio(usuario);
-};
+  btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.classList.remove("oculto");
+  btnVolver.onclick = () => {
+    mostrarInicio(window.usuarioActual);
+  };
 
   if (!usuario) {
     contentArea.innerHTML = `
@@ -1115,15 +1125,16 @@ document.getElementById("btn-volver-header").onclick = () => {
 }
 async function mostrarPerfil(usuario) {
 
-  configurarBotonVolver(() => mostrarInicio(usuario));
+  let btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.replaceWith(btnVolver.cloneNode(true));
+
+  btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.classList.remove("oculto");
+  btnVolver.onclick = () => {
+    mostrarInicio(window.usuarioActual);
+  };
+
   const numeroSocio = usuario.numeroSocio ?? "-";
-
-  document.getElementById("btn-volver-header").classList.remove("oculto");
-document.getElementById("btn-volver-header").onclick = () => {
-  const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
-  mostrarInicio(usuario);
-};
-
   let rolMostrado = "Socio";
 
   if (Array.isArray(usuario.roles)) {
@@ -1444,10 +1455,21 @@ async function cancelarInscripcion(actividadId) {
 
 window.cancelarInscripcion = cancelarInscripcion;
 
+
+
 function mostrarAdmin(usuario) {
   const contentArea = document.getElementById("content-area");
 
-  configurarBotonVolver(() => mostrarInicio(usuario));
+  let btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.replaceWith(btnVolver.cloneNode(true));
+
+  btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.classList.remove("oculto");
+  btnVolver.onclick = () => {
+    mostrarInicio(usuario);
+  };
+ 
+ 
 
   if (!tieneRol(usuario, "admin") && !tieneRol(usuario, "directiva")) {
     contentArea.innerHTML = `
@@ -1459,63 +1481,86 @@ function mostrarAdmin(usuario) {
     return;
   }
 
-  const esAdmin = tieneRol(usuario, "admin");
-
-  let html = `
+  contentArea.innerHTML = `
     <section class="dashboard-card">
-      <h2>${esAdmin ? "⚙️ Panel de Administración" : "📋 Panel de Gestión"}</h2>
+      <h2>⚙️ Panel de Administración</h2>
       <p>Gestión interna de AGAFONA.</p>
-    </section>
 
-    <article class="dashboard-card">
-      <h3>📋 Gestionar actividades</h3>
-      <p>Ver actividades creadas y desactivar actividades.</p>
-      <button onclick="mostrarGestionActividades()">Gestionar actividades</button>
-    </article>
+  </section>
 
-    <article class="dashboard-card">
-      <h3>📢 Gestionar avisos</h3>
-      <p>Ver avisos creados y desactivar avisos antiguos.</p>
-      <button onclick="mostrarGestionAvisos()">Gestionar avisos</button>
-    </article>
 
-    <article class="dashboard-card">
-      <h3>📄 Gestionar documentos</h3>
-      <p>Ver documentos creados y desactivar los que ya no estén disponibles.</p>
-      <button onclick="mostrarGestionDocumentos()">Gestionar documentos</button>
-    </article>
-  `;
-
-  if (esAdmin) {
-    html += `
       <article class="dashboard-card">
-        <h3>👥 Gestión de usuarios</h3>
-        <p>Consultar usuarios, cambiar roles y desactivar accesos.</p>
-        <button onclick="mostrarGestionUsuarios()">Gestionar usuarios</button>
-      </article>
-    `;
-  }
+  <h3>📋 Gestionar actividades</h3>
+  <p>Ver actividades creadas y desactivar actividades.</p>
 
-  html += `
-    <article class="dashboard-card">
-      <h3>📷 Gestión Liga</h3>
-      <p>Crear y gestionar convocatorias de la liga fotográfica.</p>
-      <button onclick="mostrarGestionLiga()">Gestionar liga</button>
-    </article>
+  <button onclick="mostrarGestionActividades()">
+    Gestionar actividades
+  </button>
+</article>
+
+<article class="dashboard-card">
+  <h3>📢 Gestionar avisos</h3>
+
+  <p>
+    Ver avisos creados y desactivar avisos antiguos.
+  </p>
+
+  <button onclick="mostrarGestionAvisos()">
+    Gestionar avisos
+  </button>
+
+</article>
+
+<article class="dashboard-card">
+  <h3>📄 Gestionar documentos</h3>
+
+  <p>
+    Ver documentos creados y desactivar los que ya no estén disponibles.
+  </p>
+
+  <button onclick="mostrarGestionDocumentos()">
+    Gestionar documentos
+  </button>
+</article>
+
+<article class="dashboard-card">
+  <h3>👥 Gestión de usuarios</h3>
+
+  <p>
+    Consultar usuarios, cambiar roles y desactivar accesos.
+  </p>
+
+  <button onclick="mostrarGestionUsuarios()">
+    Gestionar usuarios
+  </button>
+
+</article>
+
+<article class="dashboard-card">
+  <h3>📷 Gestión Liga</h3>
+
+  <p>
+    Crear y gestionar convocatorias de la liga fotográfica.
+  </p>
+
+  <button onclick="mostrarGestionLiga()">
+    Gestionar liga
+  </button>
+</article>
+
+    </section>
   `;
-
-  contentArea.innerHTML = html;
 }
 
-window.mostrarAdmin = mostrarAdmin; 
+window.mostrarAdmin = mostrarAdmin;
 
 function mostrarFormularioDocumento() {
 
-  configurarBotonVolver(() => mostrarGestionDocumentos());
   const contentArea = document.getElementById("content-area");
-
   document.getElementById("btn-volver-header").classList.remove("oculto");
-  document.getElementById("btn-volver-header").onclick = () => mostrarGestionDocumentos();
+  document.getElementById("btn-volver-header").onclick = () => {
+    mostrarGestionDocumentos();
+  };
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
@@ -1601,11 +1646,12 @@ async function guardarDocumento() {
 window.guardarDocumento = guardarDocumento;
 
 function mostrarFormularioActividad() {
-
-  configurarBotonVolver(() => mostrarGestionActividades());
   const contentArea = document.getElementById("content-area");
 
-  configurarBotonVolver(() => mostrarGestionActividades());
+  document.getElementById("btn-volver-header").classList.remove("oculto");
+  document.getElementById("btn-volver-header").onclick = () => {
+    mostrarGestionActividades();
+  };
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
@@ -1662,7 +1708,8 @@ async function guardarActividad() {
 
     alert("Actividad creada correctamente.");
 
-mostrarGestionActividades();
+    const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
+    mostrarAdmin(usuario);
 
   } catch (error) {
     console.error("Error creando actividad:", error);
@@ -1673,33 +1720,21 @@ mostrarGestionActividades();
 window.guardarActividad = guardarActividad;
 
 function volverAdmin() {
-  const usuario = window.usuarioActual;
-
-  if (!usuario) {
-    return;
-  }
-
-  if (usuario.admin === true) {
-    mostrarAdmin(usuario);
-  } else if (usuario.roles && usuario.roles.includes("directiva")) {
-    mostrarGestion(usuario);
-  } else {
-    mostrarInicio(usuario);
-  }
+  volverGestion();
 }
 
 window.volverAdmin = volverAdmin;
 
-
 function mostrarFormularioAviso() {
   const contentArea = document.getElementById("content-area");
-
   document.getElementById("btn-volver-header").classList.remove("oculto");
-  document.getElementById("btn-volver-header").onclick = () => mostrarGestionAvisos();
+document.getElementById("btn-volver-header").onclick = () => {
+  mostrarGestionAvisos();
+};
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
-      <h2>📢 Crear nuevo aviso</h2>
+      <h2>📢 Crear aviso</h2>
 
       <label>Título</label>
       <input type="text" id="aviso-titulo">
@@ -1707,16 +1742,18 @@ function mostrarFormularioAviso() {
       <label>Mensaje</label>
       <textarea id="aviso-mensaje"></textarea>
 
-      <label>Fecha fin</label>
+      <label>Fecha</label>
       <input type="date" id="aviso-fecha">
 
-      <button onclick="guardarAviso()">Guardar aviso</button>
+      <button onclick="guardarAviso()">
+        Guardar aviso
+      </button>
+
     </section>
   `;
 }
 
 window.mostrarFormularioAviso = mostrarFormularioAviso;
-
 
 async function guardarAviso() {
 
@@ -1756,13 +1793,14 @@ window.guardarAviso = guardarAviso;
 
 
 async function mostrarGestionActividades() {
-
   const contentArea = document.getElementById("content-area");
   const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
 
-  configurarBotonVolver(() => mostrarAdmin(usuario));
+  document.getElementById("btn-volver-header").classList.remove("oculto");
+  document.getElementById("btn-volver-header").onclick = () => {
+    volverGestion();
+  };
 
-  
   contentArea.innerHTML = `
     <section class="dashboard-card">
       <h2>📋 Gestionar actividades</h2>
@@ -1844,11 +1882,13 @@ window.mostrarGestionActividades = mostrarGestionActividades;
 
 async function mostrarGestionAvisos() {
   const contentArea = document.getElementById("content-area");
-
   const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
 
   document.getElementById("btn-volver-header").classList.remove("oculto");
-  document.getElementById("btn-volver-header").onclick = () => mostrarAdmin(usuario);
+  document.getElementById("btn-volver-header").onclick = () => {
+    volverGestion();
+  
+  };
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
@@ -1865,9 +1905,9 @@ async function mostrarGestionAvisos() {
       <section class="dashboard-card">
         <h2>📢 Gestionar avisos</h2>
 
-       <button onclick="mostrarFormularioAviso()">
-  Crear nuevo aviso
-</button>
+        <button onclick="mostrarFormularioAviso()">
+          Crear nuevo aviso
+        </button>
       </section>
 
       <section class="dashboard-grid">
@@ -1948,13 +1988,14 @@ window.cambiarEstadoAviso = cambiarEstadoAviso;
 
 
 async function mostrarGestionDocumentos() {
-
-  configurarBotonVolver(() => mostrarGestion());
   const contentArea = document.getElementById("content-area");
   const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
 
-  document.getElementById("btn-volver-header").classList.remove("oculto");
-  document.getElementById("btn-volver-header").onclick = () => mostrarAdmin(usuario);
+document.getElementById("btn-volver-header").classList.remove("oculto");
+document.getElementById("btn-volver-header").onclick = () => {
+  volverGestion();
+
+};
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
@@ -1968,17 +2009,17 @@ async function mostrarGestionDocumentos() {
     const snapshot = await getDocs(q);
 
     let html = `
-      <section class="dashboard-card">
-        <h2>📄 Gestionar documentos</h2>
-        <p>Crear, consultar y gestionar documentos de AGAFONA.</p>
-
-        <button onclick="mostrarFormularioDocumento()">
-          Subir nuevo documento
-        </button>
-      </section>
-
-      <section class="dashboard-grid">
-    `;
+    <section class="dashboard-card">
+      <h2>📄 Gestionar documentos</h2>
+      <p>
+        Crear, consultar y gestionar documentos de AGAFONA.
+      </p>
+  
+      <button onclick="mostrarFormularioDocumento()">
+        Subir nuevo documento
+      </button>
+    </section>
+  `;
 
     if (snapshot.empty) {
       html += `
@@ -2032,7 +2073,6 @@ window.mostrarGestionDocumentos = mostrarGestionDocumentos;
 
 
 
-
 async function cambiarEstadoDocumento(documentoId, estadoActual) {
   console.log("Cambiando documento:", documentoId, estadoActual);
 
@@ -2068,6 +2108,15 @@ window.cambiarEstadoDocumento = cambiarEstadoDocumento;
 async function mostrarGestionUsuarios() {
 
   const contentArea = document.getElementById("content-area");
+
+  let btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.replaceWith(btnVolver.cloneNode(true));
+
+  btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.classList.remove("oculto");
+  btnVolver.onclick = () => {
+    mostrarAdmin(window.usuarioActual);
+  };
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
@@ -2136,9 +2185,9 @@ async function mostrarGestionUsuarios() {
       </section>
 
       <section class="dashboard-card">
-      <button onclick="mostrarGestion(JSON.parse(localStorage.getItem('usuarioAgafona')))">
-  Volver
-</button>
+        <button onclick="volverAdmin()">
+          Volver
+        </button>
       </section>
     `;
 
@@ -2244,6 +2293,16 @@ window.desactivarUsuario = desactivarUsuario;
 async function mostrarGestionLiga() {
   const contentArea = document.getElementById("content-area");
 
+  let btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.replaceWith(btnVolver.cloneNode(true));
+
+  btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.classList.remove("oculto");
+  btnVolver.onclick = () => {
+    mostrarAdmin(window.usuarioActual);
+  };
+
+
   contentArea.innerHTML = `
     <section class="dashboard-card">
       <h2>📷 Gestión Liga</h2>
@@ -2319,14 +2378,18 @@ async function mostrarGestionLiga() {
           </button>
         </article>
 
-        <article class="dashboard-card">
-          <h3>👨‍⚖️ Jurado de la liga</h3>
-          <p>Gestionar los jurados que puntuarán toda la liga.</p>
+       <article class="dashboard-card">
+  <h3>👨‍⚖️ Jurado de la liga</h3>
+  <p>Gestionar los jurados que puntuarán toda la liga.</p>
 
-          <button onclick="mostrarGestionJuradoLiga()">
-            Gestionar jurado
-          </button>
-        </article>
+  <button onclick="mostrarGestionJuradoLiga()">
+    Gestionar jurado
+  </button>
+
+  <button onclick="mostrarEditarInfoJurado()">
+    Editar biografías y méritos
+  </button>
+</article>
       </section>
 
       <article class="dashboard-card">
@@ -2624,6 +2687,15 @@ window.verParticipantesConvocatoria = verParticipantesConvocatoria;
 async function mostrarGestionJuradoLiga() {
   const contentArea = document.getElementById("content-area");
 
+  let btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.replaceWith(btnVolver.cloneNode(true));
+
+  btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.classList.remove("oculto");
+  btnVolver.onclick = () => {
+    mostrarGestionLiga();
+  };
+
   contentArea.innerHTML = `
     <section class="dashboard-card">
       <h2>👨‍⚖️ Jurado de la liga</h2>
@@ -2664,9 +2736,6 @@ async function mostrarGestionJuradoLiga() {
           Guardar jurado
         </button>
 
-        <button onclick="mostrarGestionLiga()">
-          Volver
-        </button>
       </section>
     `;
 
@@ -2713,11 +2782,14 @@ window.guardarJuradoLiga = guardarJuradoLiga;
 async function mostrarPanelJurado(usuario) {
   const contentArea = document.getElementById("content-area");
 
-  document.getElementById("btn-volver-header").classList.remove("oculto");
-document.getElementById("btn-volver-header").onclick = () => {
-  const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
-  mostrarInicio(usuario);
-};
+  let btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.replaceWith(btnVolver.cloneNode(true));
+
+  btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.classList.remove("oculto");
+  btnVolver.onclick = () => {
+    mostrarInicio(window.usuarioActual);
+  };
 
   if (!tieneRol(usuario, "jurado") && !tieneRol(usuario, "admin")) {
     contentArea.innerHTML = `
@@ -2889,6 +2961,240 @@ document.getElementById("btn-volver-header").onclick = () => {
 }
 
 window.mostrarPanelJurado = mostrarPanelJurado;
+
+
+async function mostrarJuradoLiga() {
+  const contentArea = document.getElementById("content-area");
+
+  let btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.replaceWith(btnVolver.cloneNode(true));
+
+  btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.classList.remove("oculto");
+  btnVolver.onclick = () => {
+    mostrarLiga(window.usuarioActual);
+  };
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
+      <h2>👥 Jurado de la liga</h2>
+      <p>Cargando información...</p>
+    </section>
+  `;
+
+  try {
+
+    const configRef = doc(db, "configuracionLiga", "ligaActual");
+    const configSnap = await getDoc(configRef);
+
+    if (!configSnap.exists()) {
+      contentArea.innerHTML = `
+        <section class="dashboard-card">
+          <h2>👥 Jurado de la liga</h2>
+          <p>No hay jurado configurado.</p>
+        </section>
+      `;
+      return;
+    }
+
+    const config = configSnap.data();
+
+    const emailsJurado = [
+      config.jurado1,
+      config.jurado2,
+      config.jurado3
+    ].filter(Boolean);
+
+    let html = `
+      <section class="dashboard-card">
+        <h2>👥 Jurado de la liga</h2>
+        <p>Conoce a los miembros encargados de valorar las fotografías.</p>
+      </section>
+    `;
+
+    for (const email of emailsJurado) {
+
+      const usuarioQuery = query(
+        collection(db, "usuarios"),
+        where("email", "==", email)
+      );
+
+      const usuarioSnapshot = await getDocs(usuarioQuery);
+
+      if (!usuarioSnapshot.empty) {
+
+        const usuario = usuarioSnapshot.docs[0].data();
+
+        html += `
+          <section class="dashboard-card">
+            <h3>👤 ${usuario.nombre || "Jurado"}</h3>
+
+            <p>
+              ${usuario.bioJurado || "Información no disponible."}
+            </p>
+
+            <h4>🏆 Méritos</h4>
+
+            <p>
+              ${usuario.meritosJurado || "Información no disponible."}
+            </p>
+          </section>
+        `;
+      }
+    }
+
+    contentArea.innerHTML = html;
+
+  } catch (error) {
+    console.error(error);
+
+    contentArea.innerHTML = `
+      <section class="dashboard-card">
+        <h2>👥 Jurado de la liga</h2>
+        <p>Error cargando la información del jurado.</p>
+      </section>
+    `;
+  }
+}
+
+window.mostrarJuradoLiga = mostrarJuradoLiga;
+
+
+async function mostrarEditarInfoJurado() {
+  const contentArea = document.getElementById("content-area");
+
+  let btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.replaceWith(btnVolver.cloneNode(true));
+
+  btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.classList.remove("oculto");
+  btnVolver.onclick = () => {
+    mostrarGestionLiga();
+  };
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
+      <h2>👥 Editar biografías y méritos</h2>
+      <p>Cargando jurado...</p>
+    </section>
+  `;
+
+  try {
+    const configRef = doc(db, "configuracionLiga", "ligaActual");
+    const configSnap = await getDoc(configRef);
+
+    if (!configSnap.exists()) {
+      contentArea.innerHTML = `
+        <section class="dashboard-card">
+          <h2>👥 Editar biografías y méritos</h2>
+          <p>No hay jurado configurado actualmente.</p>
+        </section>
+      `;
+      return;
+    }
+
+    const config = configSnap.data();
+
+    const emailsJurado = [
+      config.jurado1,
+      config.jurado2,
+      config.jurado3
+    ].filter(Boolean);
+
+    let html = `
+      <section class="dashboard-card">
+        <h2>👥 Editar biografías y méritos</h2>
+        <p>Edita la información pública de los miembros del jurado asignados a la liga.</p>
+      </section>
+
+      <section class="dashboard-grid">
+    `;
+
+    if (emailsJurado.length === 0) {
+      html += `
+        <article class="dashboard-card">
+          <p>No hay jurados asignados todavía.</p>
+        </article>
+      `;
+    }
+
+    for (const email of emailsJurado) {
+      const usuarioQuery = query(
+        collection(db, "usuarios"),
+        where("email", "==", email)
+      );
+
+      const usuarioSnapshot = await getDocs(usuarioQuery);
+
+      if (usuarioSnapshot.empty) {
+        html += `
+          <article class="dashboard-card">
+            <h3>Jurado no encontrado</h3>
+            <p><strong>Email:</strong> ${email}</p>
+            <p>No existe ningún usuario con este email.</p>
+          </article>
+        `;
+        continue;
+      }
+
+      const docUsuario = usuarioSnapshot.docs[0];
+      const usuario = docUsuario.data();
+      const usuarioId = docUsuario.id;
+
+      html += `
+        <article class="dashboard-card">
+          <h3>${usuario.nombre || "Jurado"}</h3>
+          <p><strong>Email:</strong> ${usuario.email}</p>
+
+          <label>Biografía</label>
+          <textarea id="bio-${usuarioId}" rows="4">${usuario.bioJurado || ""}</textarea>
+
+          <label>Méritos</label>
+          <textarea id="meritos-${usuarioId}" rows="4">${usuario.meritosJurado || ""}</textarea>
+
+          <button onclick="guardarInfoJurado('${usuarioId}')">
+            Guardar información
+          </button>
+        </article>
+      `;
+    }
+
+    html += `
+      </section>
+    `;
+
+    contentArea.innerHTML = html;
+
+  } catch (error) {
+    console.error(error);
+    alert("Error cargando la información del jurado.");
+  }
+}
+
+window.mostrarEditarInfoJurado = mostrarEditarInfoJurado;
+
+
+async function guardarInfoJurado(usuarioId) {
+  const bio = document.getElementById(`bio-${usuarioId}`).value.trim();
+  const meritos = document.getElementById(`meritos-${usuarioId}`).value.trim();
+
+  try {
+    await updateDoc(doc(db, "usuarios", usuarioId), {
+      bioJurado: bio,
+      meritosJurado: meritos
+    });
+
+    alert("Información del jurado actualizada correctamente.");
+
+    mostrarEditarInfoJurado();
+
+  } catch (error) {
+    console.error(error);
+    alert("Error guardando la información del jurado.");
+  }
+}
+
+window.guardarInfoJurado = guardarInfoJurado;
 
 
 
@@ -3118,6 +3424,15 @@ function mostrarFormularioLiga() {
 
   const contentArea = document.getElementById("content-area");
 
+  let btnVolver = document.getElementById("btn-volver-header");
+btnVolver.replaceWith(btnVolver.cloneNode(true));
+
+btnVolver = document.getElementById("btn-volver-header");
+btnVolver.classList.remove("oculto");
+btnVolver.onclick = () => {
+  mostrarGestionLiga();
+};
+
   contentArea.innerHTML = `
     <section class="dashboard-card">
 
@@ -3151,10 +3466,7 @@ function mostrarFormularioLiga() {
         Crear liga
       </button>
 
-      <button onclick="mostrarGestionLiga()">
-        Volver
-      </button>
-
+     
     </section>
   `;
 }
@@ -3281,9 +3593,18 @@ window.calcularEstadoConvocatoria = calcularEstadoConvocatoria;
 async function mostrarClasificacionConvocatoria() {
   const contentArea = document.getElementById("content-area");
 
+  let btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.replaceWith(btnVolver.cloneNode(true));
+
+  btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.classList.remove("oculto");
+  btnVolver.onclick = () => {
+    mostrarLiga(window.usuarioActual);
+  };
+
   contentArea.innerHTML = `
     <section class="dashboard-card">
-      <h2>🏆 Clasificación</h2>
+      <h2>🏆 Clasificación convocatoria</h2>
       <p>Cargando clasificación...</p>
     </section>
   `;
@@ -3294,7 +3615,7 @@ async function mostrarClasificacionConvocatoria() {
     if (!convocatoria) {
       contentArea.innerHTML = `
         <section class="dashboard-card">
-          <h2>🏆 Clasificación</h2>
+          <h2>🏆 Clasificación convocatoria</h2>
           <p>No existe convocatoria activa.</p>
         </section>
       `;
@@ -3333,6 +3654,7 @@ async function mostrarClasificacionConvocatoria() {
       clasificacion.push({
         nombreSocio: foto.nombreSocio || "Socio",
         tituloFoto: foto.tituloFoto || "Sin título",
+        urlFoto: foto.urlFoto || "",
         puntos: totalPuntos,
         numeroVotos: numeroVotos
       });
@@ -3342,18 +3664,36 @@ async function mostrarClasificacionConvocatoria() {
 
     let html = `
       <section class="dashboard-card">
-        <h2>🏆 Clasificación</h2>
+        <h2>🏆 Clasificación convocatoria</h2>
         <p>${convocatoria.titulo || convocatoria.codigo}</p>
+        <p>Pincha en el nombre del socio para ver la fotografía presentada.</p>
       </section>
 
       <section class="dashboard-card">
     `;
 
+    if (clasificacion.length === 0) {
+      html += `
+        <p>No hay fotografías presentadas en esta convocatoria.</p>
+      `;
+    }
+
     clasificacion.forEach((item, index) => {
+      const nombreSeguro = item.nombreSocio.replace(/'/g, "\\'");
+      const tituloSeguro = item.tituloFoto.replace(/'/g, "\\'");
+      const urlSegura = item.urlFoto.replace(/'/g, "\\'");
+
       html += `
         <p>
           <strong>${index + 1}.</strong>
-          ${item.nombreSocio}
+
+          <button
+            type="button"
+            class="link-button"
+            onclick="abrirVisorFoto('${urlSegura}', '${tituloSeguro}')">
+            ${nombreSeguro}
+          </button>
+
           (${item.tituloFoto})
           - ${item.puntos} puntos
           <br>
@@ -3363,14 +3703,6 @@ async function mostrarClasificacionConvocatoria() {
     });
 
     html += `
-      </section>
-
-      <section class="dashboard-card">
-      
-       <button onclick="volverGestion()">
-       Volver
-      </button>
-
       </section>
     `;
 
@@ -3386,7 +3718,102 @@ window.mostrarClasificacionConvocatoria = mostrarClasificacionConvocatoria;
 window.mostrarClasificacionJurado = mostrarClasificacionConvocatoria;
 
 
-let accionConfirmada = null;
+async function mostrarClasificacionGeneral() {
+  const contentArea = document.getElementById("content-area");
+
+  let btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.replaceWith(btnVolver.cloneNode(true));
+
+  btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.classList.remove("oculto");
+  btnVolver.onclick = () => {
+    mostrarLiga(window.usuarioActual);
+  };
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
+      <h2>🏆 Clasificación general</h2>
+      <p>Cargando clasificación...</p>
+    </section>
+  `;
+
+  try {
+    const q = query(
+      collection(db, "clasificaciones"),
+      where("visible", "==", true)
+    );
+
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      contentArea.innerHTML = `
+        <section class="dashboard-card">
+          <h2>🏆 Clasificación general</h2>
+          <p>No hay clasificaciones publicadas todavía.</p>
+        </section>
+      `;
+      return;
+    }
+
+    const acumulado = {};
+
+    snapshot.forEach((docClasificacion) => {
+      const item = docClasificacion.data();
+
+      const clave = item.email || item.nombreSocio;
+
+      if (!acumulado[clave]) {
+        acumulado[clave] = {
+          nombreSocio: item.nombreSocio,
+          puntos: 0
+        };
+      }
+
+      acumulado[clave].puntos += Number(item.puntos) || 0;
+    });
+
+    const clasificacionGeneral = Object.values(acumulado).sort(
+      (a, b) => b.puntos - a.puntos
+    );
+
+    let html = `
+      <section class="dashboard-card">
+        <h2>🏆 Clasificación general</h2>
+        <p>Puntuación acumulada de todas las convocatorias publicadas.</p>
+      </section>
+
+      <section class="dashboard-grid">
+    `;
+
+    clasificacionGeneral.forEach((item, index) => {
+      html += `
+        <article class="dashboard-card">
+          <h3>${index + 1}. ${item.nombreSocio}</h3>
+          <p><strong>${item.puntos}</strong> puntos</p>
+        </article>
+      `;
+    });
+
+    html += `
+      </section>
+    `;
+
+    contentArea.innerHTML = html;
+
+  } catch (error) {
+    console.error(error);
+
+    contentArea.innerHTML = `
+      <section class="dashboard-card">
+        <h2>🏆 Clasificación general</h2>
+        <p>Error al cargar la clasificación general.</p>
+      </section>
+    `;
+  }
+}
+
+window.mostrarClasificacionGeneral = mostrarClasificacionGeneral;
+
 
 function crearModalConfirmacionSiNoExiste() {
   let modal = document.getElementById("modal-confirmacion");
@@ -3568,11 +3995,15 @@ window.calcularClasificacionConvocatoria = calcularClasificacionConvocatoria;
 function mostrarDirectiva(usuario) {
   const contentArea = document.getElementById("content-area");
 
-  document.getElementById("btn-volver-header").classList.remove("oculto");
-document.getElementById("btn-volver-header").onclick = () => {
-  const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
-  mostrarInicio(usuario);
-};
+  let btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.replaceWith(btnVolver.cloneNode(true));
+
+  btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.classList.remove("oculto");
+  btnVolver.onclick = () => {
+    mostrarInicio(window.usuarioActual);
+  };
+
 
   if (!tieneRol(usuario, "directiva") && !tieneRol(usuario, "admin")) {
     contentArea.innerHTML = `
@@ -3586,8 +4017,8 @@ document.getElementById("btn-volver-header").onclick = () => {
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
-      <h2>⚙️ Panel de Gestión</h2>
-      <p>Gestión interna de AGAFONA.</p>
+      <h2>⚙️ Gestión Directiva</h2>
+      <p>Panel de gestión para miembros de la directiva.</p>
     </section>
 
     <section class="dashboard-grid">
@@ -3609,11 +4040,6 @@ document.getElementById("btn-volver-header").onclick = () => {
         <button onclick="mostrarGestionAvisos()">Gestionar avisos</button>
       </article>
 
-      <article class="dashboard-card">
-        <h3>🏆 Clasificación</h3>
-        <p>Consultar clasificaciones de la liga fotográfica.</p>
-        <button onclick="mostrarClasificacionConvocatoria()">Ver clasificación</button>
-      </article>
     </section>
   `;
 }
@@ -3758,4 +4184,3 @@ async function cambiarEstadoActividad(actividadId, estadoActual) {
 }
 
 window.cambiarEstadoActividad = cambiarEstadoActividad;
-
