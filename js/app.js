@@ -125,21 +125,29 @@ function mostrarDashboard(usuario) {
           <button id="menu-close" class="menu-close">×</button>
         </div>
   
-        <button id="menu-inicio">🏠 Inicio</button>
-        <button id="menu-actividades">📅 Actividades</button>
-        <button id="menu-liga">📷 Liga Fotográfica</button>
-        <button id="menu-documentos">📄 Documentos</button>
-        <button id="menu-perfil">👤 Perfil</button>
-  
-        ${esJurado || esAdmin || esJuradoExterno
-      ? `<button id="menu-jurado">⚖️ Jurado</button>`
-      : ""
-    }
-  
-        ${esAdmin || esDirectiva
-      ? `<button id="menu-gestion">⚙️ Gestión</button>`
-      : ""
-    }
+        ${esJuradoExterno
+          ? `
+            <button id="menu-inicio">🏠 Inicio</button>
+            <button id="menu-jurado">⚖️ Votaciones</button>
+          `
+          : `
+            <button id="menu-inicio">🏠 Inicio</button>
+            <button id="menu-actividades">📅 Actividades</button>
+            <button id="menu-liga">📷 Liga Fotográfica</button>
+            <button id="menu-documentos">📄 Documentos</button>
+            <button id="menu-perfil">👤 Perfil</button>
+        
+            ${esJurado || esAdmin
+              ? `<button id="menu-jurado">⚖️ Votaciones</button>`
+              : ""
+            }
+        
+            ${esAdmin || esDirectiva
+              ? `<button id="menu-gestion">⚙️ Gestión</button>`
+              : ""
+            }
+          `
+        }
       </aside>
   
       <div id="menu-overlay" class="menu-overlay oculto"></div>
@@ -269,12 +277,7 @@ function mostrarDashboard(usuario) {
   const botones = document.querySelectorAll(".bottom-nav button");
 
   if (esJuradoExterno) {
-    mostrarPanelJurado(usuario);
-
-    botones[0].addEventListener("click", () => mostrarPanelJurado(usuario));
-    botones[1].addEventListener("click", () => mostrarClasificacionConvocatoria());
-    botones[2].addEventListener("click", () => mostrarPerfil(usuario));
-
+    mostrarInicio(usuario);
     return;
   }
 
@@ -311,9 +314,32 @@ async function mostrarInicio(usuario) {
 
   window.usuarioActual = usuario;
 
+  const contentArea = document.getElementById("content-area");
+
   document
     .getElementById("btn-volver-header")
     .classList.add("oculto");
+
+  const esJurado = tieneRol(usuario, "jurado");
+  const esSocio = tieneRol(usuario, "socio");
+  const esJuradoExterno = esJurado && usuario.esSocio === false && !esSocio;
+
+  if (esJuradoExterno) {
+    contentArea.innerHTML = `
+      <section class="welcome-card">
+        <h1>Hola, ${usuario.nombre} 👋</h1>
+        <p>Jurado de la liga fotográfica</p>
+      </section>
+
+        <article class="dashboard-card" onclick="mostrarPanelJurado(window.usuarioActual)">
+          <h3>⚖️ Votaciones</h3>
+          <p>Acceder al panel actual de votación.</p>
+        </article>
+      </section>
+    `;
+
+    return;
+  }
 
   let descripcionRol = "";
 
@@ -322,8 +348,6 @@ async function mostrarInicio(usuario) {
   } else {
     descripcionRol = `Socio nº ${usuario.numeroSocio ?? "-"}`;
   }
-
-  const contentArea = document.getElementById("content-area");
 
   contentArea.innerHTML = `
     <section class="welcome-card">
@@ -969,7 +993,11 @@ ${bloqueFoto}
   </button>
 
   <button onclick="mostrarClasificacionGeneral()">
-    🥇 Clasificación general
+    🏅 Clasificación general
+  </button>
+
+  <button onclick="mostrarJuradoLiga()">
+    👥 Jurado de la liga
   </button>
 </div>
 
@@ -2923,6 +2951,103 @@ async function mostrarPanelJurado(usuario) {
 }
 
 window.mostrarPanelJurado = mostrarPanelJurado;
+
+
+async function mostrarJuradoLiga() {
+  const contentArea = document.getElementById("content-area");
+
+  let btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.replaceWith(btnVolver.cloneNode(true));
+
+  btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.classList.remove("oculto");
+  btnVolver.onclick = () => {
+    mostrarLiga(window.usuarioActual);
+  };
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
+      <h2>👥 Jurado de la liga</h2>
+      <p>Cargando información...</p>
+    </section>
+  `;
+
+  try {
+
+    const configRef = doc(db, "configuracionLiga", "ligaActual");
+    const configSnap = await getDoc(configRef);
+
+    if (!configSnap.exists()) {
+      contentArea.innerHTML = `
+        <section class="dashboard-card">
+          <h2>👥 Jurado de la liga</h2>
+          <p>No hay jurado configurado.</p>
+        </section>
+      `;
+      return;
+    }
+
+    const config = configSnap.data();
+
+    const emailsJurado = [
+      config.jurado1,
+      config.jurado2,
+      config.jurado3
+    ].filter(Boolean);
+
+    let html = `
+      <section class="dashboard-card">
+        <h2>👥 Jurado de la liga</h2>
+        <p>Conoce a los miembros encargados de valorar las fotografías.</p>
+      </section>
+    `;
+
+    for (const email of emailsJurado) {
+
+      const usuarioQuery = query(
+        collection(db, "usuarios"),
+        where("email", "==", email)
+      );
+
+      const usuarioSnapshot = await getDocs(usuarioQuery);
+
+      if (!usuarioSnapshot.empty) {
+
+        const usuario = usuarioSnapshot.docs[0].data();
+
+        html += `
+          <section class="dashboard-card">
+            <h3>👤 ${usuario.nombre || "Jurado"}</h3>
+
+            <p>
+              ${usuario.bioJurado || "Información no disponible."}
+            </p>
+
+            <h4>🏆 Méritos</h4>
+
+            <p>
+              ${usuario.meritosJurado || "Información no disponible."}
+            </p>
+          </section>
+        `;
+      }
+    }
+
+    contentArea.innerHTML = html;
+
+  } catch (error) {
+    console.error(error);
+
+    contentArea.innerHTML = `
+      <section class="dashboard-card">
+        <h2>👥 Jurado de la liga</h2>
+        <p>Error cargando la información del jurado.</p>
+      </section>
+    `;
+  }
+}
+
+window.mostrarJuradoLiga = mostrarJuradoLiga;
 
 
 
