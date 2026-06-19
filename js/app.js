@@ -3080,23 +3080,64 @@ async function mostrarEditarInfoJurado() {
   `;
 
   try {
-    const usuariosQuery = query(
-      collection(db, "usuarios"),
-      where("roles", "array-contains", "jurado")
-    );
+    const configRef = doc(db, "configuracionLiga", "ligaActual");
+    const configSnap = await getDoc(configRef);
 
-    const snapshot = await getDocs(usuariosQuery);
+    if (!configSnap.exists()) {
+      contentArea.innerHTML = `
+        <section class="dashboard-card">
+          <h2>👥 Editar biografías y méritos</h2>
+          <p>No hay jurado configurado actualmente.</p>
+        </section>
+      `;
+      return;
+    }
+
+    const config = configSnap.data();
+
+    const emailsJurado = [
+      config.jurado1,
+      config.jurado2,
+      config.jurado3
+    ].filter(Boolean);
 
     let html = `
       <section class="dashboard-card">
         <h2>👥 Editar biografías y méritos</h2>
-        <p>Edita la información pública de los miembros del jurado.</p>
+        <p>Edita la información pública de los miembros del jurado asignados a la liga.</p>
       </section>
 
       <section class="dashboard-grid">
     `;
 
-    snapshot.forEach((docUsuario) => {
+    if (emailsJurado.length === 0) {
+      html += `
+        <article class="dashboard-card">
+          <p>No hay jurados asignados todavía.</p>
+        </article>
+      `;
+    }
+
+    for (const email of emailsJurado) {
+      const usuarioQuery = query(
+        collection(db, "usuarios"),
+        where("email", "==", email)
+      );
+
+      const usuarioSnapshot = await getDocs(usuarioQuery);
+
+      if (usuarioSnapshot.empty) {
+        html += `
+          <article class="dashboard-card">
+            <h3>Jurado no encontrado</h3>
+            <p><strong>Email:</strong> ${email}</p>
+            <p>No existe ningún usuario con este email.</p>
+          </article>
+        `;
+        continue;
+      }
+
+      const docUsuario = usuarioSnapshot.docs[0];
       const usuario = docUsuario.data();
       const usuarioId = docUsuario.id;
 
@@ -3116,7 +3157,7 @@ async function mostrarEditarInfoJurado() {
           </button>
         </article>
       `;
-    });
+    }
 
     html += `
       </section>
