@@ -839,19 +839,15 @@ async function mostrarLiga(usuario) {
 
     let clasificacionHtml = "";
 
-    if (clasificacionSnapshot.empty) {
-      clasificacionHtml = `
-        <p>No hay clasificación publicada todavía.</p>
-      `;
-    } else {
+    if (!clasificacionSnapshot.empty) {
       clasificacionHtml = `
         <hr>
         <h3>🏆 Clasificación provisional</h3>
       `;
-
+    
       clasificacionSnapshot.forEach((doc) => {
         const item = doc.data();
-
+    
         clasificacionHtml += `
           <p>
             <strong>${item.posicion}.</strong>
