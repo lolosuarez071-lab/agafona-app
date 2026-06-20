@@ -549,10 +549,20 @@ const notificacionesSnapshot = await getDocs(
   collection(db, "notificaciones")
 );
 
+const hace30Dias = new Date();
+hace30Dias.setDate(hace30Dias.getDate() - 30);
+
 notificacionesSnapshot.forEach((doc) => {
   const notificacion = doc.data();
 
-  if (notificacion.activa === true) {
+  const fechaNotificacion =
+    notificacion.fecha?.toDate?.() ?? null;
+
+  if (
+    notificacion.activa === true &&
+    fechaNotificacion &&
+    fechaNotificacion >= hace30Dias
+  ) {
     totalNotificaciones++;
   }
 });
@@ -560,9 +570,9 @@ notificacionesSnapshot.forEach((doc) => {
 let textoNotificaciones = "No hay notificaciones recientes.";
 
 if (totalNotificaciones === 1) {
-  textoNotificaciones = "Tienes 1 novedad reciente.";
+  textoNotificaciones = "1 novedad reciente";
 } else if (totalNotificaciones > 1) {
-  textoNotificaciones = `Tienes ${totalNotificaciones} novedades recientes.`;
+  textoNotificaciones = `${totalNotificaciones} novedades recientes`;
 }
 
 let notificacionesHtml = `
@@ -570,8 +580,9 @@ let notificacionesHtml = `
     class="dashboard-card tarjeta-clickable"
     onclick="window.mostrarNotificaciones()"
   >
-    <h2>🔔 Notificaciones →</h2>
-    <p>${textoNotificaciones}</p>
+   <h2>🔔 Notificaciones</h2>
+<p>${textoNotificaciones}</p>
+<p><strong>Ver novedades →</strong></p>
   </article>
 `;
 
@@ -833,12 +844,22 @@ const snapshot = await getDocs(notificacionesQuery);
 
     let notificacionesHtml = "";
 
-    snapshot.forEach((doc) => {
-      const notificacion = doc.data();
+   const hace30Dias = new Date();
+hace30Dias.setDate(hace30Dias.getDate() - 30);
 
-      if (!notificacion.activa) return;
+snapshot.forEach((doc) => {
+  const notificacion = doc.data();
 
-     let icono = "🔔";
+  const fechaNotificacion =
+    notificacion.fecha?.toDate?.() ?? null;
+
+  if (!fechaNotificacion) return;
+
+  if (fechaNotificacion < hace30Dias) return;
+
+  if (!notificacion.activa) return;
+
+  let icono = "🔔";
 
 if (notificacion.tipo === "aviso") icono = "📢";
 if (notificacion.tipo === "actividad") icono = "📅";
