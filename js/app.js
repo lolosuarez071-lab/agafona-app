@@ -298,29 +298,29 @@ if (menuNotificaciones) {
 
   window.usuarioActual = usuario;
 
-  mostrarInicio(usuario);
+ mostrarInicio(usuario);
 
-  botones[0].addEventListener("click", () => mostrarInicio(usuario));
-  botones[1].addEventListener("click", () => mostrarActividades(usuario));
-  botones[2].addEventListener("click", () => mostrarLiga(usuario));
-  botones[3].addEventListener("click", () => mostrarDocumentos());
+botones[0]?.addEventListener("click", () => mostrarInicio(usuario));
+botones[1]?.addEventListener("click", () => mostrarActividades(usuario));
+botones[2]?.addEventListener("click", () => mostrarLiga(usuario));
+botones[3]?.addEventListener("click", () => mostrarDocumentos());
 
-  let indice = 4;
+let indice = 4;
 
-  if (esAdmin) {
-    botones[indice].addEventListener("click", () => mostrarAdmin(usuario));
-    indice++;
-  } else if (esDirectiva) {
-    botones[indice].addEventListener("click", () => mostrarDirectiva(usuario));
-    indice++;
-  }
+if (esAdmin) {
+  botones[indice]?.addEventListener("click", () => mostrarAdmin(usuario));
+  indice++;
+} else if (esDirectiva) {
+  botones[indice]?.addEventListener("click", () => mostrarDirectiva(usuario));
+  indice++;
+}
 
-  if (esJurado || esAdmin) {
-    botones[indice].addEventListener("click", () => mostrarPanelJurado(usuario));
-    indice++;
-  }
+if (esJurado || esAdmin) {
+  botones[indice]?.addEventListener("click", () => mostrarPanelJurado(usuario));
+  indice++;
+}
 
-  botones[indice].addEventListener("click", () => mostrarPerfil(usuario));
+botones[indice]?.addEventListener("click", () => mostrarPerfil(usuario));
 }
 
 
@@ -1538,7 +1538,24 @@ const totalFotosEnviadas = fotosPerfilSnapshot.size;
         <h2>Mis actividades</h2>
         ${actividadesHtml}
       </section>
+
+<section id="card-estadisticas" class="dashboard-card clickable">
+  <h2>📊 Mis estadísticas</h2>
+
+  <p>
+    Consulta tu participación en la liga y tu actividad en AGAFONA.
+  </p>
+</section>
+
     `;
+
+ document
+  .getElementById("card-estadisticas")
+  ?.addEventListener("click", () => {
+    console.log("CLICK");
+    console.log(usuario);
+    mostrarMisEstadisticas(usuario);
+  });
 
   } catch (error) {
     console.error("Error cargando perfil:", error);
@@ -4499,3 +4516,141 @@ async function cambiarEstadoActividad(actividadId, estadoActual) {
 }
 
 window.cambiarEstadoActividad = cambiarEstadoActividad;
+
+
+async function mostrarMisEstadisticas(usuario) {
+  const contentArea = document.getElementById("content-area");
+
+  document.getElementById("btn-volver-header").classList.remove("oculto");
+  document.getElementById("btn-volver-header").onclick = () => mostrarPerfil(usuario);
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
+      <h2>📊 Mis estadísticas</h2>
+      <p>Cargando estadísticas...</p>
+    </section>
+  `;
+
+  try {
+    const fotosQuery = query(
+      collection(db, "fotos"),
+      where("email", "==", usuario.email),
+      where("visible", "==", true)
+    );
+
+    const fotosSnapshot = await getDocs(fotosQuery);
+    const totalFotosEnviadas = fotosSnapshot.size;
+
+    const clasificacionesSocioQuery = query(
+      collection(db, "clasificaciones"),
+      where("socioEmail", "==", usuario.email)
+    );
+
+    const clasificacionesSocioSnapshot = await getDocs(clasificacionesSocioQuery);
+
+    const convocatoriasParticipadas = new Set();
+    let mejorPosicion = null;
+
+    clasificacionesSocioSnapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+
+      if (data.convocatoriaId) {
+        convocatoriasParticipadas.add(data.convocatoriaId);
+      }
+
+      if (typeof data.posicion === "number") {
+        if (mejorPosicion === null || data.posicion < mejorPosicion) {
+          mejorPosicion = data.posicion;
+        }
+      }
+    });
+
+    const todasClasificacionesSnapshot = await getDocs(
+      collection(db, "clasificaciones")
+    );
+
+    const puntosPorSocio = {};
+
+    todasClasificacionesSnapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+
+      if (!data.socioEmail) return;
+
+      if (!puntosPorSocio[data.socioEmail]) {
+        puntosPorSocio[data.socioEmail] = {
+          email: data.socioEmail,
+          puntos: 0
+        };
+      }
+
+      puntosPorSocio[data.socioEmail].puntos += Number(data.puntos) || 0;
+    });
+
+    const clasificacionGeneral = Object.values(puntosPorSocio)
+      .sort((a, b) => b.puntos - a.puntos)
+      .map((socio, index) => ({
+        ...socio,
+        posicion: index + 1
+      }));
+
+    const posicionActual = clasificacionGeneral.find(
+      (socio) => socio.email === usuario.email
+    );
+
+    const inscripcionesQuery = query(
+      collection(db, "inscripciones"),
+      where("email", "==", usuario.email)
+    );
+
+    const inscripcionesSnapshot = await getDocs(inscripcionesQuery);
+    const totalActividadesInscritas = inscripcionesSnapshot.size;
+
+    contentArea.innerHTML = `
+      <section class="dashboard-card">
+        <h2>📊 Mis estadísticas</h2>
+
+        <p>
+          <strong>📷 Fotografías enviadas:</strong>
+          ${totalFotosEnviadas}
+        </p>
+
+        <p>
+          <strong>🏅 Convocatorias participadas:</strong>
+          ${convocatoriasParticipadas.size}
+        </p>
+
+        <p>
+          <strong>🥇 Posición actual en la liga:</strong>
+          ${
+            posicionActual
+              ? `${posicionActual.posicion}.ª posición`
+              : "Sin clasificación todavía"
+          }
+        </p>
+
+        <p>
+          <strong>🏆 Mejor posición obtenida:</strong>
+          ${
+            mejorPosicion !== null
+              ? `${mejorPosicion}.ª posición`
+              : "Sin datos todavía"
+          }
+        </p>
+
+        <p>
+          <strong>📅 Actividades inscritas:</strong>
+          ${totalActividadesInscritas}
+        </p>
+      </section>
+    `;
+  } catch (error) {
+    console.error("Error al cargar estadísticas:", error);
+
+    contentArea.innerHTML = `
+      <section class="dashboard-card">
+        <h2>📊 Mis estadísticas</h2>
+        <p>No se pudieron cargar las estadísticas.</p>
+      </section>
+    `;
+  }
+}

@@ -748,3 +748,16 @@ button:hover {
   margin-top: 10px;
   opacity: 0.7;
 }
+
+.dashboard-card.clickable {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-card.clickable:hover {
+  transform: translateY(-3px);
+}
+
+.dashboard-card.clickable:active {
+  transform: scale(0.98);
+}
