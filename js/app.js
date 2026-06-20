@@ -309,6 +309,11 @@ function mostrarDashboard(usuario) {
 }
 
 
+function formatearFecha(fecha) {
+  return new Date(fecha).toLocaleDateString("es-ES");
+}
+
+
 
 async function mostrarInicio(usuario) {
 
@@ -424,14 +429,34 @@ async function mostrarInicio(usuario) {
         estadoFoto = `📷 ${fotoSnapshot.docs[0].data().tituloFoto}`;
       }
 
+      const hoy = new Date();
+
+      const inicioSubida = new Date(convocatoria.fechaInicioSubida);
+      const finSubida = new Date(convocatoria.fechaFinSubida);
+      
+      const inicioVotacion = new Date(convocatoria.fechaInicioVotacion);
+      const finVotacion = new Date(convocatoria.fechaFinVotacion);
+      
+      let estadoLiga = "🔵 Próxima convocatoria";
+      
+      if (hoy >= inicioSubida && hoy <= finSubida) {
+        estadoLiga = "🟢 Convocatoria abierta";
+      }
+      else if (hoy >= inicioVotacion && hoy <= finVotacion) {
+        estadoLiga = "🟡 Votación en curso";
+      }
+      else if (hoy > finVotacion) {
+        estadoLiga = "⚫ Convocatoria cerrada";
+      }
+
       ligaHtml = `
     <article class="dashboard-card tarjeta-clickable"
       onclick="window.mostrarLiga(window.usuarioActual)">
       <h2>📷 Liga Fotográfica →</h2>
 
       <p><strong>${convocatoria.titulo}</strong></p>
-      <p>🟢 Convocatoria ${convocatoria.estado}</p>
-      <p>📅 Hasta ${convocatoria.fechaFinSubida}</p>
+      <p>${estadoLiga}</p>
+  <p>📅 Hasta ${formatearFecha(convocatoria.fechaFinVotacion)}</p>
       <p>${estadoFoto}</p>
     </article>
   `;
