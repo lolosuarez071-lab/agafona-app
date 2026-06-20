@@ -127,10 +127,16 @@ function mostrarDashboard(usuario) {
   
         ${esJuradoExterno
           ? `
+          <button onclick="mostrarNotificaciones()">
+  🔔 Notificaciones
+</button>
             <button id="menu-inicio">🏠 Inicio</button>
             <button id="menu-jurado">⚖️ Votaciones</button>
           `
           : `
+          <button onclick="mostrarNotificaciones()">
+  🔔 Notificaciones
+</button>
             <button id="menu-inicio">🏠 Inicio</button>
             <button id="menu-actividades">📅 Actividades</button>
             <button id="menu-liga">📷 Liga Fotográfica</button>
@@ -232,6 +238,15 @@ function mostrarDashboard(usuario) {
       cerrarMenu();
       mostrarInicio(usuario);
     });
+
+    const menuNotificaciones = document.getElementById("menu-notificaciones");
+
+if (menuNotificaciones) {
+  menuNotificaciones.addEventListener("click", () => {
+    cerrarMenu();
+    mostrarNotificaciones();
+  });
+}
 
   document.getElementById("menu-actividades")
     ?.addEventListener("click", () => {
@@ -361,6 +376,16 @@ async function mostrarInicio(usuario) {
   } else {
     descripcionRol = `Socio nº ${usuario.numeroSocio ?? "-"}`;
   }
+
+  let agafonaOnlineHtml = `
+  <article
+    class="dashboard-card tarjeta-clickable"
+    onclick="window.mostrarAgafonaOnline()"
+  >
+    <h2>🌐 AGAFONA Online →</h2>
+    <p>Web oficial · Facebook · Instagram</p>
+  </article>
+`;
 
   contentArea.innerHTML = `
     <section class="welcome-card">
@@ -493,30 +518,62 @@ async function mostrarInicio(usuario) {
       return aviso.fecha >= hoy;
     });
 
-    if (avisosValidos.length === 0) {
+   if (avisosValidos.length === 0) {
 
-      avisosHtml = `
-        <article class="dashboard-card tarjeta-clickable"
-  onclick="window.mostrarAvisos()">
-          <h2>📢 Avisos →</h2>
-          <p>No hay avisos nuevos.</p>
-        </article>
-      `;
-    } else {
-      avisosValidos.forEach((doc) => {
-        const aviso = doc.data();
+  avisosHtml = `
+    <article class="dashboard-card tarjeta-clickable"
+      onclick="window.mostrarAvisos()">
+      <h2>📢 Último aviso →</h2>
+      <p>No hay avisos nuevos.</p>
+    </article>
+  `;
+} else {
 
-        avisosHtml += `
-  <article class="dashboard-card tarjeta-clickable"
-  onclick="window.mostrarAvisos()">
-     <h2>📢 Avisos →</h2>
-    <h3>${aviso.titulo}</h3>
-    <p>${aviso.mensaje}</p>
-   <p><strong>Fecha:</strong> ${formatearFecha(aviso.fecha)}</p>
+  const aviso = avisosValidos[0].data();
+
+  avisosHtml = `
+    <article class="dashboard-card tarjeta-clickable"
+      onclick="window.mostrarAvisos()">
+      <h2>📢 Avisos (más reciente) →</h2>
+      <h3>${aviso.titulo}</h3>
+      <p>${aviso.mensaje}</p>
+      <p><strong>Fecha:</strong> ${formatearFecha(aviso.fecha)}</p>
+    </article>
+  `;
+      
+    }
+
+let totalNotificaciones = 0;
+
+const notificacionesSnapshot = await getDocs(
+  collection(db, "notificaciones")
+);
+
+notificacionesSnapshot.forEach((doc) => {
+  const notificacion = doc.data();
+
+  if (notificacion.activa === true) {
+    totalNotificaciones++;
+  }
+});
+
+let textoNotificaciones = "No hay notificaciones recientes.";
+
+if (totalNotificaciones === 1) {
+  textoNotificaciones = "Tienes 1 novedad reciente.";
+} else if (totalNotificaciones > 1) {
+  textoNotificaciones = `Tienes ${totalNotificaciones} novedades recientes.`;
+}
+
+let notificacionesHtml = `
+  <article
+    class="dashboard-card tarjeta-clickable"
+    onclick="window.mostrarNotificaciones()"
+  >
+    <h2>🔔 Notificaciones →</h2>
+    <p>${textoNotificaciones}</p>
   </article>
 `;
-      });
-    }
 
     contentArea.innerHTML = `
   <section class="welcome-card">
@@ -526,16 +583,16 @@ async function mostrarInicio(usuario) {
     <br>
 
     <p>
-       Bienvenido/a a la app AGAFONA.
-      © msd AGAFONA-app 2026
+       Bienvenido/a a la app AGAFONA
     </p>
 
   </section>
 
-  <section class="dashboard-grid">
-  ${actividadHtml}
-  ${ligaHtml}
-  ${avisosHtml}
+<section class="dashboard-grid">
+ ${notificacionesHtml}
+${avisosHtml}
+${agafonaOnlineHtml}
+${ligaHtml}
 </section>
 
 <footer class="app-footer">
@@ -679,6 +736,163 @@ async function mostrarActividades(usuario) {
 }
 
 window.mostrarActividades = mostrarActividades;
+
+
+async function crearNotificacion(datos) {
+  try {
+    const docRef = await addDoc(collection(db, "notificaciones"), {
+      titulo: datos.titulo,
+      mensaje: datos.mensaje,
+      tipo: datos.tipo,
+      fecha: serverTimestamp(),
+      fechaCaducidad: datos.fechaCaducidad ?? null,
+      activa: true,
+      visiblePara: datos.visiblePara ?? ["socio", "directiva", "admin"],
+      destino: datos.destino ?? null,
+      referenciaId: datos.referenciaId ?? null
+    });
+
+    console.log("Notificación creada:", docRef.id);
+
+  } catch (error) {
+    console.error("Error creando notificación:", error);
+    alert("El aviso se creó, pero falló la notificación.");
+  }
+}
+
+window.crearNotificacion = crearNotificacion;
+
+
+function mostrarAgafonaOnline() {
+  const contentArea = document.getElementById("content-area");
+
+  document.getElementById("btn-volver-header").classList.remove("oculto");
+  document.getElementById("btn-volver-header").onclick = () => {
+    mostrarInicio(window.usuarioActual);
+  };
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card page-title-card">
+      <h2>🌐 AGAFONA Online</h2>
+      <p>Enlaces oficiales de la asociación.</p>
+    </section>
+
+    <section class="dashboard-grid">
+      <article class="dashboard-card">
+        <h3>🌍 Web oficial</h3>
+        <p>Visita la web principal de AGAFONA.</p>
+        <button onclick="window.open('https://www.agafona.com', '_blank')">
+          Abrir web
+        </button>
+      </article>
+
+      <article class="dashboard-card">
+        <h3>📘 Facebook</h3>
+        <p>Sigue las publicaciones de AGAFONA.</p>
+        <button onclick="window.open('https://www.facebook.com/agafona', '_blank')">
+          Abrir Facebook
+        </button>
+      </article>
+
+      <article class="dashboard-card">
+        <h3>📸 Instagram</h3>
+        <p>Fotografías y actividad social de AGAFONA.</p>
+        <button onclick="window.open('https://www.instagram.com/agafona', '_blank')">
+          Abrir Instagram
+        </button>
+      </article>
+    </section>
+  `;
+}
+
+window.mostrarAgafonaOnline = mostrarAgafonaOnline;
+
+
+async function mostrarNotificaciones() {
+  const contentArea = document.getElementById("content-area");
+
+  document.getElementById("btn-volver-header").classList.remove("oculto");
+  document.getElementById("btn-volver-header").onclick = () => {
+    mostrarInicio(window.usuarioActual);
+  };
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
+      <h2>🔔 Notificaciones</h2>
+      <p>Cargando notificaciones...</p>
+    </section>
+  `;
+
+  try {
+    const notificacionesQuery = query(
+  collection(db, "notificaciones"),
+  orderBy("fecha", "desc")
+);
+
+const snapshot = await getDocs(notificacionesQuery);
+
+    let notificacionesHtml = "";
+
+    snapshot.forEach((doc) => {
+      const notificacion = doc.data();
+
+      if (!notificacion.activa) return;
+
+     let icono = "🔔";
+
+if (notificacion.tipo === "aviso") icono = "📢";
+if (notificacion.tipo === "actividad") icono = "📅";
+if (notificacion.tipo === "liga") icono = "📷";
+if (notificacion.tipo === "clasificacion") icono = "🏆";
+if (notificacion.tipo === "documento") icono = "📄";
+
+notificacionesHtml += `
+  <article class="dashboard-card tarjeta-clickable">
+    <h3>${icono} ${notificacion.titulo}</h3>
+
+    <p>${notificacion.mensaje}</p>
+
+    <p class="fecha-notificacion">
+  <small>
+    ${formatearFecha(notificacion.fecha?.toDate?.())}
+  </small>
+</p>
+
+  </article>
+`;
+    });
+
+    if (!notificacionesHtml) {
+      notificacionesHtml = `
+        <section class="dashboard-card">
+          <p>No hay notificaciones disponibles.</p>
+        </section>
+      `;
+    }
+
+    contentArea.innerHTML = `
+      <section class="dashboard-card page-title-card">
+        <h2>🔔 Notificaciones</h2>
+      </section>
+
+      <section class="dashboard-grid">
+        ${notificacionesHtml}
+      </section>
+    `;
+
+  } catch (error) {
+    console.error("Error cargando notificaciones:", error);
+
+    contentArea.innerHTML = `
+      <section class="dashboard-card">
+        <h2>🔔 Notificaciones</h2>
+        <p>Error al cargar las notificaciones.</p>
+      </section>
+    `;
+  }
+}
+
+window.mostrarNotificaciones = mostrarNotificaciones;
 
 
 async function mostrarAvisos() {
@@ -1647,7 +1861,7 @@ async function guardarDocumento() {
 
   try {
 
-    await addDoc(collection(db, "documentos"), {
+    const documentoRef = await addDoc(collection(db, "documentos"), {
       titulo,
       categoria,
       url,
@@ -1655,6 +1869,15 @@ async function guardarDocumento() {
       activo: true,
       publico: true,
       fechaCreacion: serverTimestamp()
+    });
+
+    await crearNotificacion({
+      titulo: "Nuevo documento disponible",
+      mensaje: titulo,
+      tipo: "documento",
+      destino: "documentos",
+      referenciaId: documentoRef.id,
+      visiblePara: [visiblePara, "admin"]
     });
 
     alert("Documento creado correctamente.");
@@ -1724,7 +1947,7 @@ async function guardarActividad() {
   }
 
   try {
-    await addDoc(collection(db, "actividades"), {
+    const actividadRef = await addDoc(collection(db, "actividades"), {
       titulo,
       fecha,
       lugar,
@@ -1733,6 +1956,16 @@ async function guardarActividad() {
       inscritos: 0,
       activa: true,
       fechaCreacion: serverTimestamp()
+    });
+
+    await crearNotificacion({
+      titulo: "Nueva actividad disponible",
+      mensaje: titulo,
+      tipo: "actividad",
+      fechaCaducidad: fecha,
+      destino: "actividades",
+      referenciaId: actividadRef.id,
+      visiblePara: ["socio", "directiva", "admin"]
     });
 
     alert("Actividad creada correctamente.");
@@ -1797,12 +2030,22 @@ async function guardarAviso() {
 
   try {
 
-    await addDoc(collection(db, "avisos"), {
+    const avisoRef = await addDoc(collection(db, "avisos"), {
       titulo,
       mensaje,
       fecha,
       activo: true,
       fechaCreacion: serverTimestamp()
+    });
+
+    await crearNotificacion({
+      titulo: "Nuevo aviso publicado",
+      mensaje: titulo,
+      tipo: "aviso",
+      fechaCaducidad: fecha,
+      destino: "avisos",
+      referenciaId: avisoRef.id,
+      visiblePara: ["socio", "directiva", "admin"]
     });
 
     alert("Aviso creado correctamente.");
