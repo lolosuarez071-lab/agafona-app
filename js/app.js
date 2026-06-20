@@ -310,7 +310,15 @@ function mostrarDashboard(usuario) {
 
 
 function formatearFecha(fecha) {
-  return new Date(fecha).toLocaleDateString("es-ES");
+  if (!fecha) return "";
+
+  const fechaObj = new Date(fecha);
+
+  return fechaObj.toLocaleDateString("es-ES", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
+  });
 }
 
 
@@ -402,7 +410,7 @@ async function mostrarInicio(usuario) {
         onclick="mostrarActividades(window.usuarioActual)">
         <h2>📅 Actividades →</h2>
         <p><strong>${actividad.titulo}</strong></p>
-        <p>📅 ${actividad.fecha}</p>
+        <p>📅 ${formatearFecha(actividad.fecha)}</p>
         <p>📍 ${actividad.lugar}</p>
       </article>
     `;
@@ -504,7 +512,7 @@ async function mostrarInicio(usuario) {
      <h2>📢 Avisos →</h2>
     <h3>${aviso.titulo}</h3>
     <p>${aviso.mensaje}</p>
-    <p><strong>Fecha:</strong> ${aviso.fecha}</p>
+   <p><strong>Fecha:</strong> ${formatearFecha(aviso.fecha)}</p>
   </article>
 `;
       });
@@ -636,7 +644,7 @@ async function mostrarActividades(usuario) {
         actividadesHtml += `
           <article class="dashboard-card">
             <h3>📅 ${actividad.titulo ?? "Actividad"}</h3>
-            <p>📅 ${actividad.fecha ?? ""}</p>
+            <p>📅 ${actividad.fecha ? formatearFecha(actividad.fecha) : ""}</p>
             <p>📍 ${actividad.lugar ?? ""}</p>
             <p>${actividad.descripcion ?? ""}</p>
             <p><strong>Inscritos:</strong> ${actividad.inscritos ?? 0}</p>
@@ -722,7 +730,7 @@ async function mostrarAvisos() {
         <article class="dashboard-card">
           <h3>${aviso.titulo}</h3>
           <p>${aviso.mensaje}</p>
-          <p><strong>Fecha:</strong> ${aviso.fecha}</p>
+          <p><strong>Fecha:</strong> ${formatearFecha(aviso.fecha)}</p>
         </article>
       `;
     });
@@ -750,6 +758,11 @@ window.mostrarAvisos = mostrarAvisos;
 
 async function verInscritosActividad(actividadId) {
   const contentArea = document.getElementById("content-area");
+
+  document.getElementById("btn-volver-header").classList.remove("oculto");
+  document.getElementById("btn-volver-header").onclick = () => {
+    mostrarActividades(window.usuarioActual);
+  };
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
@@ -794,9 +807,6 @@ async function verInscritosActividad(actividadId) {
         <h2>Lista de inscritos</h2>
         ${inscritosHtml}
 
-        <button onclick="mostrarActividadesDesdeBoton()">
-          Volver
-        </button>
       </section>
     `;
 
@@ -820,7 +830,10 @@ async function mostrarLiga(usuario) {
   const contentArea = document.getElementById("content-area");
 
   document.getElementById("btn-volver-header").classList.remove("oculto");
-  document.getElementById("btn-volver-header").onclick = () => mostrarInicio(usuario);
+  document.getElementById("btn-volver-header").classList.remove("oculto");
+  document.getElementById("btn-volver-header").onclick = () => {
+    mostrarInicio(usuario);
+  };
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
@@ -986,24 +999,17 @@ async function mostrarLiga(usuario) {
 
         <h3>${convocatoria.titulo}</h3>
 
-        <p>
-          ${subidaAbierta
-            ? "🟢 Convocatoria abierta"
-            : "🔒 Periodo de subida cerrado"}
-        </p>
-
-        <p>
-          <strong>Periodo de subida:</strong>
-          del ${convocatoria.fechaInicioSubida}
-          al ${convocatoria.fechaFinSubida}
-        </p>
-
-      <p>
-  <strong>Periodo de votación:</strong>
-  del ${convocatoria.fechaInicioVotacion}
-  al ${convocatoria.fechaFinVotacion}
+<p>
+  <strong>Periodo de subida:</strong>
+  del ${formatearFecha(convocatoria.fechaInicioSubida)}
+  al ${formatearFecha(convocatoria.fechaFinSubida)}
 </p>
 
+<p>
+  <strong>Periodo de votación:</strong>
+  del ${formatearFecha(convocatoria.fechaInicioVotacion)}
+  al ${formatearFecha(convocatoria.fechaFinVotacion)}
+</p>
 <hr>
 
 ${bloqueFoto}
@@ -1223,17 +1229,19 @@ async function mostrarPerfil(usuario) {
         }
 
         actividadesHtml += `
-  <article class="dashboard-card">
-    <h3>📅 ${tituloActividad}</h3>
-    <p>📅 ${fechaActividad}</p>
-    <p>📍 ${lugarActividad}</p>
-    <p><strong>Estado:</strong> Inscrito</p>
-
-    <button onclick="cancelarInscripcion('${inscripcion.actividadId}')">
-      Cancelar inscripción
-    </button>
-  </article>
-`;
+        <article class="dashboard-card">
+          <h3>📅 ${tituloActividad}</h3>
+        
+          <p>📅 ${formatearFecha(fechaActividad)}</p>
+          <p>📍 ${lugarActividad}</p>
+        
+          <p><strong>Estado:</strong> Inscrito</p>
+        
+          <button onclick="cancelarInscripcion('${inscripcion.actividadId}')">
+            Cancelar inscripción
+          </button>
+        </article>
+        `;
       }
 
       actividadesHtml += `</section>`;
@@ -1862,7 +1870,7 @@ async function mostrarGestionActividades() {
         <article class="dashboard-card">
           <h3>${actividad.titulo}</h3>
 
-          <p>📅 ${actividad.fecha}</p>
+          <p>📅 ${formatearFecha(actividad.fecha)}</p>
           <p>📍 ${actividad.lugar}</p>
 
           <p>
@@ -1950,7 +1958,7 @@ async function mostrarGestionAvisos() {
         <article class="dashboard-card">
           <h3>${aviso.titulo}</h3>
           <p>${aviso.mensaje}</p>
-          <p><strong>Fecha:</strong> ${aviso.fecha}</p>
+          <p><strong>Fecha:</strong> ${formatearFecha(aviso.fecha)}</p>
           <p><strong>Estado:</strong> ${aviso.activo ? "Activo" : "Inactivo"}</p>
 
           <button onclick="cambiarEstadoAviso('${avisoId}', ${aviso.activo === true})">
@@ -2500,6 +2508,11 @@ window.guardarConvocatoria = guardarConvocatoria;
 async function mostrarListadoConvocatorias() {
   const contentArea = document.getElementById("content-area");
 
+  document.getElementById("btn-volver-header").classList.remove("oculto");
+document.getElementById("btn-volver-header").onclick = () => {
+  mostrarGestionLiga();
+};
+
   contentArea.innerHTML = `
     <section class="dashboard-card">
       <h2>📋 Convocatorias</h2>
@@ -2527,9 +2540,9 @@ async function mostrarListadoConvocatorias() {
         <article class="dashboard-card">
           <h3>${convocatoria.titulo}</h3>
           <p><strong>Código:</strong> ${convocatoria.codigo}</p>
-          <p><strong>Inicio:</strong> ${convocatoria.fechaInicio}</p>
-          <p><strong>Fin:</strong> ${convocatoria.fechaFin}</p>
-          <p><strong>Estado:</strong> ${estadoCalculado}</p>
+         <p><strong>Inicio subida:</strong> ${formatearFecha(convocatoria.fechaInicioSubida)}</p>
+<p><strong>Fin votación:</strong> ${formatearFecha(convocatoria.fechaFinVotacion)}</p>
+<p><strong>Estado:</strong> ${estadoCalculado}</p>
           
 
           <button onclick="activarConvocatoria('${convocatoriaId}')">
@@ -2623,6 +2636,11 @@ window.cerrarConvocatoria = cerrarConvocatoria;
 
 async function verParticipantesConvocatoria(codigoConvocatoria) {
   const contentArea = document.getElementById("content-area");
+
+  document.getElementById("btn-volver-header").classList.remove("oculto");
+document.getElementById("btn-volver-header").onclick = () => {
+  mostrarListadoConvocatorias();
+};
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
