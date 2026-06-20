@@ -1436,6 +1436,17 @@ async function mostrarPerfil(usuario) {
 
     const inscripcionesSnapshot = await getDocs(inscripcionesQuery);
 
+    const fotosPerfilQuery = query(
+  collection(db, "fotos"),
+  where("email", "==", usuario.email),
+  where("visible", "==", true)
+);
+
+const fotosPerfilSnapshot = await getDocs(fotosPerfilQuery);
+
+const totalActividadesInscritas = inscripcionesSnapshot.size;
+const totalFotosEnviadas = fotosPerfilSnapshot.size;
+
     let actividadesHtml = "";
 
     if (inscripcionesSnapshot.empty) {
@@ -1482,6 +1493,7 @@ async function mostrarPerfil(usuario) {
       actividadesHtml += `</section>`;
     }
 
+
     contentArea.innerHTML = `
       <section class="dashboard-card perfil-card">
         <h2>Mi Perfil</h2>
@@ -1521,7 +1533,7 @@ async function mostrarPerfil(usuario) {
           <span>${usuario.activo ? "Activo" : "Inactivo"}</span>
         </div>
       </section>
-
+    
       <section class="dashboard-card">
         <h2>Mis actividades</h2>
         ${actividadesHtml}
