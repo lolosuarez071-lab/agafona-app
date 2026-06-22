@@ -548,9 +548,9 @@ let notificacionesHtml = `
 
 <section class="dashboard-grid">
  ${notificacionesHtml}
-${avisosHtml}
-${agafonaOnlineHtml}
-${ligaHtml}
+ ${avisosHtml}
+ ${ligaHtml}
+ ${agafonaOnlineHtml}
 </section>
 
 <footer class="app-footer">
@@ -1349,17 +1349,6 @@ async function mostrarPerfil(usuario) {
     );
 
     const inscripcionesSnapshot = await getDocs(inscripcionesQuery);
-
-    const fotosPerfilQuery = query(
-  collection(db, "fotos"),
-  where("email", "==", usuario.email),
-  where("visible", "==", true)
-);
-
-const fotosPerfilSnapshot = await getDocs(fotosPerfilQuery);
-
-const totalActividadesInscritas = inscripcionesSnapshot.size;
-const totalFotosEnviadas = fotosPerfilSnapshot.size;
 
     let actividadesHtml = "";
 
