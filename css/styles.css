@@ -758,15 +758,11 @@ button:hover {
   }
 
   .side-menu button {
-    font-size: 0.8rem;
+    font-size: 0.78rem !important;
     padding: 12px 16px;
+    line-height: 1.2;
+    font-weight: 600;
   }
-
-  .side-menu button::first-letter {
-    font-size: 1.4rem;
-  }
-
-}
 
 
 .fecha-notificacion {
