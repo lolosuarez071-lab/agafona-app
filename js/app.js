@@ -400,46 +400,7 @@ async function mostrarInicio(usuario) {
   `;
 
   try {
-    const actividadesQuery = query(
-      collection(db, "actividades"),
-      where("activa", "==", true)
-    );
-
-    const actividadesSnapshot = await getDocs(actividadesQuery);
-
-    let actividadHtml = "";
-
     const hoy = new Date().toISOString().split("T")[0];
-
-    const actividadesValidas = actividadesSnapshot.docs.filter(doc => {
-      const actividad = doc.data();
-      return actividad.fecha >= hoy;
-    });
-
-    if (actividadesValidas.length === 0) {
-
-      actividadHtml = `
-      <article class="dashboard-card tarjeta-clickable"
-        onclick="mostrarActividades(window.usuarioActual)">
-       <h2>📅 Actividades →</h2>
-        <p>No hay actividades publicadas todavía.</p>
-    
-      </article>
-    `;
-
-    } else {
-      const actividad = actividadesValidas[0].data();
-
-      actividadHtml = `
-      <article class="dashboard-card tarjeta-clickable"
-        onclick="mostrarActividades(window.usuarioActual)">
-        <h2>📅 Actividades →</h2>
-        <p><strong>${actividad.titulo}</strong></p>
-        <p>📅 ${formatearFecha(actividad.fecha)}</p>
-        <p>📍 ${actividad.lugar}</p>
-      </article>
-    `;
-    }
 
     const convocatoria = await obtenerConvocatoriaActual();
 
@@ -543,29 +504,15 @@ async function mostrarInicio(usuario) {
       
     }
 
-let totalNotificaciones = 0;
+    const notificacionesQuery = query(
+      collection(db, "notificaciones"),
+      where("activa", "==", true),
+      limit(15)
+    );
 
-const notificacionesSnapshot = await getDocs(
-  collection(db, "notificaciones")
-);
+const notificacionesSnapshot = await getDocs(notificacionesQuery);
 
-const hace30Dias = new Date();
-hace30Dias.setDate(hace30Dias.getDate() - 30);
-
-notificacionesSnapshot.forEach((doc) => {
-  const notificacion = doc.data();
-
-  const fechaNotificacion =
-    notificacion.fecha?.toDate?.() ?? null;
-
-  if (
-    notificacion.activa === true &&
-    fechaNotificacion &&
-    fechaNotificacion >= hace30Dias
-  ) {
-    totalNotificaciones++;
-  }
-});
+const totalNotificaciones = notificacionesSnapshot.size;
 
 let textoNotificaciones = "No hay notificaciones recientes.";
 
@@ -836,30 +783,24 @@ async function mostrarNotificaciones() {
 
   try {
     const notificacionesQuery = query(
-  collection(db, "notificaciones"),
-  orderBy("fecha", "desc")
-);
-
-const snapshot = await getDocs(notificacionesQuery);
+      collection(db, "notificaciones"),
+      where("activa", "==", true),
+      limit(15)
+    );
+    
+    const snapshot = await getDocs(notificacionesQuery);
 
     let notificacionesHtml = "";
 
-   const hace30Dias = new Date();
-hace30Dias.setDate(hace30Dias.getDate() - 30);
-
-snapshot.forEach((doc) => {
-  const notificacion = doc.data();
-
-  const fechaNotificacion =
-    notificacion.fecha?.toDate?.() ?? null;
-
-  if (!fechaNotificacion) return;
-
-  if (fechaNotificacion < hace30Dias) return;
-
-  if (!notificacion.activa) return;
-
-  let icono = "🔔";
+    snapshot.forEach((doc) => {
+      const notificacion = doc.data();
+    
+      const fechaNotificacion =
+        notificacion.fecha?.toDate?.() ?? null;
+    
+      if (!fechaNotificacion) return;
+    
+      let icono = "🔔";
 
 if (notificacion.tipo === "aviso") icono = "📢";
 if (notificacion.tipo === "actividad") icono = "📅";
@@ -932,19 +873,21 @@ async function mostrarAvisos() {
   try {
     const avisosQuery = query(
       collection(db, "avisos"),
-      where("activo", "==", true)
+      where("activo", "==", true),
+      limit(15)
     );
-
+    
     const avisosSnapshot = await getDocs(avisosQuery);
 
     const hoy = new Date().toISOString().split("T")[0];
-
-    const avisosValidos = avisosSnapshot.docs.filter(doc => {
+    
+    const avisosValidos = avisosSnapshot.docs.filter((doc) => {
       const aviso = doc.data();
       return aviso.fecha >= hoy;
     });
-
+    
     if (avisosValidos.length === 0) {
+
       contentArea.innerHTML = `
         <section class="dashboard-card">
           <h2>📢 Avisos</h2>
@@ -1065,7 +1008,6 @@ async function mostrarLiga(usuario) {
   const contentArea = document.getElementById("content-area");
 
   document.getElementById("btn-volver-header").classList.remove("oculto");
-  document.getElementById("btn-volver-header").classList.remove("oculto");
   document.getElementById("btn-volver-header").onclick = () => {
     mostrarInicio(usuario);
   };
@@ -1101,35 +1043,7 @@ async function mostrarLiga(usuario) {
 
     const fotosSnapshot = await getDocs(fotosQuery);
 
-    const clasificacionQuery = query(
-      collection(db, "clasificaciones"),
-      where("convocatoriaId", "==", convocatoria.codigo),
-      where("visible", "==", true),
-      orderBy("posicion", "asc")
-    );
-
-    const clasificacionSnapshot = await getDocs(clasificacionQuery);
-
     let clasificacionHtml = "";
-
-    if (!clasificacionSnapshot.empty) {
-      clasificacionHtml = `
-        <hr>
-        <h3>🏆 Clasificación provisional</h3>
-      `;
-    
-      clasificacionSnapshot.forEach((doc) => {
-        const item = doc.data();
-    
-        clasificacionHtml += `
-          <p>
-            <strong>${item.posicion}.</strong>
-            ${item.nombreSocio}
-            — ${item.puntos} puntos
-          </p>
-        `;
-      });
-    }
 
     let bloqueFoto = "";
     let fotoDocId = null;
@@ -2659,7 +2573,6 @@ async function mostrarGestionLiga() {
       );
 
       const convocatoriasSnapshot = await getDocs(convocatoriasQuery);
-      const convocatoria = await obtenerConvocatoriaActual();
 
       ligaActualHtml = `  
   <article class="dashboard-card">
@@ -2714,21 +2627,6 @@ async function mostrarGestionLiga() {
 </article>
       </section>
 
-      <article class="dashboard-card">
-        <h3>🏆 Clasificación</h3>
-
-        <p>
-          Ver clasificación automática de la convocatoria actual.
-        </p>
-
-        <button onclick="mostrarClasificacionConvocatoria()">
-          Ver clasificación
-        </button>
-      </article>
-
-      <section class="dashboard-card">
-        <button onclick="volverAdmin()">Volver</button>
-      </section>
     `;
 
   } catch (error) {
@@ -2744,6 +2642,9 @@ async function mostrarGestionLiga() {
 }
 
 window.mostrarGestionLiga = mostrarGestionLiga;
+
+
+
 async function guardarConvocatoria() {
 
   const titulo =
@@ -3867,9 +3768,13 @@ window.guardarLigaYConvocatorias = guardarLigaYConvocatorias;
 async function obtenerConvocatoriaActual() {
   const hoy = new Date().toISOString().split("T")[0];
 
-  const snapshot = await getDocs(
-    collection(db, "convocatorias")
+  const convocatoriasQuery = query(
+    collection(db, "convocatorias"),
+    where("fechaFinVotacion", ">=", hoy),
+    limit(3)
   );
+
+  const snapshot = await getDocs(convocatoriasQuery);
 
   for (const docConvocatoria of snapshot.docs) {
     const convocatoria = docConvocatoria.data();
@@ -3922,7 +3827,7 @@ function calcularEstadoConvocatoria(convocatoria) {
 
 window.calcularEstadoConvocatoria = calcularEstadoConvocatoria;
 
-async function mostrarClasificacionConvocatoria() {
+async function mostrarClasificacionConvocatoria(origen = "liga") {
   const contentArea = document.getElementById("content-area");
 
   let btnVolver = document.getElementById("btn-volver-header");
@@ -3930,9 +3835,12 @@ async function mostrarClasificacionConvocatoria() {
 
   btnVolver = document.getElementById("btn-volver-header");
   btnVolver.classList.remove("oculto");
-  btnVolver.onclick = () => {
-    mostrarLiga(window.usuarioActual);
-  };
+
+  if (origen === "gestion") {
+    btnVolver.onclick = () => mostrarGestionLiga();
+  } else {
+    btnVolver.onclick = () => mostrarLiga(window.usuarioActual);
+  }
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
@@ -4255,6 +4163,19 @@ window.guardarVotoJurado = guardarVotoJurado;
 
 async function calcularClasificacionConvocatoria(convocatoriaId) {
   try {
+    const convocatoriaQuery = query(
+      collection(db, "convocatorias"),
+      where("codigo", "==", convocatoriaId)
+    );
+
+    const convocatoriaSnapshot = await getDocs(convocatoriaQuery);
+
+    let ligaId = null;
+
+    if (!convocatoriaSnapshot.empty) {
+      ligaId = convocatoriaSnapshot.docs[0].data().ligaId || null;
+    }
+
     const fotosQuery = query(
       collection(db, "fotos"),
       where("convocatoriaId", "==", convocatoriaId),
@@ -4293,6 +4214,7 @@ async function calcularClasificacionConvocatoria(convocatoriaId) {
       clasificacion.push({
         fotoId: docFoto.id,
         convocatoriaId: convocatoriaId,
+        ligaId: ligaId,
         socioEmail: foto.email,
         nombreSocio: foto.nombreSocio || "Socio",
         puntos: puntosTotales,
@@ -4305,11 +4227,15 @@ async function calcularClasificacionConvocatoria(convocatoriaId) {
     for (let i = 0; i < clasificacion.length; i++) {
       const item = clasificacion[i];
 
-      await setDoc(doc(db, "clasificaciones", `${convocatoriaId}_${item.fotoId}`), {
-        ...item,
-        posicion: i + 1,
-        fechaCalculo: serverTimestamp()
-      });
+      await setDoc(
+        doc(db, "clasificaciones", `${convocatoriaId}_${item.fotoId}`),
+        {
+          ...item,
+          ligaId: ligaId,
+          posicion: i + 1,
+          fechaCalculo: serverTimestamp()
+        }
+      );
     }
 
     alert("Clasificación mensual calculada correctamente.");
@@ -4321,7 +4247,6 @@ async function calcularClasificacionConvocatoria(convocatoriaId) {
 }
 
 window.calcularClasificacionConvocatoria = calcularClasificacionConvocatoria;
-
 
 
 function mostrarDirectiva(usuario) {
