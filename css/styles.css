@@ -12,8 +12,21 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background: #f2f5f3;
+  background-color: #f2f5f3;
   color: #1f1f1f;
+  position: relative;
+  min-height: 100vh;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: url("../assets/fondo-app.jpg");
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  z-index: -1;
 }
 
 .login-page {
