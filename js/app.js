@@ -134,14 +134,14 @@ function mostrarDashboard(usuario) {
             <button id="menu-jurado">⚖️ Votaciones</button>
           `
           : `
-          <button onclick="mostrarNotificaciones()">
-  🔔 Notificaciones
-</button>
-            <button id="menu-inicio">🏠 Inicio</button>
-            <button id="menu-actividades">📅 Actividades</button>
-            <button id="menu-liga">📷 Liga Fotográfica</button>
-            <button id="menu-documentos">📄 Documentos</button>
-            <button id="menu-perfil">👤 Perfil</button>
+          <button id="menu-inicio">🏠 Inicio</button>
+
+<button id="menu-notificaciones">🔔 Notificaciones</button>
+
+<button id="menu-actividades">📅 Actividades</button>
+<button id="menu-liga">📷 Liga Fotográfica</button>
+<button id="menu-documentos">📄 Documentos</button>
+<button id="menu-perfil">👤 Perfil</button>
         
  ${esJurado
   ? `<button id="menu-jurado">⚖️ Jurado</button>`
@@ -239,14 +239,15 @@ function mostrarDashboard(usuario) {
       mostrarInicio(usuario);
     });
 
-    const menuNotificaciones = document.getElementById("menu-notificaciones");
-
-if (menuNotificaciones) {
-  menuNotificaciones.addEventListener("click", () => {
-    cerrarMenu();
-    mostrarNotificaciones();
-  });
-}
+    const menuNotificaciones =
+    document.getElementById("menu-notificaciones");
+  
+  if (menuNotificaciones) {
+    menuNotificaciones.addEventListener("click", () => {
+      cerrarMenu();
+      mostrarNotificaciones();
+    });
+  }
 
   document.getElementById("menu-actividades")
     ?.addEventListener("click", () => {
