@@ -26,7 +26,7 @@ body::before {
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
-  z-index: 0;
+  z-index: -1;
   pointer-events: none;
 }
 
@@ -113,20 +113,11 @@ button:hover {
 
 .app-page {
   min-height: 100vh;
+
   padding: 16px;
   padding-bottom: calc(140px + env(safe-area-inset-bottom));
 
-  background:
-    linear-gradient(
-      rgba(242,245,243,0.82),
-      rgba(242,245,243,0.82)
-    ),
-    url("../assets/fondo-app.jpg");
-
-  background-size: 100%;
-  background-position: top center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
+  background: rgba(242,245,243,0.55);
 }
 
 .app-header {
@@ -511,7 +502,7 @@ button:hover {
   top: 0;
   left: 0;
 
-  width: 250px;
+  width: 200px;
   height: 100vh;
 
   background: rgba(255,255,255,0.18);
@@ -752,10 +743,10 @@ button:hover {
     word-break: break-word;
   }
 
-  .side-menu {
-    width: 82%;
-    max-width: 290px;
-  }
+.side-menu {
+  width: 65%;
+  max-width: 210px;
+}
 
   .side-menu button {
     font-size: 0.9rem;
