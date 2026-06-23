@@ -117,7 +117,11 @@ button:hover {
   padding: 16px;
   padding-bottom: calc(140px + env(safe-area-inset-bottom));
 
-  background: rgba(242,245,243,0.55);
+  background:
+    linear-gradient(
+      rgba(242,245,243,0.92),
+      rgba(242,245,243,0.92)
+    );
 }
 
 .app-header {
