@@ -101,7 +101,7 @@ loginForm.addEventListener("submit", async (e) => {
 
     localStorage.setItem("usuarioAgafona", JSON.stringify(usuario));
 
-    activarNotificacionesPush(usuarioAgafona);
+    activarNotificacionesPush(usuario);
 
     mostrarDashboard(usuario);
 
