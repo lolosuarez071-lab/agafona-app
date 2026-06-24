@@ -37,6 +37,10 @@ loginForm.addEventListener("submit", async (e) => {
 
 
   async function activarNotificacionesPush(usuario) {
+
+console.log("Entrando en activarNotificacionesPush");
+
+
   try {
     if (!("Notification" in window)) {
       console.log("Este navegador no soporta notificaciones.");
