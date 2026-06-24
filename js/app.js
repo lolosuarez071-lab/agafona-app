@@ -1,9 +1,13 @@
-import { auth, db } from "./firebase-services.js";
+import { auth, db, messaging } from "./firebase-services.js";
 
 import {
   signInWithEmailAndPassword,
   signOut
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+import {
+  getToken
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-messaging.js";
 
 import {
   collection,
@@ -31,6 +35,46 @@ loginForm.addEventListener("submit", async (e) => {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
 
+
+  async function activarNotificacionesPush(usuario) {
+  try {
+    if (!("Notification" in window)) {
+      console.log("Este navegador no soporta notificaciones.");
+      return;
+    }
+
+    const permiso = await Notification.requestPermission();
+
+    if (permiso !== "granted") {
+      console.log("Permiso de notificaciones no concedido.");
+      return;
+    }
+
+    const token = await getToken(messaging, {
+      vapidKey: "BMM2Hr1ur8wwJx_La8K-u6wsynvh6CYV05ryvOWuUNs88FGji7siVgm9wfP_P1ZTTcU966ErAs6SF8Ffl-iD-7A"
+    });
+
+    if (!token) {
+      console.log("No se pudo obtener token FCM.");
+      return;
+    }
+
+    await setDoc(doc(db, "tokens_notificaciones", usuario.email), {
+      email: usuario.email,
+      nombre: usuario.nombre || "",
+      roles: usuario.roles || [],
+      token: token,
+      activo: true,
+      fechaAlta: serverTimestamp()
+    }, { merge: true });
+
+    console.log("Token de notificaciones guardado correctamente");
+
+  } catch (error) {
+    console.error("Error activando notificaciones push:", error);
+  }
+}
+
   loginMessage.textContent = "Comprobando datos...";
 
   try {
@@ -56,6 +100,8 @@ loginForm.addEventListener("submit", async (e) => {
     }
 
     localStorage.setItem("usuarioAgafona", JSON.stringify(usuario));
+
+    activarNotificacionesPush(usuarioAgafona);
 
     mostrarDashboard(usuario);
 
@@ -4567,5 +4613,45 @@ async function mostrarMisEstadisticas(usuario) {
         <p>No se pudieron cargar las estadísticas.</p>
       </section>
     `;
+  }
+}
+
+
+async function activarNotificacionesPush(usuario) {
+  try {
+    if (!("Notification" in window)) {
+      console.log("Este navegador no soporta notificaciones.");
+      return;
+    }
+
+    const permiso = await Notification.requestPermission();
+
+    if (permiso !== "granted") {
+      console.log("Permiso de notificaciones no concedido.");
+      return;
+    }
+
+    const token = await getToken(messaging, {
+      vapidKey: "BMM2Hr1ur8wwJx_La8K-u6wsynvh6CYV05ryvOWuUNs88FGji7siVgm9wfP_P1ZTTcU966ErAs6SF8Ffl-iD-7A"
+    });
+
+    if (!token) {
+      console.log("No se pudo obtener token FCM.");
+      return;
+    }
+
+    await setDoc(doc(db, "tokens_notificaciones", usuario.email), {
+      email: usuario.email,
+      nombre: usuario.nombre || "",
+      roles: usuario.roles || [],
+      token: token,
+      activo: true,
+      fechaAlta: serverTimestamp()
+    }, { merge: true });
+
+    console.log("Token de notificaciones guardado correctamente");
+
+  } catch (error) {
+    console.error("Error activando notificaciones push:", error);
   }
 }
