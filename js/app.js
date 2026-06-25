@@ -777,6 +777,41 @@ async function crearNotificacion(datos) {
 window.crearNotificacion = crearNotificacion;
 
 
+async function crearPushNotificacion(datos) {
+  try {
+    await addDoc(collection(db, "push_notificaciones"), {
+      titulo: datos.titulo,
+      mensaje: datos.mensaje,
+
+      origen: datos.origen ?? "manual",
+      referenciaId: datos.referenciaId ?? null,
+
+      destinatarios: {
+        socios: datos.destinatarios?.socios ?? false,
+        directiva: datos.destinatarios?.directiva ?? false
+      },
+
+      enviadaPor: datos.enviadaPor ?? "",
+      enviadaPorEmail: datos.enviadaPorEmail ?? "",
+
+      fechaCreacion: serverTimestamp(),
+      fechaEnvio: null,
+
+      estado: "pendiente",
+      error: null
+    });
+
+    console.log("Push notificación creada correctamente");
+
+  } catch (error) {
+    console.error("Error creando push notificación:", error);
+    alert("Error al crear la notificación push.");
+  }
+}
+
+window.crearPushNotificacion = crearPushNotificacion;
+
+
 function mostrarAgafonaOnline() {
   const contentArea = document.getElementById("content-area");
 
@@ -1875,22 +1910,20 @@ async function guardarNotificacion() {
 
     const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
 
-    await addDoc(collection(db, "notificaciones"), {
-
+    await crearPushNotificacion({
       titulo,
       mensaje,
-
+    
+      origen: "manual",
+      referenciaId: null,
+    
       destinatarios: {
         socios,
         directiva
       },
-
-      enviadaPor: usuario.nombre,
-
-      fecha: serverTimestamp(),
-
-      estado: "pendiente"
-
+    
+      enviadaPor: usuario.nombre || usuario.email,
+      enviadaPorEmail: usuario.email
     });
 
     alert("Notificación guardada correctamente.");
