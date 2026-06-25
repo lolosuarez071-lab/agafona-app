@@ -59,7 +59,7 @@ console.log("Entrando en activarNotificacionesPush");
 );
 
 const token = await getToken(messaging, {
-  vapidKey: "TU_CLAVE_PUBLICA_VAPID",
+  vapidKey: "BMM2Hr1ur8wwJx_La8K-u6wsynvh6CYV05ryvOWuUNs88FGji7siVgm9wfP_P1ZTTcU966ErAs6SF8Ffl-iD-7A",
   serviceWorkerRegistration: registration
 });
 
