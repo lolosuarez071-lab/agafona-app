@@ -1708,7 +1708,6 @@ async function cancelarInscripcion(actividadId) {
 window.cancelarInscripcion = cancelarInscripcion;
 
 
-
 function mostrarAdmin(usuario) {
   const contentArea = document.getElementById("content-area");
 
@@ -1720,8 +1719,6 @@ function mostrarAdmin(usuario) {
   btnVolver.onclick = () => {
     mostrarInicio(usuario);
   };
- 
- 
 
   if (!tieneRol(usuario, "admin") && !tieneRol(usuario, "directiva")) {
     contentArea.innerHTML = `
@@ -1737,74 +1734,181 @@ function mostrarAdmin(usuario) {
     <section class="dashboard-card">
       <h2>⚙️ Panel de Administración</h2>
       <p>Gestión interna de AGAFONA.</p>
-
-  </section>
-
-
-      <article class="dashboard-card">
-  <h3>📋 Gestionar actividades</h3>
-  <p>Ver actividades creadas y desactivar actividades.</p>
-
-  <button onclick="mostrarGestionActividades()">
-    Gestionar actividades
-  </button>
-</article>
-
-<article class="dashboard-card">
-  <h3>📢 Gestionar avisos</h3>
-
-  <p>
-    Ver avisos creados y desactivar avisos antiguos.
-  </p>
-
-  <button onclick="mostrarGestionAvisos()">
-    Gestionar avisos
-  </button>
-
-</article>
-
-<article class="dashboard-card">
-  <h3>📄 Gestionar documentos</h3>
-
-  <p>
-    Ver documentos creados y desactivar los que ya no estén disponibles.
-  </p>
-
-  <button onclick="mostrarGestionDocumentos()">
-    Gestionar documentos
-  </button>
-</article>
-
-<article class="dashboard-card">
-  <h3>👥 Gestión de usuarios</h3>
-
-  <p>
-    Consultar usuarios, cambiar roles y desactivar accesos.
-  </p>
-
-  <button onclick="mostrarGestionUsuarios()">
-    Gestionar usuarios
-  </button>
-
-</article>
-
-<article class="dashboard-card">
-  <h3>📷 Gestión Liga</h3>
-
-  <p>
-    Crear y gestionar convocatorias de la liga fotográfica.
-  </p>
-
-  <button onclick="mostrarGestionLiga()">
-    Gestionar liga
-  </button>
-</article>
-
     </section>
+
+    <article class="dashboard-card">
+      <h3>📋 Gestionar actividades</h3>
+      <p>Ver actividades creadas y desactivar actividades.</p>
+
+      <button onclick="mostrarGestionActividades()">
+        Gestionar actividades
+      </button>
+    </article>
+
+    <article class="dashboard-card">
+      <h3>📢 Gestionar avisos</h3>
+      <p>Ver avisos creados y desactivar avisos antiguos.</p>
+
+      <button onclick="mostrarGestionAvisos()">
+        Gestionar avisos
+      </button>
+    </article>
+
+    <article class="dashboard-card">
+      <h3>📄 Gestionar documentos</h3>
+      <p>Ver documentos creados y desactivar los que ya no estén disponibles.</p>
+
+      <button onclick="mostrarGestionDocumentos()">
+        Gestionar documentos
+      </button>
+    </article>
+
+    <article class="dashboard-card">
+      <h3>🔔 Enviar notificación</h3>
+      <p>Crear una comunicación para socios y/o directiva.</p>
+
+      <button onclick="mostrarEnviarNotificacion()">
+        Enviar notificación
+      </button>
+    </article>
+
+    <article class="dashboard-card">
+      <h3>👥 Gestión de usuarios</h3>
+      <p>Consultar usuarios, cambiar roles y desactivar accesos.</p>
+
+      <button onclick="mostrarGestionUsuarios()">
+        Gestionar usuarios
+      </button>
+    </article>
+
+    <article class="dashboard-card">
+      <h3>📷 Gestión Liga</h3>
+      <p>Crear y gestionar convocatorias de la liga fotográfica.</p>
+
+      <button onclick="mostrarGestionLiga()">
+        Gestionar liga
+      </button>
+    </article>
   `;
 }
 
 window.mostrarAdmin = mostrarAdmin;
+
+
+function mostrarEnviarNotificacion() {
+  const contentArea = document.getElementById("content-area");
+
+  configurarBotonVolver(() => {
+    const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
+    mostrarAdmin(usuario);
+  });
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
+      <h2>🔔 Enviar notificación</h2>
+      <p>Crear una notificación para socios y/o directiva.</p>
+    </section>
+
+    <section class="dashboard-card">
+      <label for="notificacion-titulo">Título</label>
+      <input 
+        type="text" 
+        id="notificacion-titulo" 
+        placeholder="Escribe el título"
+      >
+
+      <label for="notificacion-mensaje">Mensaje</label>
+      <textarea 
+        id="notificacion-mensaje" 
+        placeholder="Escribe el mensaje"
+        rows="5"
+      ></textarea>
+
+      <h3>Destinatarios</h3>
+
+      <label>
+        <input type="checkbox" id="destinatarios-socios">
+        Socios
+      </label>
+
+      <label>
+        <input type="checkbox" id="destinatarios-directiva">
+        Directiva
+      </label>
+
+      <hr>
+
+      <button onclick="guardarNotificacion()">
+        ENVIAR
+      </button>
+    </section>
+  `;
+}
+
+window.mostrarEnviarNotificacion = mostrarEnviarNotificacion;
+
+
+async function guardarNotificacion() {
+
+  const titulo = document.getElementById("notificacion-titulo").value.trim();
+  const mensaje = document.getElementById("notificacion-mensaje").value.trim();
+
+  const socios = document.getElementById("destinatarios-socios").checked;
+  const directiva = document.getElementById("destinatarios-directiva").checked;
+
+  if (!titulo) {
+    alert("Introduce un título.");
+    return;
+  }
+
+  if (!mensaje) {
+    alert("Introduce un mensaje.");
+    return;
+  }
+
+  if (!socios && !directiva) {
+    alert("Selecciona al menos un destinatario.");
+    return;
+  }
+
+  try {
+
+    const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
+
+    await addDoc(collection(db, "notificaciones"), {
+
+      titulo,
+      mensaje,
+
+      destinatarios: {
+        socios,
+        directiva
+      },
+
+      enviadaPor: usuario.nombre,
+
+      fecha: serverTimestamp(),
+
+      estado: "pendiente"
+
+    });
+
+    alert("Notificación guardada correctamente.");
+
+    mostrarEnviarNotificacion();
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert("Error al guardar la notificación.");
+
+  }
+
+}
+
+window.guardarNotificacion = guardarNotificacion;
+
 
 function mostrarFormularioDocumento() {
 
