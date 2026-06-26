@@ -54,9 +54,12 @@ console.log("Entrando en activarNotificacionesPush");
       return;
     }
 
-    const registration = await navigator.serviceWorker.register(
-  "/agafona-app/firebase-messaging-sw.js"
-);
+    const rutaFirebaseSW =
+    location.hostname === "127.0.0.1" || location.hostname === "localhost"
+      ? "/firebase-messaging-sw.js"
+      : "/agafona-app/firebase-messaging-sw.js";
+  
+  const registration = await navigator.serviceWorker.register(rutaFirebaseSW);
 
 const token = await getToken(messaging, {
   vapidKey: "BMM2Hr1ur8wwJx_La8K-u6wsynvh6CYV05ryvOWuUNs88FGji7siVgm9wfP_P1ZTTcU966ErAs6SF8Ffl-iD-7A",
@@ -810,6 +813,61 @@ async function crearPushNotificacion(datos) {
 }
 
 window.crearPushNotificacion = crearPushNotificacion;
+
+
+function crearHtmlSeccionPush(modulo) {
+  return `
+    <hr>
+
+    <h3>🔔 Notificación push</h3>
+
+    <label>
+      <input 
+        type="checkbox" 
+        id="${modulo}-enviar-push"
+        onchange="toggleOpcionesPush('${modulo}')"
+      >
+      Enviar notificación push
+    </label>
+
+    <div id="${modulo}-opciones-push" class="oculto">
+      <p class="small-text">
+        Selecciona a quién quieres avisar.
+      </p>
+
+      <h4>Destinatarios</h4>
+
+      <label>
+        <input type="checkbox" id="${modulo}-push-socios">
+        Socios
+      </label>
+
+      <label>
+        <input type="checkbox" id="${modulo}-push-directiva">
+        Directiva
+      </label>
+    </div>
+  `;
+}
+
+window.crearHtmlSeccionPush = crearHtmlSeccionPush;
+
+
+function toggleOpcionesPush(modulo) {
+  const enviarPush = document.getElementById(`${modulo}-enviar-push`).checked;
+  const opcionesPush = document.getElementById(`${modulo}-opciones-push`);
+
+  if (enviarPush) {
+    opcionesPush.classList.remove("oculto");
+  } else {
+    opcionesPush.classList.add("oculto");
+
+    document.getElementById(`${modulo}-push-socios`).checked = false;
+    document.getElementById(`${modulo}-push-directiva`).checked = false;
+  }
+}
+
+window.toggleOpcionesPush = toggleOpcionesPush;
 
 
 function mostrarAgafonaOnline() {
@@ -1833,10 +1891,21 @@ window.mostrarAdmin = mostrarAdmin;
 function mostrarEnviarNotificacion() {
   const contentArea = document.getElementById("content-area");
 
-  configurarBotonVolver(() => {
+  let btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.replaceWith(btnVolver.cloneNode(true));
+
+  btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.classList.remove("oculto");
+
+  btnVolver.onclick = () => {
     const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
-    mostrarAdmin(usuario);
-  });
+  
+    if (tieneRol(usuario, "admin")) {
+      mostrarAdmin(usuario);
+    } else {
+      mostrarDirectiva(usuario);
+    }
+  };
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
@@ -2070,6 +2139,8 @@ function mostrarFormularioActividad() {
       <label>Plazas</label>
       <input type="number" id="actividad-plazas" placeholder="Ejemplo: 25">
 
+      ${crearHtmlSeccionPush("actividad")}
+
       <button onclick="guardarActividad()">
         Guardar actividad
       </button>
@@ -2080,6 +2151,7 @@ function mostrarFormularioActividad() {
 
 window.mostrarFormularioActividad = mostrarFormularioActividad;
 
+
 async function guardarActividad() {
   const titulo = document.getElementById("actividad-titulo").value.trim();
   const fecha = document.getElementById("actividad-fecha").value;
@@ -2087,8 +2159,17 @@ async function guardarActividad() {
   const descripcion = document.getElementById("actividad-descripcion").value.trim();
   const plazas = Number(document.getElementById("actividad-plazas").value);
 
+  const enviarPush = document.getElementById("actividad-enviar-push").checked;
+  const pushSocios = document.getElementById("actividad-push-socios").checked;
+  const pushDirectiva = document.getElementById("actividad-push-directiva").checked;
+
   if (!titulo || !fecha || !lugar || !descripcion) {
     alert("Completa los campos obligatorios.");
+    return;
+  }
+
+  if (enviarPush && !pushSocios && !pushDirectiva) {
+    alert("Selecciona al menos un destinatario para la notificación push.");
     return;
   }
 
@@ -2104,15 +2185,25 @@ async function guardarActividad() {
       fechaCreacion: serverTimestamp()
     });
 
-    await crearNotificacion({
-      titulo: "Nueva actividad disponible",
-      mensaje: titulo,
-      tipo: "actividad",
-      fechaCaducidad: fecha,
-      destino: "actividades",
-      referenciaId: actividadRef.id,
-      visiblePara: ["socio", "directiva", "admin"]
-    });
+    if (enviarPush) {
+      const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
+
+      await crearPushNotificacion({
+        titulo: "Nueva actividad publicada",
+        mensaje: titulo,
+
+        origen: "actividad",
+        referenciaId: actividadRef.id,
+
+        destinatarios: {
+          socios: pushSocios,
+          directiva: pushDirectiva
+        },
+
+        enviadaPor: usuario.nombre || usuario.email,
+        enviadaPorEmail: usuario.email
+      });
+    }
 
     alert("Actividad creada correctamente.");
 
@@ -2126,12 +2217,6 @@ async function guardarActividad() {
 }
 
 window.guardarActividad = guardarActividad;
-
-function volverAdmin() {
-  volverGestion();
-}
-
-window.volverAdmin = volverAdmin;
 
 function mostrarFormularioAviso() {
   const contentArea = document.getElementById("content-area");
@@ -4478,6 +4563,15 @@ function mostrarDirectiva(usuario) {
         <p>Crear avisos para socios.</p>
         <button onclick="mostrarGestionAvisos()">Gestionar avisos</button>
       </article>
+
+      <article class="dashboard-card">
+  <h3>🔔 Enviar notificación</h3>
+  <p>Crear una comunicación rápida para socios y/o directiva.</p>
+
+  <button onclick="mostrarEnviarNotificacion()">
+    Enviar notificación
+  </button>
+</article>
 
     </section>
   `;
