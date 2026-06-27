@@ -2011,10 +2011,9 @@ async function guardarNotificacion() {
 
 window.guardarNotificacion = guardarNotificacion;
 
-
 function mostrarFormularioDocumento() {
-
   const contentArea = document.getElementById("content-area");
+
   document.getElementById("btn-volver-header").classList.remove("oculto");
   document.getElementById("btn-volver-header").onclick = () => {
     mostrarGestionDocumentos();
@@ -2042,7 +2041,7 @@ function mostrarFormularioDocumento() {
         <option value="admin">Admin</option>
       </select>
 
-      <br><br>
+      ${crearHtmlSeccionPush("documento")}
 
       <button onclick="guardarDocumento()">
         Guardar documento
@@ -2055,27 +2054,26 @@ function mostrarFormularioDocumento() {
 window.mostrarFormularioDocumento = mostrarFormularioDocumento;
 
 async function guardarDocumento() {
+  const titulo = document.getElementById("doc-titulo").value.trim();
+  const categoria = document.getElementById("doc-categoria").value.trim();
+  const url = document.getElementById("doc-url").value.trim();
+  const visiblePara = document.getElementById("doc-visible").value;
 
-  const titulo =
-    document.getElementById("doc-titulo").value.trim();
-
-  const categoria =
-    document.getElementById("doc-categoria").value.trim();
-
-  const url =
-    document.getElementById("doc-url").value.trim();
-
-  const visiblePara =
-    document.getElementById("doc-visible").value;
+  const enviarPush = document.getElementById("documento-enviar-push").checked;
+  const pushSocios = document.getElementById("documento-push-socios").checked;
+  const pushDirectiva = document.getElementById("documento-push-directiva").checked;
 
   if (!titulo || !categoria || !url) {
-
     alert("Completa todos los campos.");
     return;
   }
 
-  try {
+  if (enviarPush && !pushSocios && !pushDirectiva) {
+    alert("Selecciona al menos un destinatario para la notificación push.");
+    return;
+  }
 
+  try {
     const documentoRef = await addDoc(collection(db, "documentos"), {
       titulo,
       categoria,
@@ -2086,26 +2084,38 @@ async function guardarDocumento() {
       fechaCreacion: serverTimestamp()
     });
 
-    await crearNotificacion({
-      titulo: "Nuevo documento disponible",
-      mensaje: titulo,
-      tipo: "documento",
-      destino: "documentos",
-      referenciaId: documentoRef.id,
-      visiblePara: [visiblePara, "admin"]
-    });
+    if (enviarPush) {
+      const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
+
+      await crearPushNotificacion({
+        titulo: "Nuevo documento disponible",
+        mensaje: titulo,
+
+        origen: "documento",
+        referenciaId: documentoRef.id,
+
+        destinatarios: {
+          socios: pushSocios,
+          directiva: pushDirectiva
+        },
+
+        enviadaPor: usuario.nombre || usuario.email,
+        enviadaPorEmail: usuario.email
+      });
+    }
 
     alert("Documento creado correctamente.");
 
-    const usuario =
-      JSON.parse(localStorage.getItem("usuarioAgafona"));
+    const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
 
-    mostrarAdmin(usuario);
+    if (tieneRol(usuario, "admin")) {
+      mostrarAdmin(usuario);
+    } else {
+      mostrarDirectiva(usuario);
+    }
 
   } catch (error) {
-
     console.error(error);
-
     alert("No se pudo guardar el documento.");
   }
 }
@@ -2220,10 +2230,11 @@ window.guardarActividad = guardarActividad;
 
 function mostrarFormularioAviso() {
   const contentArea = document.getElementById("content-area");
+
   document.getElementById("btn-volver-header").classList.remove("oculto");
-document.getElementById("btn-volver-header").onclick = () => {
-  mostrarGestionAvisos();
-};
+  document.getElementById("btn-volver-header").onclick = () => {
+    mostrarGestionAvisos();
+  };
 
   contentArea.innerHTML = `
     <section class="dashboard-card">
@@ -2238,6 +2249,8 @@ document.getElementById("btn-volver-header").onclick = () => {
       <label>Fecha</label>
       <input type="date" id="aviso-fecha">
 
+      ${crearHtmlSeccionPush("aviso")}
+
       <button onclick="guardarAviso()">
         Guardar aviso
       </button>
@@ -2249,18 +2262,25 @@ document.getElementById("btn-volver-header").onclick = () => {
 window.mostrarFormularioAviso = mostrarFormularioAviso;
 
 async function guardarAviso() {
-
   const titulo = document.getElementById("aviso-titulo").value.trim();
   const mensaje = document.getElementById("aviso-mensaje").value.trim();
   const fecha = document.getElementById("aviso-fecha").value;
+
+  const enviarPush = document.getElementById("aviso-enviar-push").checked;
+  const pushSocios = document.getElementById("aviso-push-socios").checked;
+  const pushDirectiva = document.getElementById("aviso-push-directiva").checked;
 
   if (!titulo || !mensaje || !fecha) {
     alert("Completa todos los campos.");
     return;
   }
 
-  try {
+  if (enviarPush && !pushSocios && !pushDirectiva) {
+    alert("Selecciona al menos un destinatario para la notificación push.");
+    return;
+  }
 
+  try {
     const avisoRef = await addDoc(collection(db, "avisos"), {
       titulo,
       mensaje,
@@ -2269,23 +2289,37 @@ async function guardarAviso() {
       fechaCreacion: serverTimestamp()
     });
 
-    await crearNotificacion({
-      titulo: "Nuevo aviso publicado",
-      mensaje: titulo,
-      tipo: "aviso",
-      fechaCaducidad: fecha,
-      destino: "avisos",
-      referenciaId: avisoRef.id,
-      visiblePara: ["socio", "directiva", "admin"]
-    });
+    if (enviarPush) {
+      const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
+
+      await crearPushNotificacion({
+        titulo: "Nuevo aviso publicado",
+        mensaje: titulo,
+
+        origen: "aviso",
+        referenciaId: avisoRef.id,
+
+        destinatarios: {
+          socios: pushSocios,
+          directiva: pushDirectiva
+        },
+
+        enviadaPor: usuario.nombre || usuario.email,
+        enviadaPorEmail: usuario.email
+      });
+    }
 
     alert("Aviso creado correctamente.");
 
     const usuario = JSON.parse(localStorage.getItem("usuarioAgafona"));
-    mostrarAdmin(usuario);
+
+    if (tieneRol(usuario, "admin")) {
+      mostrarAdmin(usuario);
+    } else {
+      mostrarDirectiva(usuario);
+    }
 
   } catch (error) {
-
     console.error("Error creando aviso:", error);
     alert("No se pudo crear el aviso.");
   }
@@ -4321,6 +4355,8 @@ async function mostrarClasificacionGeneral() {
 
 window.mostrarClasificacionGeneral = mostrarClasificacionGeneral;
 
+
+let accionConfirmada = null;
 
 function crearModalConfirmacionSiNoExiste() {
   let modal = document.getElementById("modal-confirmacion");
