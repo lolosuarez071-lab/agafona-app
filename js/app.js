@@ -786,8 +786,162 @@ async function crearPushNotificacion(datos) {
     alert("Error al crear la notificación push.");
   }
 }
-
 window.crearPushNotificacion = crearPushNotificacion;
+
+
+function formatearDestinatariosPush(destinatarios) {
+  if (!destinatarios) return "No indicado";
+
+  if (typeof destinatarios === "string") {
+    return destinatarios;
+  }
+
+  if (Array.isArray(destinatarios)) {
+    return destinatarios.join(", ");
+  }
+
+  if (typeof destinatarios === "object") {
+    return Object.keys(destinatarios)
+      .filter((clave) => destinatarios[clave] === true)
+      .join(", ") || "No indicado";
+  }
+
+  return "No indicado";
+}
+
+
+async function mostrarHistorialPush() {
+  const contentArea = document.getElementById("content-area");
+
+  let btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.replaceWith(btnVolver.cloneNode(true));
+
+  btnVolver = document.getElementById("btn-volver-header");
+  btnVolver.classList.remove("oculto");
+  btnVolver.onclick = () => {
+    volverGestion();
+  };
+
+  contentArea.innerHTML = `
+    <section class="dashboard-card">
+      <h2>🔔 Centro de notificaciones</h2>
+      <p>Cargando historial de notificaciones...</p>
+    </section>
+  `;
+
+  try {
+    const pushQuery = query(
+      collection(db, "push_notificaciones"),
+      orderBy("fechaCreacion", "desc"),
+      limit(50)
+    );
+
+    const snapshot = await getDocs(pushQuery);
+
+    if (snapshot.empty) {
+      contentArea.innerHTML = `
+        <section class="dashboard-card">
+          <h2>🔔 Centro de notificaciones</h2>
+          <p>No hay notificaciones push registradas todavía.</p>
+        </section>
+      `;
+      return;
+    }
+
+    let totalPendientes = 0;
+    let totalEnviadas = 0;
+    let totalErrores = 0;
+    let totalConErrores = 0;
+
+    snapshot.forEach((docSnap) => {
+      const push = docSnap.data();
+
+      if (push.estado === "pendiente") totalPendientes++;
+      else if (push.estado === "enviada") totalEnviadas++;
+      else if (push.estado === "error") totalErrores++;
+      else if (push.estado === "enviada_con_errores") totalConErrores++;
+    });
+
+    let html = `
+      <section class="dashboard-card">
+        <h2>🔔 Centro de notificaciones</h2>
+        <p>Resumen de las últimas notificaciones generadas por la aplicación.</p>
+
+        <p>🟡 <strong>Pendientes:</strong> ${totalPendientes}</p>
+        <p>🟢 <strong>Enviadas:</strong> ${totalEnviadas}</p>
+        <p>🟠 <strong>Enviadas con errores:</strong> ${totalConErrores}</p>
+        <p>🔴 <strong>Errores:</strong> ${totalErrores}</p>
+      </section>
+    `;
+
+    snapshot.forEach((docSnap) => {
+      const push = docSnap.data();
+
+      let iconoEstado = "🟡";
+      let textoEstado = "Pendiente";
+
+      if (push.estado === "enviada") {
+        iconoEstado = "🟢";
+        textoEstado = "Enviada";
+      } else if (push.estado === "enviada_con_errores") {
+        iconoEstado = "🟠";
+        textoEstado = "Enviada con errores";
+      } else if (push.estado === "error") {
+        iconoEstado = "🔴";
+        textoEstado = "Error";
+      }
+
+      const fechaCreacion = push.fechaCreacion?.toDate
+        ? push.fechaCreacion.toDate().toLocaleString("es-ES")
+        : "Sin fecha";
+
+      const fechaEnvio = push.fechaEnvio?.toDate
+        ? push.fechaEnvio.toDate().toLocaleString("es-ES")
+        : "Pendiente";
+
+      html += `
+        <article class="dashboard-card">
+          <h3>${iconoEstado} ${push.titulo || "Notificación sin título"}</h3>
+
+          <p>${push.mensaje || "Sin mensaje"}</p>
+
+          <p>📌 <strong>Estado:</strong> ${textoEstado}</p>
+          <p>👥 <strong>Destinatarios:</strong> ${formatearDestinatariosPush(push.destinatarios)}</p>
+          <p>📅 <strong>Creada:</strong> ${fechaCreacion}</p>
+          <p>📤 <strong>Enviada:</strong> ${fechaEnvio}</p>
+
+          ${
+            push.totalTokens > 0
+              ? `
+                <p>📲 <strong>Destinatarios reales:</strong> ${push.totalTokens}</p>
+                <p>✅ <strong>Correctas:</strong> ${push.enviadas || 0}</p>
+                <p>⚠️ <strong>Errores:</strong> ${push.errores || 0}</p>
+              `
+              : ""
+          }
+
+          ${
+            push.mensajeError
+              ? `<p>🔴 <strong>Error:</strong> ${push.mensajeError}</p>`
+              : ""
+          }
+        </article>
+      `;
+    });
+
+    contentArea.innerHTML = html;
+  } catch (error) {
+    console.error("Error cargando historial push:", error);
+
+    contentArea.innerHTML = `
+      <section class="dashboard-card">
+        <h2>🔔 Centro de notificaciones</h2>
+        <p>Error al cargar el historial de notificaciones.</p>
+      </section>
+    `;
+  }
+}
+window.crearHtmlSeccionPush = crearHtmlSeccionPush;
 
 
 function crearHtmlSeccionPush(modulo) {
@@ -824,8 +978,6 @@ function crearHtmlSeccionPush(modulo) {
     </div>
   `;
 }
-
-window.crearHtmlSeccionPush = crearHtmlSeccionPush;
 
 
 function toggleOpcionesPush(modulo) {
@@ -1857,10 +2009,21 @@ function mostrarAdmin(usuario) {
         Gestionar liga
       </button>
     </article>
+
+    <article class="dashboard-card">
+  <h3>🔔 Historial Push</h3>
+  <p>Consultar el estado de las notificaciones enviadas.</p>
+
+  <button onclick="mostrarHistorialPush()">
+    Ver historial push
+  </button>
+</article>
+
   `;
 }
 
 window.mostrarAdmin = mostrarAdmin;
+window.mostrarHistorialPush = mostrarHistorialPush;
 
 
 function mostrarEnviarNotificacion() {
