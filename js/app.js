@@ -755,31 +755,6 @@ async function mostrarActividades(usuario) {
 window.mostrarActividades = mostrarActividades;
 
 
-async function crearNotificacion(datos) {
-  try {
-    const docRef = await addDoc(collection(db, "notificaciones"), {
-      titulo: datos.titulo,
-      mensaje: datos.mensaje,
-      tipo: datos.tipo,
-      fecha: serverTimestamp(),
-      fechaCaducidad: datos.fechaCaducidad ?? null,
-      activa: true,
-      visiblePara: datos.visiblePara ?? ["socio", "directiva", "admin"],
-      destino: datos.destino ?? null,
-      referenciaId: datos.referenciaId ?? null
-    });
-
-    console.log("Notificación creada:", docRef.id);
-
-  } catch (error) {
-    console.error("Error creando notificación:", error);
-    alert("El aviso se creó, pero falló la notificación.");
-  }
-}
-
-window.crearNotificacion = crearNotificacion;
-
-
 async function crearPushNotificacion(datos) {
   try {
     await addDoc(collection(db, "push_notificaciones"), {
