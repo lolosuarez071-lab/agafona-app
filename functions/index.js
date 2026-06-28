@@ -7,6 +7,32 @@ admin.initializeApp();
 
 setGlobalOptions({ maxInstances: 10 });
 
+function destinatarioCoincide(destinatariosPush, rolesUsuario = []) {
+  if (!destinatariosPush) return false;
+
+  if (typeof destinatariosPush === "string") {
+    return (
+      destinatariosPush === "todos" ||
+      rolesUsuario.includes(destinatariosPush)
+    );
+  }
+
+  if (Array.isArray(destinatariosPush)) {
+    return destinatariosPush.some((destino) =>
+      destino === "todos" || rolesUsuario.includes(destino)
+    );
+  }
+
+  if (typeof destinatariosPush === "object") {
+    return Object.keys(destinatariosPush).some((destino) =>
+      destinatariosPush[destino] === true &&
+      (destino === "todos" || rolesUsuario.includes(destino))
+    );
+  }
+
+  return false;
+}
+
 exports.enviarPushNotificacion = onDocumentCreated(
   {
     document: "push_notificaciones/{pushId}",
@@ -28,31 +54,27 @@ exports.enviarPushNotificacion = onDocumentCreated(
     try {
       const titulo = push.titulo || "AGAFONA";
       const mensaje = push.mensaje || "";
-      const destinatarios = push.destinatarios || "socios";
+      const destinatarios = push.destinatarios || { socios: true };
 
-      const usuariosSnapshot = await admin
+      const tokensSnapshot = await admin
         .firestore()
-        .collection("usuarios")
+        .collection("tokens_notificaciones")
         .where("activo", "==", true)
         .get();
 
       const tokens = [];
 
-      usuariosSnapshot.forEach((doc) => {
-        const usuario = doc.data();
-        const roles = usuario.roles || [];
+      tokensSnapshot.forEach((docSnap) => {
+        const registro = docSnap.data();
+        const roles = registro.roles || [];
+        const token = registro.token;
 
-        const coincide =
-          destinatarios === "todos" ||
-          destinatarios === "socios" ||
-          roles.includes(destinatarios);
-
-        if (coincide && Array.isArray(usuario.tokens_notificaciones)) {
-          usuario.tokens_notificaciones.forEach((token) => {
-            if (token && !tokens.includes(token)) {
-              tokens.push(token);
-            }
-          });
+        if (
+          token &&
+          destinatarioCoincide(destinatarios, roles) &&
+          !tokens.includes(token)
+        ) {
+          tokens.push(token);
         }
       });
 
@@ -61,6 +83,9 @@ exports.enviarPushNotificacion = onDocumentCreated(
           estado: "error",
           mensajeError: "No se encontraron tokens de notificación",
           fechaError: admin.firestore.FieldValue.serverTimestamp(),
+          totalTokens: 0,
+          enviadas: 0,
+          errores: 0,
         });
 
         return;
