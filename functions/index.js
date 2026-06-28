@@ -66,8 +66,15 @@ exports.enviarPushNotificacion = onDocumentCreated(
 
       tokensSnapshot.forEach((docSnap) => {
         const registro = docSnap.data();
-        const roles = registro.roles || [];
+
         const token = registro.token;
+        const roles = (registro.roles || []).map((rol) => {
+          if (rol === "socio") return "socios";
+          if (rol === "directiva") return "directiva";
+          if (rol === "admin") return "admin";
+          if (rol === "jurado") return "jurado";
+          return rol;
+        });
 
         if (
           token &&
