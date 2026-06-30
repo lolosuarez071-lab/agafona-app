@@ -1,0 +1,95 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function estaAutenticado() {
+      return request.auth != null;
+    }
+
+    function esAdmin() {
+      return estaAutenticado()
+        && exists(/databases/$(database)/documents/usuarios/$(request.auth.token.email))
+        && get(/databases/$(database)/documents/usuarios/$(request.auth.token.email)).data.admin == true;
+    }
+
+    function tieneRol(rol) {
+      return estaAutenticado()
+        && exists(/databases/$(database)/documents/usuarios/$(request.auth.token.email))
+        && rol in get(/databases/$(database)/documents/usuarios/$(request.auth.token.email)).data.roles;
+    }
+
+    match /usuarios/{email} {
+      allow read: if estaAutenticado();
+      allow create, update, delete: if esAdmin();
+    }
+
+    match /actividades/{actividadId} {
+      allow read: if estaAutenticado();
+      allow create, update, delete: if esAdmin() || tieneRol("directiva");
+    }
+
+    match /inscripciones/{inscripcionId} {
+      allow read: if estaAutenticado();
+      allow create, update, delete: if estaAutenticado();
+    }
+
+    match /avisos/{avisoId} {
+      allow read: if estaAutenticado();
+      allow create, update, delete: if esAdmin() || tieneRol("directiva");
+    }
+
+    match /documentos/{documentoId} {
+      allow read: if estaAutenticado();
+      allow create, update, delete: if esAdmin() || tieneRol("directiva");
+    }
+
+    match /ligas/{ligaId} {
+      allow read: if estaAutenticado();
+      allow create, update, delete: if esAdmin();
+    }
+
+    match /convocatorias/{convocatoriaId} {
+      allow read: if estaAutenticado();
+      allow create, update, delete: if esAdmin();
+    }
+
+    match /fotos/{fotoId} {
+      allow read: if estaAutenticado();
+      allow create, update: if estaAutenticado();
+      allow delete: if esAdmin();
+    }
+
+    match /votaciones/{votacionId} {
+      allow read: if estaAutenticado();
+      allow create, update: if tieneRol("jurado") || esAdmin();
+      allow delete: if esAdmin();
+    }
+
+    match /clasificaciones/{clasificacionId} {
+      allow read: if estaAutenticado();
+      allow create, update, delete: if esAdmin();
+    }
+
+    match /notificaciones/{notificacionId} {
+      allow read: if estaAutenticado();
+      allow create, update, delete: if esAdmin() || tieneRol("directiva");
+    }
+
+    match /push_notificaciones/{pushId} {
+      allow read: if estaAutenticado();
+      allow create: if esAdmin() || tieneRol("directiva");
+      allow update, delete: if esAdmin();
+    }
+
+    match /tokens_notificaciones/{tokenId} {
+      allow read: if esAdmin();
+      allow create, update: if estaAutenticado();
+      allow delete: if esAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
