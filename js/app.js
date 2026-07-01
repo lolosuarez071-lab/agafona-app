@@ -564,12 +564,12 @@ async function mostrarInicio(usuario) {
     }
 
     const notificacionesQuery = query(
-      collection(db, "notificaciones"),
-      where("activa", "==", true),
+      collection(db, "push_notificaciones"),
+      orderBy("fechaEnvio", "desc"),
       limit(15)
     );
-
-const notificacionesSnapshot = await getDocs(notificacionesQuery);
+    
+    const notificacionesSnapshot = await getDocs(notificacionesQuery);
 
 const totalNotificaciones = notificacionesSnapshot.size;
 
@@ -1059,45 +1059,41 @@ async function mostrarNotificaciones() {
 
   try {
     const notificacionesQuery = query(
-      collection(db, "notificaciones"),
-      where("activa", "==", true),
+      collection(db, "push_notificaciones"),
+      orderBy("fechaEnvio", "desc"),
       limit(15)
     );
-    
+
     const snapshot = await getDocs(notificacionesQuery);
 
     let notificacionesHtml = "";
 
     snapshot.forEach((doc) => {
       const notificacion = doc.data();
-    
+
       const fechaNotificacion =
-        notificacion.fecha?.toDate?.() ?? null;
-    
-      if (!fechaNotificacion) return;
-    
+        notificacion.fechaEnvio?.toDate?.() ??
+        notificacion.fechaCreacion?.toDate?.() ??
+        notificacion.creada?.toDate?.() ??
+        null;
+
       let icono = "🔔";
 
-if (notificacion.tipo === "aviso") icono = "📢";
-if (notificacion.tipo === "actividad") icono = "📅";
-if (notificacion.tipo === "liga") icono = "📷";
-if (notificacion.tipo === "clasificacion") icono = "🏆";
-if (notificacion.tipo === "documento") icono = "📄";
+      if (notificacion.tipo === "aviso") icono = "📢";
+      if (notificacion.tipo === "actividad") icono = "📅";
+      if (notificacion.tipo === "liga") icono = "📷";
+      if (notificacion.tipo === "clasificacion") icono = "🏆";
+      if (notificacion.tipo === "documento") icono = "📄";
 
-notificacionesHtml += `
-  <article class="dashboard-card tarjeta-clickable">
-    <h3>${icono} ${notificacion.titulo}</h3>
-
-    <p>${notificacion.mensaje}</p>
-
-    <p class="fecha-notificacion">
-  <small>
-    ${formatearFecha(notificacion.fecha?.toDate?.())}
-  </small>
-</p>
-
-  </article>
-`;
+      notificacionesHtml += `
+        <article class="dashboard-card tarjeta-clickable">
+          <h3>${icono} ${notificacion.titulo || "Notificación"}</h3>
+          <p>${notificacion.mensaje || ""}</p>
+          <p class="fecha-notificacion">
+            <small>${fechaNotificacion ? formatearFecha(fechaNotificacion) : ""}</small>
+          </p>
+        </article>
+      `;
     });
 
     if (!notificacionesHtml) {
