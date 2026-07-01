@@ -92,19 +92,15 @@ const token = await getToken(messaging, {
   try {
     await signInWithEmailAndPassword(auth, email, password);
 
-    const q = query(
-      collection(db, "usuarios"),
-      where("email", "==", email)
-    );
-
-    const snapshot = await getDocs(q);
-
-    if (snapshot.empty) {
+    const usuarioRef = doc(db, "usuarios", email);
+    const usuarioSnap = await getDoc(usuarioRef);
+    
+    if (!usuarioSnap.exists()) {
       loginMessage.textContent = "Usuario encontrado en Auth pero no en Firestore";
       return;
     }
-
-    const usuario = snapshot.docs[0].data();
+    
+    const usuario = usuarioSnap.data();
 
     if (!usuario.activo) {
       loginMessage.textContent = "Usuario desactivado";
