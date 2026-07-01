@@ -76,9 +76,9 @@ service cloud.firestore {
       allow create, update, delete: if esAdmin() || tieneRol("directiva");
     }
 
-  match /push_notificaciones/{pushId} {
+ match /push_notificaciones/{pushId} {
   allow read: if estaAutenticado();
-  allow create: if estaAutenticado();
+  allow create: if esAdmin() || tieneRol("directiva");
   allow update, delete: if esAdmin();
 }
 
